@@ -531,7 +531,7 @@
       <div class="filtros-panel">
         <div class="filtro-grupo">
           <label>🔍 Buscar</label>
-          <input type="text" id="buscar" placeholder="Código o nombre...">
+          <input type="text" id="buscar" placeholder="Código o nombre..." onkeypress="if(event.key==='Enter') aplicarFiltros()">
         </div>
         <div class="filtro-grupo">
           <label>📂 Categoría</label>
@@ -1860,6 +1860,9 @@
               mostrarAlerta(`✅ ${importados} producto(s) importado(s). ${errores} error(es).`, 'success');
               // Recargar inmediatamente
               setTimeout(() => {
+                document.getElementById('buscar').value = '';
+                document.getElementById('filtroCategoria').value = '';
+                document.getElementById('filtroZona').value = '';
                 cargarProductos();
                 cargarEstadisticas();
                 cambiarTab('productos');
