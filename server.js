@@ -648,7 +648,9 @@ const initializeDatabase = async () => {
     }
 
     // 5. Iniciar servidor después de todo
+    console.log('⏳ Esperando migración...');
     setTimeout(() => {
+      console.log('✅ Iniciando servidor...');
       app.listen(PORT, '0.0.0.0', () => {
         console.log(`
 ╔═══════════════════════════════════════════════════╗
@@ -657,7 +659,7 @@ const initializeDatabase = async () => {
 ║  ✅ Servidor escuchando en puerto ${PORT}           ║
 ╚═══════════════════════════════════════════════════╝
         `);
-      });
+      }, 5000);
     }, 800);
   } catch (err) {
     console.error('❌ Error inicializando BD:', err);
