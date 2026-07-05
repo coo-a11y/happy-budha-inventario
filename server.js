@@ -20,94 +20,90 @@ app.get('/', (req, res) => {
 // Inicializar BD
 const dbPath = path.join(__dirname, 'inventario.db');
 const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) console.error('Error abriendo BD:', err);
-  else console.log('BD conectada');
-});
+  if (err) {
+    console.error('Error abriendo BD:', err);
+  } else {
+    console.log('✅ BD conectada');
+    // Ejecutar migrations y luego iniciar servidor
+    db.serialize(() => {
+      // 1. Crear tabla productos
+      db.run(`CREATE TABLE IF NOT EXISTS productos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        codigo TEXT UNIQUE,
+        nombre TEXT,
+        categoria TEXT,
+        presentacion TEXT,
+        stock REAL,
+        stock_minimo REAL,
+        precio REAL,
+        fecha_caducidad TEXT,
+        zona TEXT,
+        contifico_id TEXT,
+        tipo_producto TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
 
-// Crear tablas si no existen
-db.serialize(() => {
-  // Tabla de productos
-  db.run(`CREATE TABLE IF NOT EXISTS productos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    codigo TEXT UNIQUE,
-    nombre TEXT,
-    categoria TEXT,
-    presentacion TEXT,
-    stock REAL,
-    stock_minimo REAL,
-    precio REAL,
-    fecha_caducidad TEXT,
-    zona TEXT,
-    contifico_id TEXT,
-    tipo_producto TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  // Tabla de movimientos
-  db.run(`CREATE TABLE IF NOT EXISTS movimientos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    producto_id INTEGER,
-    tipo TEXT,
-    cantidad_presentacion REAL,
-    cantidad_salida REAL,
-    unidad_salida TEXT,
-    zona_origen TEXT,
-    zona_destino TEXT,
-    operario TEXT,
-    costo_unitario REAL,
-    costo_total REAL,
-    descripcion TEXT,
-    contifico_kardex_id TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(producto_id) REFERENCES productos(id)
-  )`);
-
-  // Tabla de usuarios/roles
-  db.run(`CREATE TABLE IF NOT EXISTS usuarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT,
-    email TEXT UNIQUE,
-    rol TEXT,
-    activo INTEGER DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  // Tabla de conversiones de unidades
-  db.run(`CREATE TABLE IF NOT EXISTS conversiones (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    producto_id INTEGER,
-    unidad_presentacion TEXT,
-    unidad_salida TEXT,
-    factor REAL,
-    FOREIGN KEY(producto_id) REFERENCES productos(id)
-  )`);
-
-  // Migration: Agregar columnas faltantes si no existen
-  db.all("PRAGMA table_info(movimientos)", (err, columns) => {
-    if (!err && columns) {
-      const columnNames = columns.map(c => c.name);
-      const columnasAgregar = [
-        { name: 'cantidad_presentacion', type: 'REAL' },
-        { name: 'cantidad_salida', type: 'REAL' },
-        { name: 'zona_origen', type: 'TEXT' },
-        { name: 'zona_destino', type: 'TEXT' },
-        { name: 'costo_unitario', type: 'REAL' },
-        { name: 'costo_total', type: 'REAL' },
-        { name: 'created_at', type: 'DATETIME DEFAULT CURRENT_TIMESTAMP' }
-      ];
-
-      columnasAgregar.forEach(col => {
-        if (!columnNames.includes(col.name)) {
-          console.log(`📝 Agregando columna: ${col.name} a tabla movimientos`);
-          db.run(`ALTER TABLE movimientos ADD COLUMN ${col.name} ${col.type}`, (err) => {
-            if (err) console.log(`   ⚠️  Error agregando ${col.name}: ${err.message}`);
-            else console.log(`   ✅ Columna ${col.name} agregada`);
-          });
+      // 2. Dropear y recrear tabla movimientos SIEMPRE
+      db.run('DROP TABLE IF EXISTS movimientos');
+      db.run(`CREATE TABLE movimientos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        producto_id INTEGER,
+        tipo TEXT,
+        cantidad_presentacion REAL,
+        cantidad_salida REAL,
+        unidad_salida TEXT,
+        zona_origen TEXT,
+        zona_destino TEXT,
+        operario TEXT,
+        costo_unitario REAL,
+        costo_total REAL,
+        descripcion TEXT,
+        contifico_kardex_id TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(producto_id) REFERENCES productos(id)
+      )`, (err) => {
+        if (err) {
+          console.error('❌ Error creando tabla movimientos:', err.message);
+        } else {
+          console.log('✅ Tabla movimientos lista');
         }
       });
-    }
-  });
+
+      // 3. Crear tabla usuarios
+      db.run(`CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT,
+        email TEXT UNIQUE,
+        rol TEXT,
+        activo INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+
+      // 4. Crear tabla conversiones
+      db.run(`CREATE TABLE IF NOT EXISTS conversiones (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        producto_id INTEGER,
+        unidad_presentacion TEXT,
+        unidad_salida TEXT,
+        factor REAL,
+        FOREIGN KEY(producto_id) REFERENCES productos(id)
+      )`);
+
+      // 5. Iniciar servidor después de todo
+      setTimeout(() => {
+        app.listen(PORT, '0.0.0.0', () => {
+          console.log(`
+╔═══════════════════════════════════════════════════╗
+║  Happy Budha - Sistema de Inventario v4         ║
+║  🌐 http://localhost:${PORT}                        ║
+║  ✅ Servidor escuchando en puerto ${PORT}           ║
+╚═══════════════════════════════════════════════════╝
+          `);
+        });
+      }, 800);
+    });
+  }
 });
 
 // ============ AUTENTICACIÓN SIMPLE ============
@@ -234,7 +230,9 @@ app.post('/api/movimientos/entrada', (req, res) => {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
-    const nuevoStock = producto.stock + cantidad;
+    // Validar stock: si es NULL o undefined, usar 0
+    const stockActual = producto.stock !== null && producto.stock !== undefined ? parseFloat(producto.stock) : 0;
+    const nuevoStock = stockActual + parseFloat(cantidad || 0);
 
     db.run('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id], (err) => {
       if (err) return res.status(500).json({ error: err.message });
@@ -261,8 +259,12 @@ app.post('/api/movimientos/salida', (req, res) => {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
+    // Validar stock: si es NULL o undefined, usar 0
+    const stockActual = producto.stock !== null && producto.stock !== undefined ? parseFloat(producto.stock) : 0;
+    const cantidadSalida = parseFloat(cantidad_salida || 0);
+
     // Validar que hay suficiente stock
-    if (producto.stock < cantidad_salida) {
+    if (stockActual < cantidadSalida) {
       return res.status(400).json({ error: 'Stock insuficiente' });
     }
 
@@ -277,11 +279,11 @@ app.post('/api/movimientos/salida', (req, res) => {
       if (match) {
         const cantidadPresentacion = parseFloat(match[1]);
         costoUnitario = producto.precio / cantidadPresentacion;
-        costoTotal = costoUnitario * cantidad_salida;
+        costoTotal = costoUnitario * cantidadSalida;
       }
     }
 
-    const nuevoStock = producto.stock - cantidad_salida;
+    const nuevoStock = stockActual - cantidadSalida;
 
     db.run('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id], (err) => {
       if (err) return res.status(500).json({ error: err.message });
@@ -290,7 +292,7 @@ app.post('/api/movimientos/salida', (req, res) => {
         `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida,
          zona_origen, operario, costo_unitario, costo_total, descripcion)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [producto_id, 'salida', producto.stock, cantidad_salida, unidad_salida, zona_origen, operario, costoUnitario, costoTotal, descripcion],
+        [producto_id, 'salida', stockActual, cantidadSalida, unidad_salida, zona_origen, operario, costoUnitario, costoTotal, descripcion],
         function (err) {
           if (err) res.status(500).json({ error: err.message });
           else res.json({ success: true, id: this.lastID, nuevoStock, costoTotal });
@@ -386,6 +388,36 @@ app.delete('/api/movimientos/:id', (req, res) => {
   });
 });
 
+// Eliminar producto
+app.delete('/api/productos/:id', (req, res) => {
+  if (usuarioActual.rol !== 'admin' && usuarioActual.rol !== 'gerente') {
+    return res.status(403).json({ error: 'Permisos insuficientes' });
+  }
+
+  const productoId = req.params.id;
+
+  // Primero verificar si hay movimientos asociados
+  db.all('SELECT COUNT(*) as count FROM movimientos WHERE producto_id = ?', [productoId], (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error verificando movimientos' });
+    }
+
+    const count = result[0].count || 0;
+    if (count > 0) {
+      return res.status(400).json({ error: `No se puede eliminar: hay ${count} movimiento(s) asociado(s)` });
+    }
+
+    // Eliminar producto
+    db.run('DELETE FROM productos WHERE id = ?', [productoId], (err) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+      } else {
+        res.json({ success: true, mensaje: 'Producto eliminado' });
+      }
+    });
+  });
+});
+
 // ============ ESTADÍSTICAS PARA DASHBOARD ============
 
 app.get('/api/estadisticas', (req, res) => {
@@ -442,17 +474,6 @@ app.get('/api/exportar/excel', (req, res) => {
 // ============ HEALTH CHECK ============
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Iniciar servidor
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`
-╔═══════════════════════════════════════════════════╗
-║  Happy Budha - Sistema de Inventario v4         ║
-║  🌐 http://localhost:${PORT}                        ║
-║  ✅ Servidor escuchando en puerto ${PORT}           ║
-╚═══════════════════════════════════════════════════╝
-  `);
 });
 
 process.on('SIGINT', () => {

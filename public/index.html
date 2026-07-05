@@ -159,6 +159,7 @@
       border-radius: 6px;
       font-size: 0.95rem;
       font-family: inherit;
+      width: 100%;
     }
     .filtro-grupo input:focus,
     .filtro-grupo select:focus {
@@ -367,6 +368,7 @@
       header {
         padding: 1rem;
         font-size: 0.9rem;
+        flex-direction: column;
       }
       header h1 {
         font-size: 1.3rem;
@@ -386,6 +388,69 @@
       }
       .form-acciones button {
         width: 100%;
+      }
+      .nav-tabs {
+        padding: 0 1rem;
+      }
+      .nav-tabs button {
+        padding: 0.8rem 1rem;
+        font-size: 0.8rem;
+      }
+      .filtros-panel {
+        flex-direction: column;
+      }
+      .filtro-grupo {
+        min-width: 100%;
+      }
+      table {
+        font-size: 0.75rem;
+      }
+      th, td {
+        padding: 0.5rem;
+      }
+      .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+      }
+    }
+    @media (max-width: 480px) {
+      header h1 {
+        font-size: 1rem;
+      }
+      .container {
+        padding: 0.5rem;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .formulario-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+      .nav-tabs {
+        padding: 0 0.5rem;
+      }
+      .nav-tabs button {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.7rem;
+      }
+      table {
+        font-size: 0.65rem;
+      }
+      th, td {
+        padding: 0.35rem;
+      }
+      .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+      }
+      .modal-content {
+        width: 95%;
+        padding: 1rem;
+      }
+      .modal-header {
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
       }
     }
   </style>
@@ -528,7 +593,7 @@
       </div>
       <div style="margin-bottom: 1rem;">
         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600;">
-          <input type="checkbox" id="selectTodosHeader" onchange="seleccionarTodosMovimientos()"> Seleccionar todos
+          <input type="checkbox" id="selectTodosMovimientos" onchange="seleccionarTodosMovimientos()"> Seleccionar todos
         </label>
       </div>
       <div class="tabla-container">
@@ -567,10 +632,10 @@
           </div>
         </div>
         <div class="formulario-grid">
-          <div class="form-grupo">
+          <div class="form-grupo" style="position: relative;">
             <label>Producto * (escribe para buscar)</label>
             <input type="text" id="salida-buscar-producto" placeholder="Ej: FERT-001 o Fertilizante..." oninput="filtrarProductos()" autocomplete="off" required="">
-            <div id="salida-lista-productos" style="position: absolute; background: white; border: 1px solid var(--gray-300); border-radius: 6px; max-height: 200px; overflow-y: auto; display: none; width: 300px; z-index: 100; margin-top: 0.5rem;"></div>
+            <div id="salida-lista-productos" style="position: absolute; background: white; border: 1px solid var(--gray-300); border-radius: 6px; max-height: 200px; overflow-y: auto; display: none; width: 100%; z-index: 100; top: 100%;"></div>
             <input type="hidden" id="salida-producto" value="">
           </div>
           <div class="form-grupo">
@@ -579,7 +644,7 @@
           </div>
           <div class="form-grupo">
             <label id="labelCantidad">Cantidad a Sacar *</label>
-            <input type="number" id="salida-cantidad" placeholder="Ej: 2" step="0.01" required="">
+            <input type="number" id="salida-cantidad" placeholder="Ej: 2" step="0.01" oninput="calcularCosto()" required="">
           </div>
           <div class="form-grupo">
             <label>Unidad *</label>
@@ -917,9 +982,11 @@
     function cambiarTab(tabName) {
       console.log('📌 Cambiando a tab:', tabName);
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.dashboard').forEach(s => s.classList.remove('active'));
-      document.querySelector(`[data-tab="${tabName}"].nav-btn`)?.classList.add('active');
-      document.querySelector(`.dashboard[data-tab="${tabName}"]`).classList.add('active');
+      document.querySelectorAll('[data-tab]').forEach(s => s.classList.remove('active'));
+      const navBtn = document.querySelector(`.nav-btn[data-tab="${tabName}"]`);
+      const section = document.querySelector(`.dashboard[data-tab="${tabName}"]`);
+      if (navBtn) navBtn.classList.add('active');
+      if (section) section.classList.add('active');
     }
     function cargarProductos() {
       console.log('🔄 Cargando productos...');
@@ -1124,6 +1191,10 @@
       });
     }
     function filtrarMovimientos() {
+      if (!movimientos || movimientos.length === 0) {
+        cargarMovimientos();
+        return;
+      }
       const desde = document.getElementById('filtroFechaDesde').value;
       const hasta = document.getElementById('filtroFechaHasta').value;
       let filtrados = movimientos;
@@ -1136,6 +1207,7 @@
         });
       }
       renderizarMovimientos(filtrados);
+      console.log(`📊 Filtrados ${filtrados.length} movimientos`);
     }
     function seleccionarTodosMovimientos() {
       const checks = document.querySelectorAll('.checkbox-movimiento');
@@ -1197,6 +1269,7 @@
       document.getElementById('salida-producto').value = id;
       document.getElementById('salida-presentacion').value = presentacion;
       document.getElementById('salida-lista-productos').style.display = 'none';
+      calcularCosto();
     }
     function actualizarZonasSeleccionadas() {
       const checkboxes = document.querySelectorAll('.zona-checkbox:checked');
@@ -1233,16 +1306,29 @@
     function calcularCosto() {
       const productoId = document.getElementById('salida-producto').value;
       const cantidad = parseFloat(document.getElementById('salida-cantidad').value) || 0;
-      const producto = productos.find(p => p.id == productoId);
-      if (!producto || !producto.precio || !producto.presentacion) {
+
+      if (!productoId || cantidad <= 0) {
         document.getElementById('salida-costo').value = '$0.00';
         return;
       }
+
+      const producto = productos.find(p => p.id == productoId);
+      if (!producto) {
+        document.getElementById('salida-costo').value = '$0.00';
+        return;
+      }
+
+      if (!producto.precio || !producto.presentacion) {
+        document.getElementById('salida-costo').value = '$0.00';
+        return;
+      }
+
       const match = producto.presentacion.match(/(\d+\.?\d*)/);
       if (!match) {
         document.getElementById('salida-costo').value = '$0.00';
         return;
       }
+
       const cantPres = parseFloat(match[1]);
       const costo = (producto.precio / cantPres) * cantidad;
       document.getElementById('salida-costo').value = '$' + costo.toFixed(2);
@@ -1254,7 +1340,7 @@
       const unidad = document.getElementById('salida-unidad').value;
       let zonas = Array.from(document.querySelectorAll('.zona-checkbox:checked')).map(cb => cb.value);
       const operario = document.getElementById('salida-operario').value;
-      const fecha = document.getElementById('salida-fecha').value;
+
       if (zonas.includes('Otros')) {
         const otroNombre = document.getElementById('otroZonaNombre').value.trim();
         if (!otroNombre) {
@@ -1263,37 +1349,59 @@
         }
         zonas = zonas.map(z => z === 'Otros' ? otroNombre : z);
       }
+
       if (!productoId || !cantidad || !unidad || zonas.length === 0 || !operario) {
         mostrarAlerta('⚠️ Completa todos los campos requeridos', 'error');
         return;
       }
+
       const endpoint = tipo === 'entrada' ? '/api/movimientos/entrada' : '/api/movimientos/salida';
-      const datos = {
-        producto_id: productoId,
-        cantidad_salida: cantidad,
-        zona_origen: zonas[0],
-        operario,
-        descripcion: document.getElementById('salida-descripcion').value,
-        precio: 0
-      };
-      fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos)
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.success) {
-            mostrarAlerta(`✅ ${tipo === 'entrada' ? 'Entrada' : 'Salida'} registrada`, 'success');
-            limpiarFormularioSalida();
-            cargarProductos();
-            cargarEstadisticas();
-            cargarMovimientos();
-          } else {
-            mostrarAlerta(data.error || 'Error registrando movimiento', 'error');
+
+      // Registrar movimiento para CADA zona seleccionada
+      const promesas = zonas.map(zona => {
+        let datos = {
+          producto_id: productoId,
+          operario,
+          descripcion: document.getElementById('salida-descripcion').value,
+          fecha: document.getElementById('salida-fecha').value
+        };
+
+        if (tipo === 'entrada') {
+          datos.cantidad = cantidad;
+          datos.unidad_salida = unidad;
+          datos.zona_destino = zona;
+          if (document.getElementById('salida-caducidad').value) {
+            datos.fecha_caducidad = document.getElementById('salida-caducidad').value;
           }
-        })
-        .catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
+        } else {
+          datos.cantidad_salida = cantidad;
+          datos.unidad_salida = unidad;
+          datos.zona_origen = zona;
+        }
+
+        return fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datos)
+        }).then(r => r.json());
+      });
+
+      Promise.all(promesas).then(results => {
+        const exitosos = results.filter(r => r.success).length;
+        const fallidos = results.filter(r => !r.success).length;
+
+        if (exitosos > 0) {
+          mostrarAlerta(`✅ ${exitosos} movimiento(s) registrado(s) exitosamente`, 'success');
+          limpiarFormularioSalida();
+          cargarProductos();
+          cargarEstadisticas();
+          cargarMovimientos();
+        }
+        if (fallidos > 0) {
+          mostrarAlerta(`⚠️ ${fallidos} movimiento(s) fallaron`, 'error');
+        }
+      })
+      .catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
     }
     function aplicarFiltros() {
       const buscar = document.getElementById('buscar').value;
@@ -1427,12 +1535,17 @@
         .catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
     }
     function filtrarCultivoPorLote() {
+      if (!movimientos || movimientos.length === 0) {
+        cargarMovimientos();
+        setTimeout(() => filtrarCultivoPorLote(), 500);
+        return;
+      }
       const desde = document.getElementById('filtroFechaCultivoDesde').value;
       const hasta = document.getElementById('filtroFechaCultivoHasta').value;
       const zona = document.getElementById('filtroZonaCultivo').value;
       let filtrados = movimientos.filter(m => {
         const fechaStr = m.created_at || m.fecha || '';
-        const fecha = fechaStr.split('T')[0];
+        const fecha = fechaStr ? fechaStr.split('T')[0] : '';
         const zonaMovimiento = m.zona_origen || '';
         if (desde && fecha < desde) return false;
         if (hasta && fecha > hasta) return false;
@@ -1461,6 +1574,7 @@
           `;
         });
       }
+      console.log(`🌱 Filtrados ${filtrados.length} movimientos de cultivo`);
     }
     function exportarCultivoPorLote() {
       const desde = document.getElementById('filtroFechaCultivoDesde').value;
@@ -1499,10 +1613,75 @@
       alert(`✅ ${datos.length} registros exportados`);
     }
     function descargarPlantilla() {
-      alert('📥 Plantilla descargada');
+      const datos = [
+        { codigo: 'FERT-001', nombre: 'Ejemplo Fertilizante', categoria: 'Fertilizantes', presentacion: '25 KG', stock: 100, stock_minimo: 20, precio: 50.00, zona: 'Almacén', fecha_caducidad: '2025-12-31' }
+      ];
+      const ws = XLSX.utils.json_to_sheet(datos);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Productos');
+      XLSX.writeFile(wb, 'Plantilla_Productos.xlsx');
+      mostrarAlerta('✅ Plantilla descargada', 'success');
     }
     function abrirUploadExcel() {
-      alert('📤 Función en construcción');
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.xlsx';
+      input.onchange = function(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          try {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(worksheet);
+
+            let importados = 0;
+            let errores = 0;
+
+            const promesas = rows.map(row => {
+              const datos = {
+                codigo: row.codigo || `AUTO-${Date.now()}`,
+                nombre: row.nombre,
+                categoria: row.categoria || 'Otros',
+                presentacion: row.presentacion || '',
+                stock: parseFloat(row.stock) || 0,
+                stock_minimo: parseFloat(row.stock_minimo) || 0,
+                precio: parseFloat(row.precio) || 0,
+                fecha_caducidad: row.fecha_caducidad || '',
+                zona: row.zona || ''
+              };
+
+              if (!datos.nombre) {
+                errores++;
+                return Promise.resolve();
+              }
+
+              return fetch('/api/productos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+              })
+              .then(r => r.json())
+              .then(data => {
+                if (data.success) importados++;
+                else errores++;
+              })
+              .catch(() => errores++);
+            });
+
+            Promise.all(promesas).then(() => {
+              mostrarAlerta(`✅ ${importados} producto(s) importado(s). ${errores} error(es).`, 'success');
+              cargarProductos();
+              cargarEstadisticas();
+            });
+          } catch(err) {
+            mostrarAlerta('❌ Error leyendo Excel: ' + err.message, 'error');
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      };
+      input.click();
     }
   </script>
 </body>
