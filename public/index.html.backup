@@ -493,10 +493,6 @@
           <div class="stat-label">📉 Bajo Stock</div>
           <div class="stat-value" id="statBajo">3</div>
         </div>
-        <div class="stat-card danger">
-          <div class="stat-label">🚫 Sin Stock</div>
-          <div class="stat-value" id="statSinStock">0</div>
-        </div>
       </div>
       <h3 style="margin-bottom: 1rem; margin-top: 2rem;">Productos que Necesitan Atención</h3>
       <div class="tabla-container">
@@ -1095,52 +1091,15 @@
       tbody.innerHTML = html;
     }
     function cargarEstadisticas() {
-      // Calcular estadísticas basado en productos cargados
-      const hoy = new Date();
-      const hace60Dias = new Date();
-      hace60Dias.setDate(hace60Dias.getDate() + 60);
-
-      function parsearFecha(fechaStr) {
-        if (!fechaStr) return null;
-        const mesesAbrev = {
-          'ene': 1, 'feb': 2, 'mar': 3, 'abr': 4, 'may': 5, 'jun': 6,
-          'jul': 7, 'ago': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dic': 12
-        };
-        const partes = fechaStr.toLowerCase().split('-');
-        if (partes.length === 2) {
-          let mes, año;
-          mes = parseInt(partes[0]);
-          if (isNaN(mes)) mes = mesesAbrev[partes[0]];
-          año = parseInt(partes[1]);
-          if (año < 100 && año >= 0) año += 2000;
-          if (mes > 0 && mes <= 12 && año > 1900) {
-            return new Date(año, mes, 0);
-          }
-        }
-        return null;
-      }
-
-      let caducados = 0, proximoCaducar = 0, bajoStock = 0, sinStock = 0;
-      
-      productos.forEach(p => {
-        const fechaCaducidad = parsearFecha(p.fecha_caducidad);
-        if (fechaCaducidad && fechaCaducidad < hoy) {
-          caducados++;
-        } else if (p.stock === 0) {
-          sinStock++;
-        } else if (fechaCaducidad && fechaCaducidad <= hace60Dias) {
-          proximoCaducar++;
-        } else if (p.stock > 0 && p.stock <= (p.stock_minimo || 0)) {
-          bajoStock++;
-        }
-      });
-
-      document.getElementById('statTotal').textContent = productos.length;
-      document.getElementById('statCaducados').textContent = caducados;
-      document.getElementById('statProximo').textContent = proximoCaducar;
-      document.getElementById('statBajo').textContent = bajoStock;
-      document.getElementById('statSinStock').textContent = sinStock;
-      cargarProductosCriticos();
+      fetch('/api/estadisticas')
+        .then(r => r.json())
+        .then(stats => {
+          document.getElementById('statTotal').textContent = stats.totalProductos;
+          document.getElementById('statCaducados').textContent = stats.productosCaducados;
+          document.getElementById('statProximo').textContent = stats.productosProximoCaducar;
+          document.getElementById('statBajo').textContent = stats.productosBajoStock;
+          cargarProductosCriticos();
+        });
     }
     function cargarProductosCriticos() {
       const hoy = new Date();
@@ -1200,9 +1159,9 @@
           tipo.push(3);
           estado.push('⏰ Vence en 60 días');
         }
-        else if (p.stock > 0 && p.stock <= (p.stock_minimo || 0)) {
+        else if (p.stock > 0 && p.stock <= 10) {
           tipo.push(4);
-          estado.push(`📉 Stock bajo`);
+          estado.push(`📉 Stock bajo (${p.stock})`);
         }
         if (tipo.length > 0) {
           productosCriticos.push({

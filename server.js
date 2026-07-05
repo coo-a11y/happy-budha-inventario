@@ -987,17 +987,42 @@ app.get('/api/estadisticas', async (req, res) => {
     const result = await executeQuery('SELECT * FROM productos');
     const productos = result.rows;
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const hace60Dias = new Date();
+    hace60Dias.setDate(hace60Dias.getDate() + 60);
+
+    // Función para parsear fecha en formato "mes-año"
+    function parsearFecha(fechaStr) {
+      if (!fechaStr) return null;
+      const mesesAbrev = {
+        'ene': 1, 'feb': 2, 'mar': 3, 'abr': 4, 'may': 5, 'jun': 6,
+        'jul': 7, 'ago': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dic': 12
+      };
+      const partes = fechaStr.toLowerCase().split('-');
+      if (partes.length === 2) {
+        let mes = parseInt(partes[0]);
+        if (isNaN(mes)) mes = mesesAbrev[partes[0]];
+        let año = parseInt(partes[1]);
+        if (año < 100 && año >= 0) año += 2000;
+        if (mes > 0 && mes <= 12 && año > 1900) {
+          return new Date(año, mes, 0);
+        }
+      }
+      return null;
+    }
 
     const stats = {
       totalProductos: productos.length,
-      productosCaducados: productos.filter(p => p.fecha_caducidad && p.fecha_caducidad < today).length,
-      productosProximoCaducar: productos.filter(p => {
-        if (!p.fecha_caducidad) return false;
-        const dias = Math.floor((new Date(p.fecha_caducidad) - new Date(today)) / (1000 * 60 * 60 * 24));
-        return dias >= 0 && dias <= 60;
+      productosCaducados: productos.filter(p => {
+        const fecha = parsearFecha(p.fecha_caducidad);
+        return fecha && fecha < today;
       }).length,
-      productosBajoStock: productos.filter(p => p.stock <= p.stock_minimo).length,
+      productosProximoCaducar: productos.filter(p => {
+        const fecha = parsearFecha(p.fecha_caducidad);
+        return fecha && fecha <= hace60Dias && fecha >= today;
+      }).length,
+      productosBajoStock: productos.filter(p => p.stock <= (p.stock_minimo || 0)).length,
+      productosSinStock: productos.filter(p => p.stock === 0 || p.stock < 1).length,
       valorTotalInventario: productos.reduce((sum, p) => sum + (p.stock * (p.precio || 0)), 0),
       categorias: [...new Set(productos.map(p => p.categoria))],
       zonas: [...new Set(productos.map(p => p.zona))]
