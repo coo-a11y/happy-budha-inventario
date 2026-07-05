@@ -1019,17 +1019,14 @@ app.delete('/api/movimientos/:id', async (req, res) => {
     // Eliminar movimiento
     await executeQuery('DELETE FROM movimientos WHERE id = ?', [movimientoId]);
 
-    // Si el producto queda con stock 0 (después de revertir), eliminarlo completamente
+    // Si el producto queda con stock 0, registrar la eliminación en historial
     if (nuevoStock <= 0) {
-      // Registrar eliminación en historial
+      // Registrar eliminación como movimiento (sin eliminar el producto)
       const elimQuery = usePostgres
         ? `INSERT INTO movimientos (producto_id, tipo, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?) RETURNING id`
         : `INSERT INTO movimientos (producto_id, tipo, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?)`;
       await executeQuery(elimQuery, [movimiento.producto_id, 'eliminación', 'Sistema', `Producto eliminado - Stock llegó a 0`, new Date().toISOString()]);
-      
-      // Eliminar el producto
-      await executeQuery('DELETE FROM productos WHERE id = ?', [movimiento.producto_id]);
-      console.log('🗑️ Producto eliminado porque quedó con stock 0');
+      console.log('📝 Registro de eliminación creado');
     }
 
     res.json({ success: true, mensaje: 'Movimiento eliminado y stock revertido' });
