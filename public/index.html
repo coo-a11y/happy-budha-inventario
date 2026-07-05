@@ -1,16 +1,14 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
+<html lang="es"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Happy Budha - Inventario v4</title>
+  <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-
     :root {
       --primary: #10b981;
       --primary-dark: #059669;
@@ -26,15 +24,12 @@
       --gray-700: #374151;
       --gray-900: #111827;
     }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       background-color: var(--gray-50);
       color: var(--gray-900);
       line-height: 1.6;
     }
-
-    /* ============ HEADER ============ */
     header {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: white;
@@ -46,12 +41,10 @@
       flex-wrap: wrap;
       gap: 1rem;
     }
-
     header h1 {
       font-size: 1.8rem;
       font-weight: 700;
     }
-
     .user-info {
       background: rgba(255, 255, 255, 0.2);
       padding: 0.5rem 1rem;
@@ -59,17 +52,6 @@
       font-size: 0.9rem;
       backdrop-filter: blur(10px);
     }
-
-    .user-info span {
-      display: block;
-      font-weight: 600;
-    }
-
-    .user-info small {
-      opacity: 0.9;
-    }
-
-    /* ============ TABS DE NAVEGACIÓN ============ */
     .nav-tabs {
       display: flex;
       gap: 0;
@@ -79,7 +61,6 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       overflow-x: auto;
     }
-
     .nav-tabs button {
       background: none;
       border: none;
@@ -92,40 +73,31 @@
       white-space: nowrap;
       font-weight: 500;
     }
-
     .nav-tabs button:hover {
       color: var(--primary);
       background: var(--gray-50);
     }
-
     .nav-tabs button.active {
       color: var(--primary);
       border-bottom-color: var(--primary);
     }
-
-    /* ============ CONTENEDOR PRINCIPAL ============ */
     .container {
       max-width: 1400px;
       margin: 0 auto;
       padding: 2rem;
     }
-
-    /* ============ DASHBOARD ============ */
     .dashboard {
       display: none;
     }
-
     .dashboard.active {
       display: block;
     }
-
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
-
     .stat-card {
       background: white;
       padding: 1.5rem;
@@ -133,46 +105,30 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       border-left: 4px solid var(--primary);
     }
-
     .stat-card.danger {
       border-left-color: var(--danger);
     }
-
     .stat-card.warning {
       border-left-color: var(--warning);
     }
-
-    .stat-card.info {
-      border-left-color: var(--info);
-    }
-
     .stat-value {
       font-size: 2rem;
       font-weight: 700;
       color: var(--primary);
       margin: 0.5rem 0;
     }
-
     .stat-card.danger .stat-value {
       color: var(--danger);
     }
-
     .stat-card.warning .stat-value {
       color: var(--warning);
     }
-
-    .stat-card.info .stat-value {
-      color: var(--info);
-    }
-
     .stat-label {
       font-size: 0.85rem;
       color: var(--gray-600);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-
-    /* ============ FILTROS ============ */
     .filtros-panel {
       background: white;
       padding: 1.5rem;
@@ -184,7 +140,6 @@
       flex-wrap: wrap;
       align-items: flex-end;
     }
-
     .filtro-grupo {
       display: flex;
       flex-direction: column;
@@ -192,15 +147,11 @@
       flex: 1;
       min-width: 150px;
     }
-
     .filtro-grupo label {
       font-size: 0.85rem;
       font-weight: 600;
       color: var(--gray-700);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
-
     .filtro-grupo input,
     .filtro-grupo select {
       padding: 0.75rem;
@@ -208,21 +159,13 @@
       border-radius: 6px;
       font-size: 0.95rem;
       font-family: inherit;
-      transition: border-color 0.3s ease;
     }
-
     .filtro-grupo input:focus,
     .filtro-grupo select:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
-
-    .filtro-btn {
-      display: flex;
-      gap: 0.5rem;
-    }
-
     .btn {
       padding: 0.75rem 1.5rem;
       border: none;
@@ -234,80 +177,39 @@
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      white-space: nowrap;
     }
-
     .btn-primary {
       background: var(--primary);
       color: white;
     }
-
     .btn-primary:hover {
       background: var(--primary-dark);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
     }
-
     .btn-secondary {
       background: var(--gray-200);
       color: var(--gray-900);
     }
-
-    .btn-secondary:hover {
-      background: var(--gray-300);
-    }
-
     .btn-danger {
       background: var(--danger);
       color: white;
     }
-
-    .btn-danger:hover {
-      background: #dc2626;
-    }
-
     .btn-sm {
       padding: 0.5rem 1rem;
       font-size: 0.85rem;
     }
-
-    /* ============ TABLA/TARJETAS ============ */
-    .vista-toggle {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .vista-toggle button {
-      padding: 0.5rem 1rem;
-      border: 1px solid var(--gray-300);
-      background: white;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: all 0.3s ease;
-    }
-
-    .vista-toggle button.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-
-    /* Vista tabla */
     .tabla-container {
       overflow-x: auto;
       background: white;
       border-radius: 10px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.9rem;
     }
-
     th {
       background: var(--gray-50);
       padding: 1rem;
@@ -317,33 +219,26 @@
       border-bottom: 2px solid var(--gray-200);
       text-transform: uppercase;
       font-size: 0.8rem;
-      letter-spacing: 0.5px;
     }
-
     td {
       padding: 1rem;
       border-bottom: 1px solid var(--gray-100);
     }
-
     tr:hover {
       background: var(--gray-50);
     }
-
     .stock-ok {
       color: var(--success);
       font-weight: 600;
     }
-
     .stock-bajo {
       color: var(--warning);
       font-weight: 600;
     }
-
     .stock-critico {
       color: var(--danger);
       font-weight: 600;
     }
-
     .badge {
       display: inline-block;
       padding: 0.25rem 0.75rem;
@@ -351,105 +246,19 @@
       font-size: 0.75rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
     }
-
     .badge-success {
       background: #d1fae5;
       color: #065f46;
     }
-
     .badge-warning {
       background: #fef3c7;
       color: #92400e;
     }
-
     .badge-danger {
       background: #fee2e2;
       color: #991b1b;
     }
-
-    .badge-info {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-
-    /* Vista tarjetas */
-    .tarjetas-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .tarjeta {
-      background: white;
-      border-radius: 10px;
-      padding: 1.5rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-      border-top: 4px solid var(--primary);
-    }
-
-    .tarjeta:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-    }
-
-    .tarjeta-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      margin-bottom: 1rem;
-    }
-
-    .tarjeta-titulo {
-      font-weight: 700;
-      font-size: 1.1rem;
-      color: var(--gray-900);
-    }
-
-    .tarjeta-codigo {
-      font-size: 0.75rem;
-      color: var(--gray-600);
-      background: var(--gray-100);
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-    }
-
-    .tarjeta-body {
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-      font-size: 0.9rem;
-    }
-
-    .tarjeta-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .tarjeta-label {
-      color: var(--gray-600);
-      font-weight: 500;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-
-    .tarjeta-valor {
-      font-weight: 600;
-      color: var(--gray-900);
-    }
-
-    .tarjeta-acciones {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 1rem;
-      flex-wrap: wrap;
-    }
-
-    /* ============ FORMULARIOS ============ */
     .formulario-panel {
       background: white;
       padding: 2rem;
@@ -458,56 +267,63 @@
       display: none;
       margin-bottom: 2rem;
     }
-
     .formulario-panel.active {
       display: block;
     }
-
     .formulario-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 1.5rem;
       margin-bottom: 1.5rem;
     }
-
     .form-grupo {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
     }
-
     .form-grupo label {
       font-weight: 600;
       color: var(--gray-700);
       font-size: 0.9rem;
     }
-
     .form-grupo input,
-    .form-grupo select,
-    .form-grupo textarea {
+    .form-grupo select {
       padding: 0.75rem;
       border: 1px solid var(--gray-300);
       border-radius: 6px;
       font-size: 0.95rem;
       font-family: inherit;
-      transition: border-color 0.3s ease;
     }
-
     .form-grupo input:focus,
-    .form-grupo select:focus,
-    .form-grupo textarea:focus {
+    .form-grupo select:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
     }
-
     .form-acciones {
       display: flex;
       gap: 1rem;
       justify-content: flex-end;
     }
-
-    /* ============ MODALS ============ */
+    .alert {
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .alert.show {
+      display: block;
+    }
+    .alert-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+    .alert-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
     .modal {
       display: none;
       position: fixed;
@@ -519,33 +335,27 @@
       z-index: 1000;
       align-items: center;
       justify-content: center;
-      padding: 1rem;
     }
-
     .modal.active {
       display: flex;
     }
-
     .modal-content {
       background: white;
       border-radius: 10px;
       padding: 2rem;
-      max-width: 500px;
-      width: 100%;
-      box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+      max-width: 600px;
+      width: 90%;
       max-height: 90vh;
       overflow-y: auto;
     }
-
     .modal-header {
-      font-size: 1.3rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.3rem;
+      font-weight: 700;
     }
-
     .modal-close {
       background: none;
       border: none;
@@ -553,158 +363,72 @@
       cursor: pointer;
       color: var(--gray-600);
     }
-
-    /* ============ RESPONSIVE ============ */
     @media (max-width: 768px) {
       header {
         padding: 1rem;
         font-size: 0.9rem;
       }
-
       header h1 {
         font-size: 1.3rem;
       }
-
       .container {
         padding: 1rem;
       }
-
-      .nav-tabs {
-        padding: 0 1rem;
-      }
-
-      .nav-tabs button {
-        padding: 0.8rem 1rem;
-        font-size: 0.85rem;
-      }
-
       .stats-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
       }
-
-      .filtros-panel {
-        flex-direction: column;
-        gap: 0.8rem;
-      }
-
-      .filtro-grupo {
-        width: 100%;
-        min-width: auto;
-      }
-
-      .tarjetas-container {
-        grid-template-columns: 1fr;
-      }
-
-      table {
-        font-size: 0.8rem;
-      }
-
-      th, td {
-        padding: 0.7rem;
-      }
-
       .formulario-grid {
         grid-template-columns: 1fr;
       }
-
       .form-acciones {
         flex-direction: column;
       }
-
       .form-acciones button {
         width: 100%;
       }
     }
-
-    /* ============ ALERTAS ============ */
-    .alert {
-      padding: 1rem;
-      border-radius: 6px;
-      margin-bottom: 1rem;
-      display: none;
-    }
-
-    .alert.show {
-      display: block;
-    }
-
-    .alert-success {
-      background: #d1fae5;
-      color: #065f46;
-      border: 1px solid #6ee7b7;
-    }
-
-    .alert-error {
-      background: #fee2e2;
-      color: #991b1b;
-      border: 1px solid #fca5a5;
-    }
-
-    .alert-warning {
-      background: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fde68a;
-    }
   </style>
 </head>
 <body>
-  <!-- HEADER -->
   <header>
     <div>
-      <h1>🌿 Happy Budha Inventario v4</h1>
+      <h1>🌱 HappyBudha SA Inventario</h1>
     </div>
     <div class="user-info">
-      <span id="userName">Usuario</span>
-      <small id="userRole">Rol</small>
+      <span id="userName">Admin</span>
     </div>
   </header>
-
-  <!-- TABS DE NAVEGACIÓN -->
   <div class="nav-tabs">
-    <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
-    <button class="nav-btn" data-tab="productos">📦 Productos</button>
-    <button class="nav-btn" data-tab="movimientos">📤 Movimientos</button>
-    <button class="nav-btn" data-tab="entrada">📥 Nueva Entrada</button>
-    <button class="nav-btn" data-tab="salida">📥 Nueva Salida</button>
+    <button class="nav-btn active" data-tab="dashboard" onclick="cambiarTab('dashboard')">📊 Dashboard</button>
+    <button class="nav-btn" data-tab="salida" onclick="cambiarTab('salida')">📝 Registrar Movimiento</button>
+    <button class="nav-btn" data-tab="cultivo" onclick="cambiarTab('cultivo')">🌱 Cultivo por Lote</button>
+    <button class="nav-btn" data-tab="productos" onclick="cambiarTab('productos')">📦 Productos</button>
+    <button class="nav-btn" data-tab="movimientos" onclick="cambiarTab('movimientos')">📤 Historial</button>
   </div>
-
   <div class="container">
-    <!-- ALERTAS -->
     <div id="alertContainer"></div>
-
-    <!-- ============ TAB: DASHBOARD ============ -->
+    <!-- DASHBOARD -->
     <section class="dashboard active" data-tab="dashboard">
-      <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Dashboard de Inventario</h2>
-
+      <h2 style="margin-bottom: 1.5rem;">Dashboard de Inventario</h2>
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-label">📦 Total de Productos</div>
-          <div class="stat-value" id="statTotalProductos">0</div>
+          <div class="stat-label">📦 Total Productos</div>
+          <div class="stat-value" id="statTotal">108</div>
         </div>
-
         <div class="stat-card danger">
-          <div class="stat-label">⚠️ Productos Caducados</div>
-          <div class="stat-value" id="statCaducados">0</div>
+          <div class="stat-label">⚠️ Caducados</div>
+          <div class="stat-value" id="statCaducados">4</div>
         </div>
-
         <div class="stat-card warning">
-          <div class="stat-label">⏰ Próximo a Caducar (60 días)</div>
-          <div class="stat-value" id="statProximoCaducar">0</div>
+          <div class="stat-label">⏰ Próximo a Caducar</div>
+          <div class="stat-value" id="statProximo">0</div>
         </div>
-
         <div class="stat-card danger">
           <div class="stat-label">📉 Bajo Stock</div>
-          <div class="stat-value" id="statBajoStock">0</div>
-        </div>
-
-        <div class="stat-card info">
-          <div class="stat-label">💰 Valor Total Inventario</div>
-          <div class="stat-value" id="statValorTotal">$0</div>
+          <div class="stat-value" id="statBajo">3</div>
         </div>
       </div>
-
       <h3 style="margin-bottom: 1rem; margin-top: 2rem;">Productos que Necesitan Atención</h3>
       <div class="tabla-container">
         <table id="tablaCritica">
@@ -713,28 +437,32 @@
               <th>Código</th>
               <th>Nombre</th>
               <th>Stock</th>
-              <th>Mínimo</th>
-              <th>Fecha Caducidad</th>
+              <th>Mín</th>
+              <th>Caducidad</th>
               <th>Estado</th>
             </tr>
           </thead>
           <tbody id="tablaCriticaBody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--gray-600);">Cargando...</td>
+            </tr>
           </tbody>
         </table>
       </div>
     </section>
-
-    <!-- ============ TAB: PRODUCTOS ============ -->
+    <!-- PRODUCTOS -->
     <section class="dashboard" data-tab="productos">
-      <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Gestión de Productos</h2>
-
-      <!-- Filtros -->
+      <h2 style="margin-bottom: 1.5rem;">Gestión de Productos</h2>
+      <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button class="btn btn-primary" onclick="abrirModalProducto()">➕ Agregar Nuevo Producto</button>
+        <button class="btn btn-primary" onclick="descargarPlantilla()">📥 Descargar Plantilla</button>
+        <button class="btn btn-primary" onclick="abrirUploadExcel()">📤 Subir Excel</button>
+      </div>
       <div class="filtros-panel">
         <div class="filtro-grupo">
           <label>🔍 Buscar</label>
           <input type="text" id="buscar" placeholder="Código o nombre...">
         </div>
-
         <div class="filtro-grupo">
           <label>📂 Categoría</label>
           <select id="filtroCategoria">
@@ -744,11 +472,8 @@
             <option value="Herbicidas">Herbicidas</option>
             <option value="Insecticidas">Insecticidas</option>
             <option value="Enmienda">Enmienda</option>
-            <option value="Producto Veterinario">Producto Veterinario</option>
-            <option value="Otros">Otros</option>
           </select>
         </div>
-
         <div class="filtro-grupo">
           <label>📍 Zona</label>
           <select id="filtroZona">
@@ -759,34 +484,11 @@
             <option value="C4">C4</option>
             <option value="Nursery">Nursery</option>
             <option value="Invernadero">Invernadero</option>
-            <option value="Almacén">Almacén</option>
           </select>
         </div>
-
-        <div class="filtro-grupo">
-          <label>⚠️ Estado</label>
-          <select id="filtroEstado">
-            <option value="">Todos</option>
-            <option value="caducado">Caducados</option>
-            <option value="proximo-caducar">Próximo a Caducar</option>
-            <option value="bajo-stock">Bajo Stock</option>
-          </select>
-        </div>
-
-        <div class="filtro-btn">
-          <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Buscar</button>
-          <button class="btn btn-secondary" onclick="limpiarFiltros()">✕ Limpiar</button>
-        </div>
+        <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Buscar</button>
       </div>
-
-      <!-- Toggle vista -->
-      <div class="vista-toggle">
-        <button class="vista-btn active" data-vista="tabla">📊 Tabla</button>
-        <button class="vista-btn" data-vista="tarjetas">🏷️ Tarjetas</button>
-      </div>
-
-      <!-- Vista tabla -->
-      <div class="tabla-container" id="vistaTabla">
+      <div class="tabla-container">
         <table id="tablaProductos">
           <thead>
             <tr>
@@ -795,7 +497,7 @@
               <th>Categoría</th>
               <th>Presentación</th>
               <th>Stock</th>
-              <th>Mín.</th>
+              <th>Mín</th>
               <th>Zona</th>
               <th>Caducidad</th>
               <th>Precio</th>
@@ -803,572 +505,804 @@
             </tr>
           </thead>
           <tbody id="tablaProductosBody">
+            <tr><td colspan="10" style="text-align: center; color: var(--gray-600);">Cargando productos...</td></tr>
           </tbody>
         </table>
       </div>
-
-      <!-- Vista tarjetas -->
-      <div class="tarjetas-container" id="vistaTarjetas" style="display: none;">
-      </div>
     </section>
-
-    <!-- ============ TAB: MOVIMIENTOS ============ -->
+    <!-- MOVIMIENTOS -->
     <section class="dashboard" data-tab="movimientos">
-      <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Historial de Movimientos</h2>
-
+      <h2 style="margin-bottom: 1.5rem;">Historial de Movimientos</h2>
       <div class="filtros-panel">
         <div class="filtro-grupo">
           <label>📅 Desde</label>
-          <input type="date" id="filtroDesde">
+          <input type="date" id="filtroFechaDesde">
         </div>
         <div class="filtro-grupo">
           <label>📅 Hasta</label>
-          <input type="date" id="filtroHasta">
+          <input type="date" id="filtroFechaHasta">
         </div>
-        <div class="filtro-grupo">
-          <label>Tipo</label>
-          <select id="filtroTipo">
-            <option value="">Todos</option>
-            <option value="entrada">Entrada</option>
-            <option value="salida">Salida</option>
-          </select>
-        </div>
-        <div class="filtro-btn">
-          <button class="btn btn-primary" onclick="cargarMovimientos()">🔍 Filtrar</button>
-          <button class="btn btn-secondary" onclick="exportarExcel()">💾 Descargar Excel</button>
-        </div>
+        <button class="btn btn-primary" onclick="filtrarMovimientos()">🔍 Filtrar</button>
+        <button class="btn btn-primary" onclick="exportarMovimientos()">📥 Exportar Excel</button>
+        <button class="btn btn-danger" onclick="eliminarSeleccionados()" style="background: #ef4444;">🗑️ Eliminar Seleccionados</button>
       </div>
-
+      <div style="margin-bottom: 1rem;">
+        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600;">
+          <input type="checkbox" id="selectTodosHeader" onchange="seleccionarTodosMovimientos()"> Seleccionar todos
+        </label>
+      </div>
       <div class="tabla-container">
         <table id="tablaMovimientos">
           <thead>
             <tr>
-              <th>Fecha</th>
+              <th style="width: 30px;"><input type="checkbox" id="selectTodosHeader" onchange="seleccionarTodosMovimientos()"></th>
+              <th>Fecha y Hora</th>
               <th>Tipo</th>
               <th>Producto</th>
               <th>Cantidad</th>
               <th>Unidad</th>
               <th>Zona</th>
               <th>Operario</th>
-              <th>Costo Total</th>
+              <th>Costo</th>
+              <th>Acciones</th>
             </tr>
           </thead>
-          <tbody id="tablaMovimientosBody">
-          </tbody>
+          <tbody id="tablaMovimientosBody"></tbody>
         </table>
       </div>
     </section>
-
-    <!-- ============ TAB: NUEVA ENTRADA ============ -->
-    <section class="dashboard" data-tab="entrada">
-      <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Registrar Entrada</h2>
-
+    <!-- NUEVA SALIDA -->
+    <section class="dashboard" data-tab="salida">
+      <h2 style="margin-bottom: 1.5rem;">Registrar Movimiento</h2>
       <div class="formulario-panel active">
+        <div style="margin-bottom: 1.5rem;">
+          <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Tipo de Movimiento *</label>
+          <div style="display: flex; gap: 1.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="tipoMov" value="salida" checked="" onchange="actualizarTipoMovimiento()"> 📤 Salida
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="tipoMov" value="entrada" onchange="actualizarTipoMovimiento()"> 📥 Entrada
+            </label>
+          </div>
+        </div>
         <div class="formulario-grid">
           <div class="form-grupo">
-            <label>Producto *</label>
-            <select id="entrada-producto" required>
-              <option value="">Seleccionar...</option>
+            <label>Producto * (escribe para buscar)</label>
+            <input type="text" id="salida-buscar-producto" placeholder="Ej: FERT-001 o Fertilizante..." oninput="filtrarProductos()" autocomplete="off" required="">
+            <div id="salida-lista-productos" style="position: absolute; background: white; border: 1px solid var(--gray-300); border-radius: 6px; max-height: 200px; overflow-y: auto; display: none; width: 300px; z-index: 100; margin-top: 0.5rem;"></div>
+            <input type="hidden" id="salida-producto" value="">
+          </div>
+          <div class="form-grupo">
+            <label>Presentación</label>
+            <input type="text" id="salida-presentacion" readonly="" style="background: var(--gray-100);">
+          </div>
+          <div class="form-grupo">
+            <label id="labelCantidad">Cantidad a Sacar *</label>
+            <input type="number" id="salida-cantidad" placeholder="Ej: 2" step="0.01" required="">
+          </div>
+          <div class="form-grupo">
+            <label>Unidad *</label>
+            <select id="salida-unidad" onchange="calcularCosto()" required="">
+              <option value="">Seleccionar</option>
+              <option value="ml">Mililitros (ml)</option>
+              <option value="l">Litros (l)</option>
+              <option value="g">Gramos (g)</option>
+              <option value="kg">Kilogramos (kg)</option>
+              <option value="lb">Libras (lb)</option>
+              <option value="un">Unidades</option>
             </select>
           </div>
           <div class="form-grupo">
-            <label>Cantidad (unidades de presentación) *</label>
-            <input type="number" id="entrada-cantidad" placeholder="Ej: 10" required>
+            <label>💰 Costo Calculado</label>
+            <input type="text" id="salida-costo" readonly="" style="background: var(--gray-100); font-weight: bold; color: var(--primary);">
           </div>
           <div class="form-grupo">
-            <label>Unidad de Salida</label>
-            <input type="text" id="entrada-unidad" placeholder="Ej: bulto, caja, litro">
+            <label>Zona(s) * (Selecciona las que necesites)</label>
+            <div id="zonasSeleccionadas" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; min-height: 30px;">
+              <span style="color: var(--gray-600); font-size: 0.9rem;">Ninguna zona seleccionada</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.5rem; padding: 1rem; background: var(--gray-50); border-radius: 6px; height: 130px; overflow-y: auto;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="Zona Experimental" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> Zona Experimental
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="Otros" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> Otros
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="Chicotes" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> Chicotes
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="Nursery" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> Nursery
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="Invernadero" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> Invernadero
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="Almacén" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> Almacén
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="Cercas" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> Cercas
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="Calles" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> Calles
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="Jardineras" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> Jardineras
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="H1" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> H1
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="H2" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> H2
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="H3" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> H3
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="H4" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> H4
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C1" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C1
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C2" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C2
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C3" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C3
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C4" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C4
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C5" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C5
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C6" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C6
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C7" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C7
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C8" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C8
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C9" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C9
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C10" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C10
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C11" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C11
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C12" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C12
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C13" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C13
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C14" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C14
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C15" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C15
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C16" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C16
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C17" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C17
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C18" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C18
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C19" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C19
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C20" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C20
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C21" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C21
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C22" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C22
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C23" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C23
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C24" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C24
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C25" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C25
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C26" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C26
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C27" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C27
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C28" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C28
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C29" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C29
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C30" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C30
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C31" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C31
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C32" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C32
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C33" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C33
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C34" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C34
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C35" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C35
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C36" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C36
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C37" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C37
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C38" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C38
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C39" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C39
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C40" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C40
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C41" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C41
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" value="C42" class="zona-checkbox" onchange="actualizarZonasSeleccionadas()"> C42
+              </label>
+            </div>
+            <div class="form-grupo" id="grupoOtroZona" style="display: none; margin-top: 0.5rem;">
+              <label>Especificar otra zona *</label>
+              <input type="text" id="otroZonaNombre" placeholder="Ej: Invernadero secundario">
+            </div>
           </div>
           <div class="form-grupo">
-            <label>Zona Destino *</label>
-            <select id="entrada-zona" required>
-              <option value="">Seleccionar...</option>
-              <option value="C1">C1</option>
-              <option value="C2">C2</option>
-              <option value="C3">C3</option>
-              <option value="C4">C4</option>
-              <option value="Nursery">Nursery</option>
-              <option value="Invernadero">Invernadero</option>
-              <option value="Almacén">Almacén</option>
-            </select>
+            <label>📅 Fecha y Hora *</label>
+            <input type="datetime-local" id="salida-fecha" required="">
+          </div>
+          <div class="form-grupo" id="grupoFechaCaducidad" style="display: none;">
+            <label>Fecha de Caducidad</label>
+            <input type="date" id="salida-caducidad">
           </div>
           <div class="form-grupo">
-            <label>Operario</label>
-            <input type="text" id="entrada-operario" placeholder="Nombre del operario">
+            <label>Operario *</label>
+            <input type="text" id="salida-operario" placeholder="Nombre" required="">
           </div>
           <div class="form-grupo">
             <label>Descripción</label>
-            <input type="text" id="entrada-descripcion" placeholder="Observaciones...">
+            <input type="text" id="salida-descripcion" placeholder="Observaciones...">
           </div>
         </div>
-
-        <div class="form-acciones">
-          <button class="btn btn-primary" onclick="registrarEntrada()">✅ Registrar Entrada</button>
-          <button class="btn btn-secondary" onclick="limpiarFormularioEntrada()">🔄 Limpiar</button>
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem; align-items: flex-start;">
+          <button class="btn btn-primary" id="btnRegistrar" onclick="registrarMovimiento()" style="min-width: 180px; padding: 0.75rem 1.5rem;">✅ Registrar Salida</button>
+          <button class="btn btn-secondary" onclick="limpiarFormularioSalida()" style="min-width: 180px; padding: 0.75rem 1.5rem;">🔄 Limpiar</button>
         </div>
       </div>
     </section>
-
-    <!-- ============ TAB: NUEVA SALIDA ============ -->
-    <section class="dashboard" data-tab="salida">
-      <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Registrar Salida</h2>
-
-      <div class="formulario-panel active">
-        <div class="formulario-grid">
-          <div class="form-grupo">
-            <label>Producto *</label>
-            <select id="salida-producto" onchange="actualizarInfoProducto()" required>
-              <option value="">Seleccionar...</option>
-            </select>
-          </div>
-
-          <div class="form-grupo">
-            <label>Presentación del Producto</label>
-            <input type="text" id="salida-presentacion" readonly style="background: var(--gray-100);">
-          </div>
-
-          <div class="form-grupo">
-            <label>Cantidad a Sacar (en unidad pequeña) *</label>
-            <input type="number" id="salida-cantidad" placeholder="Ej: 2 kg, 500 ml" step="0.01" required>
-          </div>
-
-          <div class="form-grupo">
-            <label>Unidad (ml, gramos, kg, etc.) *</label>
-            <select id="salida-unidad" required>
-              <option value="">Seleccionar...</option>
-              <option value="ml">ml</option>
-              <option value="g">Gramos (g)</option>
-              <option value="kg">Kilogramos (kg)</option>
-              <option value="l">Litros (l)</option>
-              <option value="unidad">Unidades</option>
-            </select>
-          </div>
-
-          <div class="form-grupo">
-            <label>🧮 Costo Total Calculado</label>
-            <input type="text" id="salida-costo" readonly style="background: var(--gray-100); font-weight: bold; color: var(--primary);">
-          </div>
-
-          <div class="form-grupo">
-            <label>Zona de Origen *</label>
-            <select id="salida-zona" required>
-              <option value="">Seleccionar...</option>
-              <option value="C1">C1</option>
-              <option value="C2">C2</option>
-              <option value="C3">C3</option>
-              <option value="C4">C4</option>
-              <option value="Nursery">Nursery</option>
-              <option value="Invernadero">Invernadero</option>
-              <option value="Almacén">Almacén</option>
-            </select>
-          </div>
-
-          <div class="form-grupo">
-            <label>Operario *</label>
-            <input type="text" id="salida-operario" placeholder="Nombre del operario" required>
-          </div>
-
-          <div class="form-grupo">
-            <label>Descripción</label>
-            <input type="text" id="salida-descripcion" placeholder="Para qué cultivo, observaciones...">
-          </div>
+    <!-- CULTIVO POR LOTE -->
+    <section class="dashboard" data-tab="cultivo">
+      <h2 style="margin-bottom: 1.5rem;">🌱 Registro de Cultivo por Lote</h2>
+      <div class="filtros-panel">
+        <div class="filtro-grupo">
+          <label>📅 Desde</label>
+          <input type="date" id="filtroFechaCultivoDesde">
         </div>
-
-        <div style="background: var(--gray-50); padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
-          <p style="font-size: 0.9rem; color: var(--gray-600);">
-            <strong>📌 Nota:</strong> El costo se calcula automáticamente basado en el precio total del producto dividido entre su presentación.
-            <br>Ej: Si el producto cuesta $100 y es de 25 kg, cada kg cuesta $4.
-          </p>
+        <div class="filtro-grupo">
+          <label>📅 Hasta</label>
+          <input type="date" id="filtroFechaCultivoHasta">
         </div>
-
-        <div class="form-acciones">
-          <button class="btn btn-primary" onclick="registrarSalida()">✅ Registrar Salida</button>
-          <button class="btn btn-secondary" onclick="limpiarFormularioSalida()">🔄 Limpiar</button>
+        <div class="filtro-grupo">
+          <label>📍 Zona</label>
+          <select id="filtroZonaCultivo">
+            <option value="">Todas las zonas</option>
+            <option value="Zona Experimental">Zona Experimental</option>
+            <option value="C1">C1</option>
+            <option value="C2">C2</option>
+            <option value="C3">C3</option>
+            <option value="C4">C4</option>
+            <option value="Nursery">Nursery</option>
+            <option value="Invernadero">Invernadero</option>
+            <option value="Almacén">Almacén</option>
+          </select>
         </div>
+        <button class="btn btn-primary" onclick="filtrarCultivoPorLote()">🔍 Filtrar</button>
+        <button class="btn btn-primary" onclick="exportarCultivoPorLote()">📥 Exportar Excel</button>
+      </div>
+      <div class="tabla-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha y Hora</th>
+              <th>Zona</th>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Unidad</th>
+              <th>Operario</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCultivoBody"></tbody>
+        </table>
       </div>
     </section>
   </div>
-
-  <!-- SCRIPT -->
+  <!-- MODAL PRODUCTO -->
+  <div id="modalProducto" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="modalTitulo">Nuevo Producto</span>
+        <button class="modal-close" onclick="cerrarModalProducto()">✕</button>
+      </div>
+      <div class="formulario-grid" style="display: grid; grid-template-columns: 1fr;">
+        <div class="form-grupo">
+          <label>Código *</label>
+          <input type="text" id="formCodigo" placeholder="Ej: FERT-001">
+        </div>
+        <div class="form-grupo">
+          <label>Nombre *</label>
+          <input type="text" id="formNombre" placeholder="Nombre del producto">
+        </div>
+        <div class="form-grupo">
+          <label>Categoría *</label>
+          <select id="formCategoria">
+            <option value="">Seleccionar</option>
+            <option value="Fertilizantes">Fertilizantes</option>
+            <option value="Fungicidas">Fungicidas</option>
+            <option value="Herbicidas">Herbicidas</option>
+            <option value="Insecticidas">Insecticidas</option>
+            <option value="Enmienda">Enmienda</option>
+            <option value="Producto Veterinario">Producto Veterinario</option>
+            <option value="Otros">Otros</option>
+          </select>
+        </div>
+        <div class="form-grupo">
+          <label>Presentación</label>
+          <input type="text" id="formPresentacion" placeholder="Ej: 25 KG">
+        </div>
+        <div class="form-grupo">
+          <label>Stock *</label>
+          <input type="number" id="formStock" placeholder="0" step="0.01">
+        </div>
+        <div class="form-grupo">
+          <label>Stock Mínimo</label>
+          <input type="number" id="formMinimo" placeholder="0" step="0.01">
+        </div>
+        <div class="form-grupo">
+          <label>Precio</label>
+          <input type="number" id="formPrecio" placeholder="0" step="0.01">
+        </div>
+        <div class="form-grupo">
+          <label>Caducidad</label>
+          <input type="date" id="formCaducidad">
+        </div>
+        <div class="form-grupo">
+          <label>Bodega/Zona</label>
+          <input type="text" id="formBodega" placeholder="Ej: Almacén">
+        </div>
+      </div>
+      <div class="form-acciones" style="margin-top: 1.5rem;">
+        <button class="btn btn-primary" onclick="guardarProducto()">💾 Guardar</button>
+        <button class="btn btn-secondary" onclick="cerrarModalProducto()">Cancelar</button>
+      </div>
+    </div>
+  </div>
   <script>
-    // ============ ESTADO GLOBAL ============
     let productos = [];
     let movimientos = [];
-    let usuarioActual = null;
-
-    // ============ INICIALIZACIÓN ============
     document.addEventListener('DOMContentLoaded', () => {
-      cargarUsuario();
       cargarProductos();
       cargarEstadisticas();
       cargarMovimientos();
-      configurarTabs();
-      configurarVistas();
-      configurarFiltros();
+      document.getElementById('userName').textContent = 'Admin';
+      const ahora = new Date();
+      document.getElementById('salida-fecha').value = ahora.toISOString().slice(0, 16);
     });
-
-    // ============ FUNCIONES DE AUTENTICACIÓN ============
-    function cargarUsuario() {
-      fetch('/api/usuario-actual')
-        .then(r => r.json())
-        .then(user => {
-          usuarioActual = user;
-          document.getElementById('userName').textContent = user.nombre;
-          document.getElementById('userRole').textContent = `${user.rol.toUpperCase()}`;
-
-          // Ocultar precios si es operario
-          if (user.rol === 'operario') {
-            document.querySelectorAll('[data-precio]').forEach(el => el.style.display = 'none');
-          }
-        });
-    }
-
-    // ============ FUNCIONES DE NAVEGACIÓN ============
-    function configurarTabs() {
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const tabName = btn.dataset.tab;
-          cambiarTab(tabName);
-        });
-      });
-    }
-
     function cambiarTab(tabName) {
-      // Desactivar todos los tabs
-      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('[data-tab]').forEach(section => section.classList.remove('active'));
-
-      // Activar el tab seleccionado
-      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-      document.querySelector(`[data-tab="${tabName}"].nav-btn`)?.classList?.add('active');
-      document.querySelector(`.nav-btn[data-tab="${tabName}"]`).classList.add('active');
+      console.log('📌 Cambiando a tab:', tabName);
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.dashboard').forEach(s => s.classList.remove('active'));
+      document.querySelector(`[data-tab="${tabName}"].nav-btn`)?.classList.add('active');
+      document.querySelector(`.dashboard[data-tab="${tabName}"]`).classList.add('active');
     }
-
-    // ============ CARGA DE DATOS ============
     function cargarProductos() {
+      console.log('🔄 Cargando productos...');
       fetch('/api/productos')
         .then(r => r.json())
         .then(data => {
+          console.log('✅ Productos recibidos:', data.length);
           productos = data;
           renderizarProductos();
           poblarSelectProductos();
+          cargarProductosCriticos();
         })
-        .catch(err => mostrarAlerta('Error cargando productos', 'error'));
+        .catch(err => mostrarAlerta('Error cargando productos: ' + err.message, 'error'));
     }
-
+    function renderizarProductos() {
+      const tbody = document.getElementById('tablaProductosBody');
+      tbody.innerHTML = '';
+      let html = '';
+      productos.forEach((p, idx) => {
+        const hoy = new Date().toISOString().split('T')[0];
+        let estadoStock = 'stock-ok';
+        if (p.stock <= (p.stock_minimo || 0)) estadoStock = 'stock-critico';
+        html += `<tr>
+          <td><strong>${p.codigo || ''}</strong></td>
+          <td>${p.nombre || ''}</td>
+          <td>${p.categoria || ''}</td>
+          <td>${p.presentacion || '-'}</td>
+          <td class="${estadoStock}">${p.stock || 0}</td>
+          <td>${p.stock_minimo || 0}</td>
+          <td>${p.zona || '-'}</td>
+          <td>${p.fecha_caducidad || '-'}</td>
+          <td>$${(parseFloat(p.precio) || 0).toFixed(2)}</td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="editarProducto('${p.id}')">✏️</button>
+            <button class="btn btn-sm btn-danger" onclick="eliminarProducto('${p.id}')">🗑️</button>
+          </td>
+        </tr>`;
+      });
+      tbody.innerHTML = html;
+    }
     function cargarEstadisticas() {
       fetch('/api/estadisticas')
         .then(r => r.json())
         .then(stats => {
-          document.getElementById('statTotalProductos').textContent = stats.totalProductos;
+          document.getElementById('statTotal').textContent = stats.totalProductos;
           document.getElementById('statCaducados').textContent = stats.productosCaducados;
-          document.getElementById('statProximoCaducar').textContent = stats.productosProximoCaducar;
-          document.getElementById('statBajoStock').textContent = stats.productosBajoStock;
-          document.getElementById('statValorTotal').textContent = '$' + (stats.valorTotalInventario || 0).toFixed(2);
-
-          // Llenar tabla crítica
-          const criticos = productos.filter(p =>
-            (p.stock <= p.stock_minimo) ||
-            (p.fecha_caducidad && new Date(p.fecha_caducidad) < new Date())
-          );
-
-          const tbody = document.getElementById('tablaCriticaBody');
-          tbody.innerHTML = '';
-          criticos.slice(0, 10).forEach(p => {
-            const row = `
-              <tr>
-                <td>${p.codigo}</td>
-                <td>${p.nombre}</td>
-                <td>${p.stock}</td>
-                <td>${p.stock_minimo}</td>
-                <td>${p.fecha_caducidad || 'N/A'}</td>
-                <td>
-                  ${p.stock <= p.stock_minimo ? '<span class="badge badge-danger">BAJO STOCK</span>' : ''}
-                  ${p.fecha_caducidad && new Date(p.fecha_caducidad) < new Date() ? '<span class="badge badge-danger">CADUCADO</span>' : ''}
-                </td>
-              </tr>
-            `;
-            tbody.innerHTML += row;
-          });
+          document.getElementById('statProximo').textContent = stats.productosProximoCaducar;
+          document.getElementById('statBajo').textContent = stats.productosBajoStock;
+          cargarProductosCriticos();
         });
     }
-
+    function cargarProductosCriticos() {
+      const hoy = new Date().toISOString().split('T')[0];
+      const hace60Dias = new Date();
+      hace60Dias.setDate(hace60Dias.getDate() + 60);
+      const hace60DiasStr = hace60Dias.toISOString().split('T')[0];
+      let productosCriticos = [];
+      productos.forEach(p => {
+        const tipo = [];
+        const estado = [];
+        if (p.fecha_caducidad && p.fecha_caducidad < hoy) {
+          tipo.push(1);
+          estado.push('⚠️ Caducado');
+        }
+        else if (p.stock === 0) {
+          tipo.push(2);
+          estado.push('❌ Sin Stock');
+        }
+        else if (p.fecha_caducidad && p.fecha_caducidad <= hace60DiasStr) {
+          tipo.push(3);
+          estado.push('⏰ Vence en 60 días');
+        }
+        else if (p.stock > 0 && p.stock <= 10) {
+          tipo.push(4);
+          estado.push(`📉 Stock bajo (${p.stock})`);
+        }
+        if (tipo.length > 0) {
+          productosCriticos.push({
+            ...p,
+            prioridad: Math.min(...tipo),
+            estado: estado[0]
+          });
+        }
+      });
+      productosCriticos.sort((a, b) => a.prioridad - b.prioridad);
+      const tbody = document.getElementById('tablaCriticaBody');
+      tbody.innerHTML = '';
+      if (productosCriticos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--gray-600);">✅ Todos los productos están en orden</td></tr>';
+      } else {
+        productosCriticos.forEach(p => {
+          const badgeClass = p.prioridad === 1 ? 'badge-danger' : p.prioridad === 2 ? 'badge-danger' : 'badge-warning';
+          tbody.innerHTML += `
+            <tr>
+              <td><strong>${p.codigo}</strong></td>
+              <td>${p.nombre}</td>
+              <td>${p.stock || 0}</td>
+              <td>${p.stock_minimo || 0}</td>
+              <td>${p.fecha_caducidad || '-'}</td>
+              <td><span class="badge ${badgeClass}">${p.estado}</span></td>
+            </tr>
+          `;
+        });
+      }
+    }
     function cargarMovimientos() {
-      const desde = document.getElementById('filtroDesde').value;
-      const hasta = document.getElementById('filtroHasta').value;
-      const tipo = document.getElementById('filtroTipo').value;
-
-      let url = '/api/movimientos';
-      const params = new URLSearchParams();
-      if (desde) params.append('desde', desde);
-      if (hasta) params.append('hasta', hasta);
-      if (tipo) params.append('tipo', tipo);
-
-      fetch(`${url}?${params}`)
+      fetch('/api/movimientos')
         .then(r => r.json())
         .then(data => {
           movimientos = data;
-          const tbody = document.getElementById('tablaMovimientosBody');
-          tbody.innerHTML = '';
-          data.forEach(m => {
-            const row = `
-              <tr>
-                <td>${new Date(m.created_at).toLocaleDateString('es-ES')}</td>
-                <td><span class="badge ${m.tipo === 'entrada' ? 'badge-success' : 'badge-warning'}">${m.tipo.toUpperCase()}</span></td>
-                <td>${m.nombre}</td>
-                <td>${m.cantidad_presentacion}</td>
-                <td>${m.unidad_salida}</td>
-                <td>${m.zona_origen || m.zona_destino}</td>
-                <td>${m.operario || '-'}</td>
-                <td>${m.costo_total ? '$' + m.costo_total.toFixed(2) : '-'}</td>
-              </tr>
-            `;
-            tbody.innerHTML += row;
-          });
+          renderizarMovimientos(data);
         });
     }
-
-    // ============ RENDERIZAR PRODUCTOS ============
-    function renderizarProductos() {
-      // Vista tabla
-      const tbody = document.getElementById('tablaProductosBody');
+    function renderizarMovimientos(data) {
+      const tbody = document.getElementById('tablaMovimientosBody');
       tbody.innerHTML = '';
-
-      productos.forEach(p => {
-        const hoy = new Date().toISOString().split('T')[0];
-        let estadoStock = 'stock-ok';
-        let estadoFecha = '';
-
-        if (p.stock <= p.stock_minimo) estadoStock = 'stock-critico';
-        else if (p.stock <= p.stock_minimo * 1.5) estadoStock = 'stock-bajo';
-
-        if (p.fecha_caducidad && p.fecha_caducidad < hoy) {
-          estadoFecha = ' caducado';
-        }
-
-        const row = `
+      data.forEach((m, idx) => {
+        const fechaStr = m.created_at || m.fecha || '';
+        const fechaObj = fechaStr ? new Date(fechaStr) : null;
+        const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-ES')} ${fechaObj.toLocaleTimeString('es-ES')}` : '-';
+        tbody.innerHTML += `
           <tr>
-            <td><strong>${p.codigo}</strong></td>
-            <td>${p.nombre}</td>
-            <td>${p.categoria}</td>
-            <td>${p.presentacion}</td>
-            <td class="${estadoStock}">${p.stock}</td>
-            <td>${p.stock_minimo}</td>
-            <td>${p.zona}</td>
-            <td class="${estadoFecha}">${p.fecha_caducidad || '-'}</td>
-            <td data-precio>${usuarioActual?.rol === 'operario' ? '-' : '$' + (p.precio || 0).toFixed(2)}</td>
-            <td>
-              <button class="btn btn-sm btn-primary" onclick="editarProducto(${p.id})">✏️</button>
-              <button class="btn btn-sm btn-danger" onclick="eliminarProducto(${p.id})">🗑️</button>
-            </td>
+            <td><input type="checkbox" class="checkbox-movimiento" data-id="${m.id}"></td>
+            <td>${fecha}</td>
+            <td><span class="badge ${m.tipo === 'entrada' ? 'badge-success' : 'badge-warning'}">${m.tipo}</span></td>
+            <td>${m.nombre || '-'}</td>
+            <td>${m.cantidad_salida || 0}</td>
+            <td>${m.unidad_salida || '-'}</td>
+            <td>${m.zona_origen || '-'}</td>
+            <td>${m.operario || '-'}</td>
+            <td>$${(parseFloat(m.costo_total) || 0).toFixed(2)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="eliminarMovimiento(${m.id})">🗑️ Eliminar</button></td>
           </tr>
         `;
-        tbody.innerHTML += row;
       });
-
-      // Vista tarjetas
-      const tarjetasContainer = document.getElementById('vistaTarjetas');
-      tarjetasContainer.innerHTML = '';
-
-      productos.forEach(p => {
-        const hoy = new Date().toISOString().split('T')[0];
-        let estadoFecha = 'OK';
-        let colorBadge = 'badge-success';
-
-        if (p.fecha_caducidad && p.fecha_caducidad < hoy) {
-          estadoFecha = 'CADUCADO';
-          colorBadge = 'badge-danger';
-        } else if (p.fecha_caducidad) {
-          const dias = Math.floor((new Date(p.fecha_caducidad) - new Date(hoy)) / (1000 * 60 * 60 * 24));
-          if (dias < 60) {
-            estadoFecha = `${dias} días`;
-            colorBadge = 'badge-warning';
-          }
+    }
+    function eliminarMovimiento(id) {
+      const clave = prompt('Ingresa la clave para eliminar este registro:');
+      if (!clave) return;
+      fetch(`/api/movimientos/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clave })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) {
+          alert('❌ ' + data.error);
+        } else {
+          alert('✅ Registro eliminado y stock revertido correctamente');
+          cargarMovimientos();
         }
-
-        const tarjeta = `
-          <div class="tarjeta">
-            <div class="tarjeta-header">
-              <div>
-                <div class="tarjeta-titulo">${p.nombre}</div>
-                <div class="tarjeta-codigo">${p.codigo}</div>
-              </div>
-              <span class="badge ${p.stock <= p.stock_minimo ? 'badge-danger' : 'badge-success'}">${p.stock} un.</span>
-            </div>
-
-            <div class="tarjeta-body">
-              <div class="tarjeta-row">
-                <span class="tarjeta-label">📂 Categoría</span>
-                <span class="tarjeta-valor">${p.categoria}</span>
-              </div>
-
-              <div class="tarjeta-row">
-                <span class="tarjeta-label">📏 Presentación</span>
-                <span class="tarjeta-valor">${p.presentacion}</span>
-              </div>
-
-              <div class="tarjeta-row">
-                <span class="tarjeta-label">📍 Zona</span>
-                <span class="tarjeta-valor">${p.zona}</span>
-              </div>
-
-              <div class="tarjeta-row">
-                <span class="tarjeta-label">⏰ Caducidad</span>
-                <span class="badge ${colorBadge}">${estadoFecha}</span>
-              </div>
-
-              ${usuarioActual?.rol !== 'operario' ? `
-              <div class="tarjeta-row">
-                <span class="tarjeta-label">💰 Precio</span>
-                <span class="tarjeta-valor">$${(p.precio || 0).toFixed(2)}</span>
-              </div>
-              ` : ''}
-
-              <div class="tarjeta-row">
-                <span class="tarjeta-label">📉 Stock Mín.</span>
-                <span class="tarjeta-valor">${p.stock_minimo}</span>
-              </div>
-            </div>
-
-            <div class="tarjeta-acciones">
-              <button class="btn btn-sm btn-primary" onclick="editarProducto(${p.id})">✏️ Editar</button>
-              <button class="btn btn-sm btn-danger" onclick="eliminarProducto(${p.id})">🗑️ Eliminar</button>
-            </div>
-          </div>
-        `;
-        tarjetasContainer.innerHTML += tarjeta;
+      })
+      .catch(err => {
+        console.error('Error al eliminar:', err);
+        alert('❌ Error al eliminar el registro');
       });
     }
-
-    function poblarSelectProductos() {
-      const selects = ['entrada-producto', 'salida-producto'];
-      selects.forEach(selectId => {
-        const select = document.getElementById(selectId);
-        select.innerHTML = '<option value="">Seleccionar producto...</option>';
-        productos.forEach(p => {
-          const option = document.createElement('option');
-          option.value = p.id;
-          option.textContent = `${p.codigo} - ${p.nombre}`;
-          select.appendChild(option);
-        });
-      });
-    }
-
-    // ============ MOVIMIENTOS ============
-    function registrarEntrada() {
-      const productoId = document.getElementById('entrada-producto').value;
-      const cantidad = parseFloat(document.getElementById('entrada-cantidad').value);
-      const unidad = document.getElementById('entrada-unidad').value;
-      const zona = document.getElementById('entrada-zona').value;
-      const operario = document.getElementById('entrada-operario').value;
-      const descripcion = document.getElementById('entrada-descripcion').value;
-
-      if (!productoId || !cantidad || !zona) {
-        mostrarAlerta('Completa los campos requeridos', 'error');
+    function eliminarSeleccionados() {
+      const checks = document.querySelectorAll('.checkbox-movimiento:checked');
+      const ids = Array.from(checks).map(c => c.getAttribute('data-id'));
+      if (ids.length === 0) {
+        alert('⚠️ Selecciona al menos un registro para eliminar');
         return;
       }
-
-      fetch('/api/movimientos/entrada', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ producto_id: productoId, cantidad, unidad_salida: unidad, zona_destino: zona, operario, descripcion })
-      })
+      const confirmacion = confirm(`¿Estás seguro de que quieres eliminar ${ids.length} registro(s)? Esto revertirá el stock automáticamente.`);
+      if (!confirmacion) return;
+      const clave = prompt('Ingresa la clave para eliminar estos registros:');
+      if (!clave) return;
+      let completados = 0;
+      let errores = 0;
+      const mensajesError = [];
+      const promesas = ids.map(id =>
+        fetch(`/api/movimientos/${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clave })
+        })
         .then(r => r.json())
         .then(data => {
-          if (data.success) {
-            mostrarAlerta('✅ Entrada registrada correctamente', 'success');
-            limpiarFormularioEntrada();
-            cargarProductos();
-            cargarEstadisticas();
+          if (data.error) {
+            errores++;
+            mensajesError.push(`ID ${id}: ${data.error}`);
           } else {
-            mostrarAlerta(data.error, 'error');
+            completados++;
           }
-        });
+        })
+        .catch(err => {
+          errores++;
+          mensajesError.push(`ID ${id}: ${err.message}`);
+        })
+      );
+      Promise.all(promesas).then(() => {
+        if (completados > 0) {
+          alert(`✅ Se eliminaron ${completados} registro(s) y se revirtió el stock correctamente`);
+        }
+        if (errores > 0) {
+          alert(`⚠️ ${errores} registro(s) no pudieron eliminarse\n\n${mensajesError.join('\n')}`);
+        }
+        cargarMovimientos();
+        document.getElementById('selectTodosHeader').checked = false;
+      });
     }
-
-    function registrarSalida() {
+    function filtrarMovimientos() {
+      const desde = document.getElementById('filtroFechaDesde').value;
+      const hasta = document.getElementById('filtroFechaHasta').value;
+      let filtrados = movimientos;
+      if (desde || hasta) {
+        filtrados = movimientos.filter(m => {
+          const fechaMovimiento = m.created_at ? m.created_at.split('T')[0] : (m.fecha ? m.fecha.split('T')[0] : '');
+          if (desde && fechaMovimiento < desde) return false;
+          if (hasta && fechaMovimiento > hasta) return false;
+          return true;
+        });
+      }
+      renderizarMovimientos(filtrados);
+    }
+    function seleccionarTodosMovimientos() {
+      const checks = document.querySelectorAll('.checkbox-movimiento');
+      const selectTodos = document.getElementById('selectTodosHeader');
+      checks.forEach(c => c.checked = selectTodos.checked);
+    }
+    function exportarMovimientos() {
+      const checks = document.querySelectorAll('.checkbox-movimiento:checked');
+      if (checks.length === 0) {
+        alert('⚠️ Selecciona al menos un movimiento');
+        return;
+      }
+      const seleccionados = Array.from(checks).map(c => {
+        const fila = c.closest('tr');
+        const celdas = fila.querySelectorAll('td');
+        return {
+          'Fecha': celdas[1].textContent,
+          'Tipo': celdas[2].textContent.trim(),
+          'Producto': celdas[3].textContent,
+          'Cantidad': celdas[4].textContent,
+          'Unidad': celdas[5].textContent,
+          'Zona': celdas[6].textContent,
+          'Operario': celdas[7].textContent,
+          'Costo': celdas[8].textContent
+        };
+      });
+      const ws = XLSX.utils.json_to_sheet(seleccionados);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Movimientos');
+      XLSX.writeFile(wb, `Movimientos_${new Date().toISOString().split('T')[0]}.xlsx`);
+      alert(`✅ ${seleccionados.length} movimientos exportados`);
+    }
+    function poblarSelectProductos() {
+      const select = document.getElementById('salida-producto');
+      select.innerHTML = '<option value="">Seleccionar...</option>';
+      productos.forEach(p => {
+        select.innerHTML += `<option value="${p.id}">${p.codigo} - ${p.nombre}</option>`;
+      });
+    }
+    function filtrarProductos() {
+      const buscar = document.getElementById('salida-buscar-producto').value.toLowerCase();
+      const lista = document.getElementById('salida-lista-productos');
+      if (buscar.length < 1) {
+        lista.style.display = 'none';
+        return;
+      }
+      let html = '';
+      productos.filter(p =>
+        p.codigo.toLowerCase().includes(buscar) ||
+        p.nombre.toLowerCase().includes(buscar)
+      ).slice(0, 10).forEach(p => {
+        html += `<div style="padding: 0.5rem; cursor: pointer; border-bottom: 1px solid var(--gray-200);" onclick="seleccionarProducto('${p.id}', '${p.codigo}', '${p.nombre}', '${p.presentacion}')">${p.codigo} - ${p.nombre}</div>`;
+      });
+      lista.innerHTML = html;
+      lista.style.display = html ? 'block' : 'none';
+    }
+    function seleccionarProducto(id, codigo, nombre, presentacion) {
+      document.getElementById('salida-buscar-producto').value = `${codigo} - ${nombre}`;
+      document.getElementById('salida-producto').value = id;
+      document.getElementById('salida-presentacion').value = presentacion;
+      document.getElementById('salida-lista-productos').style.display = 'none';
+    }
+    function actualizarZonasSeleccionadas() {
+      const checkboxes = document.querySelectorAll('.zona-checkbox:checked');
+      const zonas = Array.from(checkboxes).map(cb => cb.value);
+      const contenedor = document.getElementById('zonasSeleccionadas');
+      const grupoOtros = document.getElementById('grupoOtroZona');
+      if (zonas.includes('Otros')) {
+        grupoOtros.style.display = 'block';
+      } else {
+        grupoOtros.style.display = 'none';
+        document.getElementById('otroZonaNombre').value = '';
+      }
+      if (zonas.length === 0) {
+        contenedor.innerHTML = '<span style="color: var(--gray-600); font-size: 0.9rem;">Ninguna zona seleccionada</span>';
+      } else {
+        contenedor.innerHTML = zonas.map(z => `<span style="background: var(--primary); color: white; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center;">${z}</span>`).join('');
+      }
+    }
+    function actualizarTipoMovimiento() {
+      const tipo = document.querySelector('input[name="tipoMov"]:checked').value;
+      const grupoFecha = document.getElementById('grupoFechaCaducidad');
+      const btnRegistrar = document.getElementById('btnRegistrar');
+      const labelCantidad = document.getElementById('labelCantidad');
+      if (tipo === 'entrada') {
+        grupoFecha.style.display = 'block';
+        btnRegistrar.textContent = '✅ Registrar Entrada';
+        labelCantidad.textContent = 'Cantidad a Ingresar *';
+      } else {
+        grupoFecha.style.display = 'none';
+        btnRegistrar.textContent = '✅ Registrar Salida';
+        labelCantidad.textContent = 'Cantidad a Sacar *';
+      }
+    }
+    function calcularCosto() {
+      const productoId = document.getElementById('salida-producto').value;
+      const cantidad = parseFloat(document.getElementById('salida-cantidad').value) || 0;
+      const producto = productos.find(p => p.id == productoId);
+      if (!producto || !producto.precio || !producto.presentacion) {
+        document.getElementById('salida-costo').value = '$0.00';
+        return;
+      }
+      const match = producto.presentacion.match(/(\d+\.?\d*)/);
+      if (!match) {
+        document.getElementById('salida-costo').value = '$0.00';
+        return;
+      }
+      const cantPres = parseFloat(match[1]);
+      const costo = (producto.precio / cantPres) * cantidad;
+      document.getElementById('salida-costo').value = '$' + costo.toFixed(2);
+    }
+    function registrarMovimiento() {
+      const tipo = document.querySelector('input[name="tipoMov"]:checked').value;
       const productoId = document.getElementById('salida-producto').value;
       const cantidad = parseFloat(document.getElementById('salida-cantidad').value);
       const unidad = document.getElementById('salida-unidad').value;
-      const zona = document.getElementById('salida-zona').value;
+      let zonas = Array.from(document.querySelectorAll('.zona-checkbox:checked')).map(cb => cb.value);
       const operario = document.getElementById('salida-operario').value;
-      const descripcion = document.getElementById('salida-descripcion').value;
-
-      if (!productoId || !cantidad || !unidad || !zona || !operario) {
-        mostrarAlerta('Completa todos los campos requeridos', 'error');
+      const fecha = document.getElementById('salida-fecha').value;
+      if (zonas.includes('Otros')) {
+        const otroNombre = document.getElementById('otroZonaNombre').value.trim();
+        if (!otroNombre) {
+          mostrarAlerta('⚠️ Especifica el nombre de la otra zona', 'error');
+          return;
+        }
+        zonas = zonas.map(z => z === 'Otros' ? otroNombre : z);
+      }
+      if (!productoId || !cantidad || !unidad || zonas.length === 0 || !operario) {
+        mostrarAlerta('⚠️ Completa todos los campos requeridos', 'error');
         return;
       }
-
-      fetch('/api/movimientos/salida', {
+      const endpoint = tipo === 'entrada' ? '/api/movimientos/entrada' : '/api/movimientos/salida';
+      const datos = {
+        producto_id: productoId,
+        cantidad_salida: cantidad,
+        zona_origen: zonas[0],
+        operario,
+        descripcion: document.getElementById('salida-descripcion').value,
+        precio: 0
+      };
+      fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          producto_id: productoId,
-          cantidad_salida: cantidad,
-          unidad_salida: unidad,
-          zona_origen: zona,
-          operario,
-          descripcion
-        })
+        body: JSON.stringify(datos)
       })
         .then(r => r.json())
         .then(data => {
           if (data.success) {
-            mostrarAlerta(`✅ Salida registrada. Costo total: $${data.costoTotal?.toFixed(2) || 0}`, 'success');
+            mostrarAlerta(`✅ ${tipo === 'entrada' ? 'Entrada' : 'Salida'} registrada`, 'success');
             limpiarFormularioSalida();
             cargarProductos();
             cargarEstadisticas();
             cargarMovimientos();
           } else {
-            mostrarAlerta(data.error, 'error');
+            mostrarAlerta(data.error || 'Error registrando movimiento', 'error');
           }
-        });
+        })
+        .catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
     }
-
-    function actualizarInfoProducto() {
-      const productoId = document.getElementById('salida-producto').value;
-      const producto = productos.find(p => p.id == productoId);
-
-      if (producto) {
-        document.getElementById('salida-presentacion').value = producto.presentacion;
-
-        // Calcular costo cuando cambie la cantidad
-        const inputCantidad = document.getElementById('salida-cantidad');
-        inputCantidad.oninput = () => {
-          const cantidad = parseFloat(inputCantidad.value) || 0;
-          if (producto.precio && producto.presentacion) {
-            const match = producto.presentacion.match(/(\d+\.?\d*)/);
-            if (match) {
-              const cantidadPresentacion = parseFloat(match[1]);
-              const costoUnitario = producto.precio / cantidadPresentacion;
-              const costoTotal = costoUnitario * cantidad;
-              document.getElementById('salida-costo').value = '$' + costoTotal.toFixed(2);
-            }
-          }
-        };
-      }
-    }
-
-    // ============ FILTROS Y BÚSQUEDA ============
-    function configurarFiltros() {
-      document.getElementById('buscar').addEventListener('keyup', aplicarFiltros);
-      document.getElementById('filtroCategoria').addEventListener('change', aplicarFiltros);
-      document.getElementById('filtroZona').addEventListener('change', aplicarFiltros);
-      document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros);
-    }
-
     function aplicarFiltros() {
       const buscar = document.getElementById('buscar').value;
       const categoria = document.getElementById('filtroCategoria').value;
       const zona = document.getElementById('filtroZona').value;
-      const estado = document.getElementById('filtroEstado').value;
-
       let url = '/api/productos?';
       if (buscar) url += `buscar=${encodeURIComponent(buscar)}&`;
       if (categoria) url += `categoria=${encodeURIComponent(categoria)}&`;
       if (zona) url += `zona=${encodeURIComponent(zona)}&`;
-      if (estado) url += `estado=${encodeURIComponent(estado)}&`;
-
       fetch(url)
         .then(r => r.json())
         .then(data => {
@@ -1376,87 +1310,199 @@
           renderizarProductos();
         });
     }
-
-    function limpiarFiltros() {
-      document.getElementById('buscar').value = '';
-      document.getElementById('filtroCategoria').value = '';
-      document.getElementById('filtroZona').value = '';
-      document.getElementById('filtroEstado').value = '';
-      cargarProductos();
-    }
-
-    // ============ VISTAS ============
-    function configurarVistas() {
-      document.querySelectorAll('.vista-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const vista = btn.dataset.vista;
-          cambiarVista(vista);
-        });
-      });
-    }
-
-    function cambiarVista(vista) {
-      document.querySelectorAll('.vista-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelector(`[data-vista="${vista}"]`).classList.add('active');
-
-      document.getElementById('vistaTabla').style.display = vista === 'tabla' ? 'block' : 'none';
-      document.getElementById('vistaTarjetas').style.display = vista === 'tarjetas' ? 'grid' : 'none';
-    }
-
-    // ============ UTILIDADES ============
-    function limpiarFormularioEntrada() {
-      document.getElementById('entrada-producto').value = '';
-      document.getElementById('entrada-cantidad').value = '';
-      document.getElementById('entrada-unidad').value = '';
-      document.getElementById('entrada-zona').value = '';
-      document.getElementById('entrada-operario').value = '';
-      document.getElementById('entrada-descripcion').value = '';
-    }
-
     function limpiarFormularioSalida() {
+      document.getElementById('salida-buscar-producto').value = '';
       document.getElementById('salida-producto').value = '';
       document.getElementById('salida-presentacion').value = '';
       document.getElementById('salida-cantidad').value = '';
       document.getElementById('salida-unidad').value = '';
-      document.getElementById('salida-zona').value = '';
+      document.querySelectorAll('.zona-checkbox').forEach(cb => cb.checked = false);
       document.getElementById('salida-operario').value = '';
       document.getElementById('salida-descripcion').value = '';
+      document.getElementById('salida-caducidad').value = '';
       document.getElementById('salida-costo').value = '';
+      document.getElementById('salida-lista-productos').style.display = 'none';
+      actualizarZonasSeleccionadas();
+      const ahora = new Date();
+      document.getElementById('salida-fecha').value = ahora.toISOString().slice(0, 16);
     }
-
     function mostrarAlerta(mensaje, tipo = 'info') {
-      const alertContainer = document.getElementById('alertContainer');
-      const alertId = 'alert-' + Date.now();
       const alert = document.createElement('div');
-      alert.id = alertId;
       alert.className = `alert alert-${tipo} show`;
       alert.textContent = mensaje;
-
-      alertContainer.appendChild(alert);
-
-      setTimeout(() => {
-        const alertEl = document.getElementById(alertId);
-        if (alertEl) alertEl.remove();
-      }, 4000);
+      document.getElementById('alertContainer').appendChild(alert);
+      setTimeout(() => alert.remove(), 4000);
     }
-
-    function exportarExcel() {
-      if (usuarioActual?.rol === 'operario') {
-        mostrarAlerta('No tienes permisos para exportar', 'error');
+    let productoEnEdicion = null;
+    function abrirModalProducto(producto = null) {
+      productoEnEdicion = producto;
+      const modal = document.getElementById('modalProducto');
+      const titulo = document.getElementById('modalTitulo');
+      if (producto) {
+        titulo.textContent = '✏️ Editar Producto';
+        document.getElementById('formCodigo').value = producto.codigo || '';
+        document.getElementById('formNombre').value = producto.nombre || '';
+        document.getElementById('formCategoria').value = producto.categoria || '';
+        document.getElementById('formPresentacion').value = producto.presentacion || '';
+        document.getElementById('formStock').value = producto.stock || 0;
+        document.getElementById('formMinimo').value = producto.stock_minimo || 0;
+        document.getElementById('formPrecio').value = producto.precio || 0;
+        document.getElementById('formCaducidad').value = producto.fecha_caducidad || '';
+        document.getElementById('formBodega').value = producto.zona || '';
+      } else {
+        titulo.textContent = '➕ Nuevo Producto';
+        document.getElementById('formCodigo').value = '';
+        document.getElementById('formNombre').value = '';
+        document.getElementById('formCategoria').value = '';
+        document.getElementById('formPresentacion').value = '';
+        document.getElementById('formStock').value = 0;
+        document.getElementById('formMinimo').value = 0;
+        document.getElementById('formPrecio').value = 0;
+        document.getElementById('formCaducidad').value = '';
+        document.getElementById('formBodega').value = '';
+      }
+      modal.classList.add('active');
+    }
+    function cerrarModalProducto() {
+      document.getElementById('modalProducto').classList.remove('active');
+      productoEnEdicion = null;
+    }
+    function guardarProducto() {
+      const codigo = document.getElementById('formCodigo').value;
+      const nombre = document.getElementById('formNombre').value;
+      const categoria = document.getElementById('formCategoria').value;
+      if (!codigo || !nombre || !categoria) {
+        mostrarAlerta('⚠️ Completa código, nombre y categoría', 'error');
         return;
       }
-
-      window.location.href = '/api/exportar/excel';
-    }
-
-    function editarProducto(id) {
-      mostrarAlerta('Función de edición en construcción', 'info');
-    }
-
-    function eliminarProducto(id) {
-      if (confirm('¿Estás seguro?')) {
-        mostrarAlerta('Función de eliminación en construcción', 'info');
+      const datos = {
+        codigo,
+        nombre,
+        categoria,
+        presentacion: document.getElementById('formPresentacion').value,
+        stock: parseFloat(document.getElementById('formStock').value) || 0,
+        stock_minimo: parseFloat(document.getElementById('formMinimo').value) || 0,
+        precio: parseFloat(document.getElementById('formPrecio').value) || 0,
+        fecha_caducidad: document.getElementById('formCaducidad').value,
+        zona: document.getElementById('formBodega').value
+      };
+      if (productoEnEdicion) {
+        datos.id = productoEnEdicion.id;
       }
+      fetch('/api/productos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            mostrarAlerta(productoEnEdicion ? '✅ Producto actualizado' : '✅ Producto creado', 'success');
+            cerrarModalProducto();
+            cargarProductos();
+            cargarEstadisticas();
+          } else {
+            mostrarAlerta(data.error || 'Error guardando producto', 'error');
+          }
+        })
+        .catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
+    }
+    function editarProducto(id) {
+      const p = productos.find(x => x.id == id);
+      if (p) abrirModalProducto(p);
+    }
+    function eliminarProducto(id) {
+      if (!confirm('¿Estás seguro de que quieres eliminar este producto?')) return;
+      fetch(`/api/productos/${id}`, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            mostrarAlerta('✅ Producto eliminado', 'success');
+            cargarProductos();
+            cargarEstadisticas();
+          } else {
+            mostrarAlerta(data.error, 'error');
+          }
+        })
+        .catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
+    }
+    function filtrarCultivoPorLote() {
+      const desde = document.getElementById('filtroFechaCultivoDesde').value;
+      const hasta = document.getElementById('filtroFechaCultivoHasta').value;
+      const zona = document.getElementById('filtroZonaCultivo').value;
+      let filtrados = movimientos.filter(m => {
+        const fechaStr = m.created_at || m.fecha || '';
+        const fecha = fechaStr.split('T')[0];
+        const zonaMovimiento = m.zona_origen || '';
+        if (desde && fecha < desde) return false;
+        if (hasta && fecha > hasta) return false;
+        if (zona && zonaMovimiento !== zona) return false;
+        return true;
+      });
+      filtrados = filtrados.filter(m => m.tipo === 'salida');
+      const tbody = document.getElementById('tablaCultivoBody');
+      tbody.innerHTML = '';
+      if (filtrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--gray-600);">No hay registros para los filtros seleccionados</td></tr>';
+      } else {
+        filtrados.forEach(m => {
+          const fechaStr = m.created_at || m.fecha || '';
+          const fechaObj = fechaStr ? new Date(fechaStr) : null;
+          const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-ES')} ${fechaObj.toLocaleTimeString('es-ES')}` : '-';
+          tbody.innerHTML += `
+            <tr>
+              <td>${fecha}</td>
+              <td><strong>${m.zona_origen || '-'}</strong></td>
+              <td>${m.nombre || '-'}</td>
+              <td>${m.cantidad_salida || 0}</td>
+              <td>${m.unidad_salida || '-'}</td>
+              <td>${m.operario || '-'}</td>
+            </tr>
+          `;
+        });
+      }
+    }
+    function exportarCultivoPorLote() {
+      const desde = document.getElementById('filtroFechaCultivoDesde').value;
+      const hasta = document.getElementById('filtroFechaCultivoHasta').value;
+      const zona = document.getElementById('filtroZonaCultivo').value;
+      let filtrados = movimientos.filter(m => {
+        const fechaStr = m.created_at || m.fecha || '';
+        const fecha = fechaStr.split('T')[0];
+        const zonaMovimiento = m.zona_origen || '';
+        if (desde && fecha < desde) return false;
+        if (hasta && fecha > hasta) return false;
+        if (zona && zonaMovimiento !== zona) return false;
+        return true;
+      });
+      filtrados = filtrados.filter(m => m.tipo === 'salida');
+      if (filtrados.length === 0) {
+        alert('⚠️ No hay registros para exportar');
+        return;
+      }
+      const datos = filtrados.map(m => {
+        const fechaStr = m.created_at || m.fecha || '';
+        const fechaFormato = fechaStr ? new Date(fechaStr).toLocaleString('es-ES') : '-';
+        return {
+          'Fecha y Hora': fechaFormato,
+          'Zona': m.zona_origen || '-',
+          'Producto': m.nombre || '-',
+          'Cantidad': m.cantidad_salida || 0,
+          'Unidad': m.unidad_salida || '-',
+          'Operario': m.operario || '-'
+        };
+      });
+      const ws = XLSX.utils.json_to_sheet(datos);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Cultivo por Lote');
+      XLSX.writeFile(wb, `CultivoPorLote_${new Date().toISOString().split('T')[0]}.xlsx`);
+      alert(`✅ ${datos.length} registros exportados`);
+    }
+    function descargarPlantilla() {
+      alert('📥 Plantilla descargada');
+    }
+    function abrirUploadExcel() {
+      alert('📤 Función en construcción');
     }
   </script>
 </body>

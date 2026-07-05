@@ -294,24 +294,69 @@ app.get('/api/movimientos', (req, res) => {
     params.push(tipo);
   }
   if (desde) {
-    query += " AND m.created_at >= datetime(?)";
+    query += " AND m.id >= ?";
     params.push(desde);
   }
   if (hasta) {
-    query += " AND m.created_at <= datetime(?)";
+    query += " AND m.id <= ?";
     params.push(hasta);
   }
 
-  query += ' ORDER BY m.created_at DESC LIMIT 500';
+  query += ' ORDER BY m.id DESC LIMIT 500';
 
   db.all(query, params, (err, rows) => {
-    if (err) res.status(500).json({ error: err.message });
-    else {
+    if (err) {
+      console.error('Error en GET /api/movimientos:', err);
+      res.status(500).json({ error: err.message });
+    } else {
       if (usuarioActual.rol === 'operario') {
         rows = rows.map(r => ({ ...r, precio: null, costo_unitario: null, costo_total: null }));
       }
       res.json(rows);
     }
+  });
+});
+
+// Eliminar movimiento (con reversión de stock)
+app.delete('/api/movimientos/:id', (req, res) => {
+  const { clave } = req.body;
+  const movimientoId = req.params.id;
+
+  // Validación simple de clave
+  if (clave !== 'admin123') {
+    return res.status(403).json({ error: 'Clave incorrecta' });
+  }
+
+  db.get('SELECT * FROM movimientos WHERE id = ?', [movimientoId], (err, movimiento) => {
+    if (err || !movimiento) {
+      return res.status(404).json({ error: 'Movimiento no encontrado' });
+    }
+
+    // Obtener producto para revertir stock
+    db.get('SELECT * FROM productos WHERE id = ?', [movimiento.producto_id], (err, producto) => {
+      if (err || !producto) {
+        return res.status(404).json({ error: 'Producto no encontrado' });
+      }
+
+      // Revertir stock según el tipo de movimiento
+      let nuevoStock = producto.stock;
+      if (movimiento.tipo === 'salida') {
+        nuevoStock = producto.stock + movimiento.cantidad_salida;
+      } else if (movimiento.tipo === 'entrada') {
+        nuevoStock = producto.stock - movimiento.cantidad_presentacion;
+      }
+
+      // Actualizar stock
+      db.run('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, movimiento.producto_id], (err) => {
+        if (err) return res.status(500).json({ error: 'Error actualizando stock: ' + err.message });
+
+        // Eliminar movimiento
+        db.run('DELETE FROM movimientos WHERE id = ?', [movimientoId], (err) => {
+          if (err) return res.status(500).json({ error: 'Error eliminando movimiento: ' + err.message });
+          res.json({ success: true, mensaje: 'Movimiento eliminado y stock revertido' });
+        });
+      });
+    });
   });
 });
 
