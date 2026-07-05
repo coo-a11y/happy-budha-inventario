@@ -822,11 +822,16 @@ app.post('/api/productos', async (req, res) => {
       // Crear movimiento de entrada automático si hay stock
       if (stock > 0) {
         try {
+          let costoTotal = 0;
+          if (precio) {
+            const cantidadPres = presentacion ? parseInt(presentacion) : 1;
+            costoTotal = (precio / cantidadPres) * stock;
+          }
           const movQuery = usePostgres
-            ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
-            : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-          await executeQuery(movQuery, [lastId, 'entrada', stock, presentacion || 'und', zona || 'Almacén', 'Sistema', `Importación desde Excel - ${nombre}`, new Date().toISOString()]);
-          console.log('📥 Movimiento de entrada creado');
+            ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, costo_total, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+            : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, costo_total, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+          await executeQuery(movQuery, [lastId, 'entrada', stock, presentacion || 'und', zona || 'Almacén', 'Sistema', `Importación desde Excel - ${nombre}`, costoTotal, new Date().toISOString()]);
+          console.log('📥 Movimiento de entrada creado con costo:', costoTotal);
         } catch (err) {
           console.log('⚠️ No se pudo crear movimiento:', err.message);
         }

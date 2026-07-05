@@ -1255,15 +1255,17 @@
         const fechaStr = m.created_at || m.fecha || '';
         const fechaObj = fechaStr ? new Date(fechaStr) : null;
         const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-ES')} ${fechaObj.toLocaleTimeString('es-ES')}` : '-';
+        const cantidad = m.tipo === 'entrada' ? (m.cantidad_presentacion || 0) : (m.cantidad_salida || 0);
+        const zona = m.tipo === 'entrada' ? (m.zona_destino || '-') : (m.zona_origen || '-');
         tbody.innerHTML += `
           <tr>
             <td><input type="checkbox" class="checkbox-movimiento" data-id="${m.id}"></td>
             <td>${fecha}</td>
             <td><span class="badge ${m.tipo === 'entrada' ? 'badge-success' : 'badge-warning'}">${m.tipo}</span></td>
             <td>${m.nombre || '-'}</td>
-            <td>${m.cantidad_salida || 0}</td>
+            <td>${cantidad}</td>
             <td>${m.unidad_salida || '-'}</td>
-            <td>${m.zona_origen || '-'}</td>
+            <td>${zona}</td>
             <td>${m.operario || '-'}</td>
             <td>$${(parseFloat(m.costo_total) || 0).toFixed(2)}</td>
             <td><button class="btn btn-danger btn-sm" onclick="eliminarMovimiento(${m.id})">🗑️ Eliminar</button></td>
