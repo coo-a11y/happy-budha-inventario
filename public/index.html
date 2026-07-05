@@ -1540,12 +1540,20 @@
         setTimeout(() => filtrarCultivoPorLote(), 500);
         return;
       }
-      const desde = document.getElementById('filtroFechaCultivoDesde').value;
-      const hasta = document.getElementById('filtroFechaCultivoHasta').value;
+      let desde = document.getElementById('filtroFechaCultivoDesde').value;
+      let hasta = document.getElementById('filtroFechaCultivoHasta').value;
       const zona = document.getElementById('filtroZonaCultivo').value;
+      
+      // Si no hay filtro de fecha, usar hoy
+      const hoy = new Date().toISOString().split('T')[0];
+      if (!desde && !hasta) {
+        desde = hoy;
+        hasta = hoy;
+      }
+      
       let filtrados = movimientos.filter(m => {
         const fechaStr = m.created_at || m.fecha || '';
-        const fecha = fechaStr ? fechaStr.split('T')[0] : '';
+        const fecha = fechaStr ? fechaStr.split('T')[0].split(' ')[0] : '';
         const zonaMovimiento = m.zona_origen || '';
         if (desde && fecha < desde) return false;
         if (hasta && fecha > hasta) return false;
@@ -1576,6 +1584,7 @@
       }
       console.log(`🌱 Filtrados ${filtrados.length} movimientos de cultivo`);
     }
+
     function exportarCultivoPorLote() {
       const desde = document.getElementById('filtroFechaCultivoDesde').value;
       const hasta = document.getElementById('filtroFechaCultivoHasta').value;

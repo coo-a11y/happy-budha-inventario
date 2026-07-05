@@ -44,9 +44,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`);
 
-      // 2. Dropear y recrear tabla movimientos SIEMPRE
-      db.run('DROP TABLE IF EXISTS movimientos');
-      db.run(`CREATE TABLE movimientos (
+      // 2. Crear tabla movimientos si no existe
+      db.run(`CREATE TABLE IF NOT EXISTS movimientos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         producto_id INTEGER,
         tipo TEXT,
