@@ -809,11 +809,14 @@ app.post('/api/productos', async (req, res) => {
     } else {
       // Crear
       console.log('📝 Creando producto:', { codigo, nombre });
+      const query = usePostgres
+        ? `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, contifico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+        : `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, contifico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
       const result = await executeQuery(
-        `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, contifico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        query,
         [codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, contifico_id]
       );
-      const lastId = usePostgres ? result.rows[0].id : result.lastID;
+      const lastId = usePostgres ? result.rows[0]?.id : result.lastID;
       console.log('✅ Producto creado con ID:', lastId);
       if (!usePostgres) db.saveData();
       res.json({ success: true, id: lastId });
