@@ -851,9 +851,7 @@ app.post('/api/movimientos/salida', async (req, res) => {
     await executeQuery('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id]);
 
     const movResult = await executeQuery(
-      `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida,
-       zona_origen, operario, costo_unitario, costo_total, descripcion)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [producto_id, 'salida', stockActual, cantidadSalida, unidad_salida, zona_origen, operario, costoUnitario, costoTotal, descripcion]
     );
 
