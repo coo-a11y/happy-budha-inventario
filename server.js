@@ -866,35 +866,36 @@ app.post('/api/movimientos/salida', async (req, res) => {
 app.get('/api/movimientos', async (req, res) => {
   try {
     const { producto_id, tipo, desde, hasta } = req.query;
-    let query = `
-      SELECT m.*, p.nombre, p.codigo
-      FROM movimientos m
-      JOIN productos p ON m.producto_id = p.id
-      WHERE 1=1
-    `;
+    let query = `SELECT * FROM movimientos WHERE 1=1`;
     let params = [];
 
     if (producto_id) {
-      query += usePostgres ? ` AND m.producto_id = ?` : ` AND m.producto_id = ?`;
+      query += ` AND producto_id = ?`;
       params.push(producto_id);
     }
     if (tipo) {
-      query += usePostgres ? ` AND m.tipo = ?` : ` AND m.tipo = ?`;
+      query += ` AND tipo = ?`;
       params.push(tipo);
     }
-    if (desde) {
-      query += usePostgres ? ` AND m.id >= ?` : ` AND m.id >= ?`;
-      params.push(desde);
-    }
-    if (hasta) {
-      query += usePostgres ? ` AND m.id <= ?` : ` AND m.id <= ?`;
-      params.push(hasta);
-    }
 
-    query += ' ORDER BY m.id DESC LIMIT 500';
+    query += ' ORDER BY id DESC LIMIT 500';
 
     const result = await executeQuery(query, params);
     let rows = result.rows;
+
+    // Obtener todos los productos para mapear nombres
+    const productosResult = await executeQuery('SELECT id, nombre, codigo FROM productos');
+    const productosMap = {};
+    productosResult.rows.forEach(p => {
+      productosMap[p.id] = p;
+    });
+
+    // Agregar nombre y código a cada movimiento
+    rows = rows.map(r => ({
+      ...r,
+      nombre: productosMap[r.producto_id]?.nombre || '-',
+      codigo: productosMap[r.producto_id]?.codigo || '-'
+    }));
 
     if (usuarioActual.rol === 'operario') {
       rows = rows.map(r => ({ ...r, precio: null, costo_unitario: null, costo_total: null }));
