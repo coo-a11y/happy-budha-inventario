@@ -1019,6 +1019,12 @@ app.delete('/api/movimientos/:id', async (req, res) => {
     // Eliminar movimiento
     await executeQuery('DELETE FROM movimientos WHERE id = ?', [movimientoId]);
 
+    // Si el producto queda con stock 0 (después de revertir), eliminarlo completamente
+    if (nuevoStock <= 0) {
+      await executeQuery('DELETE FROM productos WHERE id = ?', [movimiento.producto_id]);
+      console.log('🗑️ Producto eliminado porque quedó con stock 0');
+    }
+
     res.json({ success: true, mensaje: 'Movimiento eliminado y stock revertido' });
   } catch (err) {
     console.error('Error en DELETE /api/movimientos/:id:', err);
