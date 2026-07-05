@@ -751,12 +751,8 @@ app.post('/api/productos', async (req, res) => {
       // Actualizar
       const updateTime = usePostgres ? 'CURRENT_TIMESTAMP' : 'CURRENT_TIMESTAMP';
       const query = usePostgres
-        ? `UPDATE productos SET codigo=?, nombre=?, categoria=?, presentacion=?, stock=?,
-           stock_minimo=?, precio=?, fecha_caducidad=?, zona=?, contifico_id=?, updated_at=${updateTime}
-           WHERE id=?`
-        : `UPDATE productos SET codigo=?, nombre=?, categoria=?, presentacion=?, stock=?,
-           stock_minimo=?, precio=?, fecha_caducidad=?, zona=?, contifico_id=?, updated_at=CURRENT_TIMESTAMP
-           WHERE id=?`;
+        ? `UPDATE productos SET codigo=?, nombre=?, categoria=?, presentacion=?, stock=?, stock_minimo=?, precio=?, fecha_caducidad=?, zona=?, contifico_id=?, updated_at=${updateTime} WHERE id=?`
+        : `UPDATE productos SET codigo=?, nombre=?, categoria=?, presentacion=?, stock=?, stock_minimo=?, precio=?, fecha_caducidad=?, zona=?, contifico_id=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`;
       await executeQuery(query, [codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, contifico_id, req.body.id]);
       res.json({ success: true, id: req.body.id });
     } else {
@@ -1062,6 +1058,50 @@ app.get('/api/exportar/excel', async (req, res) => {
     }
   } catch (err) {
     console.error('Error en GET /api/exportar/excel:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============ IMPORTAR DESDE EXCEL ============
+app.post('/api/importar/excel', async (req, res) => {
+  try {
+    const { productos } = req.body;
+    if (!Array.isArray(productos)) {
+      return res.status(400).json({ error: 'Se esperaba un array de productos' });
+    }
+
+    let agregados = 0;
+    for (const p of productos) {
+      // Validar que tenga al menos código y nombre
+      if (!p.codigo || !p.nombre) continue;
+
+      const nuevoProducto = {
+        codigo: p.codigo,
+        nombre: p.nombre,
+        categoria: p.categoria || 'Sin categoría',
+        presentacion: p.presentacion || '',
+        stock: parseFloat(p.stock) || 0,
+        stock_minimo: parseFloat(p.stock_minimo) || 5,
+        precio: parseFloat(p.precio) || 0,
+        fecha_caducidad: p.fecha_caducidad || '',
+        bodega: p.bodega || 'Almacén',
+        zona: p.zona || 'C1',
+        id: require('crypto').randomBytes(6).toString('hex')
+      };
+
+      await executeQuery(
+        `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, bodega, zona, id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [nuevoProducto.codigo, nuevoProducto.nombre, nuevoProducto.categoria, nuevoProducto.presentacion,
+         nuevoProducto.stock, nuevoProducto.stock_minimo, nuevoProducto.precio, nuevoProducto.fecha_caducidad,
+         nuevoProducto.bodega, nuevoProducto.zona, nuevoProducto.id]
+      );
+      agregados++;
+    }
+
+    res.json({ success: true, agregados });
+  } catch (err) {
+    console.error('Error en POST /api/importar/excel:', err);
     res.status(500).json({ error: err.message });
   }
 });
