@@ -796,9 +796,8 @@ app.post('/api/movimientos/entrada', async (req, res) => {
     await executeQuery('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id]);
 
     const movResult = await executeQuery(
-      `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [producto_id, 'entrada', cantidad, unidad_salida, zona_destino, operario, descripcion]
+      `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [producto_id, 'entrada', cantidad, unidad_salida, zona_destino, operario, descripcion, new Date().toISOString()]
     );
 
     const movId = usePostgres ? movResult.rows[0].id : movResult.lastID;
@@ -851,8 +850,8 @@ app.post('/api/movimientos/salida', async (req, res) => {
     await executeQuery('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id]);
 
     const movResult = await executeQuery(
-      `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [producto_id, 'salida', stockActual, cantidadSalida, unidad_salida, zona_origen, operario, costoUnitario, costoTotal, descripcion]
+      `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [producto_id, 'salida', stockActual, cantidadSalida, unidad_salida, zona_origen, operario, costoUnitario, costoTotal, descripcion, new Date().toISOString()]
     );
 
     const movId = usePostgres ? movResult.rows[0].id : movResult.lastID;
