@@ -551,7 +551,7 @@ const initializeDatabase = async () => {
         descripcion TEXT,
         contifico_kardex_id TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(producto_id) REFERENCES productos(id)
+        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE CASCADE
       )`);
     } else {
       await executeQuery(`CREATE TABLE IF NOT EXISTS movimientos (
@@ -569,7 +569,7 @@ const initializeDatabase = async () => {
         descripcion TEXT,
         contifico_kardex_id TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(producto_id) REFERENCES productos(id)
+        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE CASCADE
       )`);
     }
     console.log('✅ Tabla movimientos lista');
@@ -604,7 +604,7 @@ const initializeDatabase = async () => {
         unidad_presentacion TEXT,
         unidad_salida TEXT,
         factor REAL,
-        FOREIGN KEY(producto_id) REFERENCES productos(id)
+        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE CASCADE
       )`);
     } else {
       await executeQuery(`CREATE TABLE IF NOT EXISTS conversiones (
@@ -613,7 +613,7 @@ const initializeDatabase = async () => {
         unidad_presentacion TEXT,
         unidad_salida TEXT,
         factor REAL,
-        FOREIGN KEY(producto_id) REFERENCES productos(id)
+        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE CASCADE
       )`);
     }
     console.log('✅ Tabla conversiones lista');
