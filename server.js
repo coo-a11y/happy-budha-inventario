@@ -818,6 +818,20 @@ app.post('/api/productos', async (req, res) => {
       const result = await executeQuery(query, params);
       const lastId = usePostgres ? result.rows[0]?.id : result.lastID;
       console.log('✅ Producto creado con ID:', lastId);
+      
+      // Crear movimiento de entrada automático si hay stock
+      if (stock > 0) {
+        try {
+          const movQuery = usePostgres
+            ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+            : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+          await executeQuery(movQuery, [lastId, 'entrada', stock, presentacion || 'und', zona || 'Almacén', 'Sistema', `Importación desde Excel - ${nombre}`, new Date().toISOString()]);
+          console.log('📥 Movimiento de entrada creado');
+        } catch (err) {
+          console.log('⚠️ No se pudo crear movimiento:', err.message);
+        }
+      }
+      
       if (!usePostgres) db.saveData();
       res.json({ success: true, id: lastId });
     }
