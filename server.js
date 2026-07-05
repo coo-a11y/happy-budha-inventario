@@ -823,10 +823,14 @@ app.post('/api/productos', async (req, res) => {
       if (stock > 0) {
         try {
           let costoTotal = 0;
-          if (precio) {
-            const cantidadPres = presentacion ? parseInt(presentacion) : 1;
-            costoTotal = (precio / cantidadPres) * stock;
+          if (precio && precio > 0) {
+            // Extraer número de presentación (ej: "25 KG" -> 25)
+            const match = presentacion?.match(/(\d+\.?\d*)/);
+            const cantidadPres = match ? parseFloat(match[1]) : 1;
+            const costoUnitario = precio / cantidadPres;
+            costoTotal = costoUnitario * stock;
           }
+          console.log('💰 Costo calculado:', { precio, presentacion, costoTotal });
           const movQuery = usePostgres
             ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, costo_total, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
             : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, costo_total, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
