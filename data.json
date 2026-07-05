@@ -1,0 +1,18 @@
+{
+  "productos": {
+    "rows": [],
+    "nextId": 1
+  },
+  "movimientos": {
+    "rows": [],
+    "nextId": 1
+  },
+  "usuarios": {
+    "rows": [],
+    "nextId": 1
+  },
+  "conversiones": {
+    "rows": [],
+    "nextId": 1
+  }
+}

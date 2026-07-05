@@ -1185,6 +1185,8 @@
         } else {
           alert('✅ Registro eliminado y stock revertido correctamente');
           cargarMovimientos();
+          cargarProductos();
+          cargarEstadisticas();
         }
       })
       .catch(err => {
