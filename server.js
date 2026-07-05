@@ -505,6 +505,7 @@ const initializeDatabase = async () => {
         stock_minimo REAL,
         precio REAL,
         fecha_caducidad TEXT,
+        bodega TEXT,
         zona TEXT,
         contifico_id TEXT,
         tipo_producto TEXT,
