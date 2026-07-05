@@ -450,7 +450,9 @@ if (usePostgres) {
 // Normaliza queries para PostgreSQL o LocalDB
 function normalizeQuery(query) {
   if (usePostgres) {
-    return query; // PostgreSQL usa $1, $2, etc
+    // Convertir ? a $1, $2, etc para PostgreSQL
+    let paramIndex = 1;
+    return query.replace(/\?/g, () => `$${paramIndex++}`);
   } else {
     // LocalDB usa ? para placeholders
     return query.replace(/\$\d+/g, '?');
