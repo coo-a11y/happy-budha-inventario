@@ -764,6 +764,7 @@ app.post('/api/productos', async (req, res) => {
       );
       const lastId = usePostgres ? result.rows[0].id : result.lastID;
       console.log('✅ Producto creado con ID:', lastId);
+      if (!usePostgres) db.saveData();
       res.json({ success: true, id: lastId });
     }
   } catch (err) {
