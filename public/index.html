@@ -1025,7 +1025,22 @@
       document.getElementById('userName').textContent = 'Admin';
       const ahora = new Date();
       document.getElementById('salida-fecha').value = ahora.toISOString().slice(0, 16);
+      iniciarPolling();
     });
+
+    // Polling automático cada 10 segundos
+    function iniciarPolling() {
+      setInterval(() => {
+        // No hace polling si hay una modal abierta
+        const modalAbiera = document.querySelector('.modal[style*="display: block"]');
+        if (modalAbiera) return;
+
+        console.log('🔄 Actualizando datos automáticamente...');
+        cargarProductos();
+        cargarMovimientos();
+        cargarEstadisticas();
+      }, 10000); // Cada 10 segundos
+    }
     function cambiarTab(tabName) {
       console.log('📌 Cambiando a tab:', tabName);
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
