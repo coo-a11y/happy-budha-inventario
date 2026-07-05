@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
 // ============ WRAPPER DE BD EN MEMORIA + JSON ============
 // LocalDB: almacena datos en memoria durante sesión y persiste en data.json
 class LocalDB {
-  constructor(dataFile = './data.json') {
+  constructor(dataFile = process.env.NODE_ENV === 'production' ? '/tmp/data.json' : './data.json') {
     this.dataFile = dataFile;
     this.data = {};
     this.loadData();
