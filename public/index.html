@@ -1858,8 +1858,12 @@
 
             Promise.all(promesas).then(() => {
               mostrarAlerta(`✅ ${importados} producto(s) importado(s). ${errores} error(es).`, 'success');
-              cargarProductos();
-              cargarEstadisticas();
+              // Recargar inmediatamente
+              setTimeout(() => {
+                cargarProductos();
+                cargarEstadisticas();
+                cambiarTab('productos');
+              }, 500);
             });
           } catch(err) {
             mostrarAlerta('❌ Error leyendo Excel: ' + err.message, 'error');
