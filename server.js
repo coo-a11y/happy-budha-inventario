@@ -616,6 +616,15 @@ const initializeDatabase = async () => {
     }
     console.log('✅ Tabla conversiones lista');
 
+    // Agregar columnas faltantes si es PostgreSQL
+    if (usePostgres) {
+      try {
+        await pool.query('ALTER TABLE productos ADD COLUMN bodega TEXT');
+      } catch (err) {
+        // Columna ya existe, ignorar
+      }
+    }
+
     // Migrar datos de data.json a PostgreSQL si está vacía
     if (usePostgres) {
       try {
