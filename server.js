@@ -813,6 +813,7 @@ app.post('/api/movimientos/entrada', async (req, res) => {
 app.post('/api/movimientos/salida', async (req, res) => {
   try {
     const { producto_id, cantidad_salida, unidad_salida, zona_origen, operario, descripcion } = req.body;
+    console.log('📝 Movimiento salida recibido:', { producto_id, cantidad_salida, unidad_salida, zona_origen });
 
     const result = await executeQuery('SELECT * FROM productos WHERE id = ?', [producto_id]);
     const producto = result.rows[0];
