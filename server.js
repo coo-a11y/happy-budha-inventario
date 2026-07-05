@@ -41,7 +41,9 @@ class LocalDB {
 
   saveData() {
     try {
+      console.log('💾 Guardando data.json...');
       fs.writeFileSync(this.dataFile, JSON.stringify(this.data, null, 2), 'utf8');
+      console.log('✅ data.json guardado');
     } catch (err) {
       console.warn('⚠️ Advertencia: no se pudo guardar data.json:', err.message);
       console.warn('ℹ️ Los datos se mantienen en memoria durante esta sesión');
@@ -243,6 +245,7 @@ class LocalDB {
     }
 
     this.data[tableName].rows.push(row);
+    console.log(`📝 [INSERT ${tableName}] Nueva fila agregada. Total: ${this.data[tableName].rows.length}`);
     this.saveData();
 
     return { lastID: row.id, changes: 1 };
