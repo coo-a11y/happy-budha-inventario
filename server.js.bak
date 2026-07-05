@@ -350,7 +350,7 @@ app.delete('/api/movimientos/:id', (req, res) => {
   const movimientoId = req.params.id;
 
   // Validación simple de clave
-  if (clave !== 'mindmind4482') {
+  if (clave !== 'admin123') {
     return res.status(403).json({ error: 'Clave incorrecta' });
   }
 
