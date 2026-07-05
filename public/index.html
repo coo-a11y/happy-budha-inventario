@@ -1363,8 +1363,12 @@
     }
     function seleccionarTodosMovimientos() {
       const checks = document.querySelectorAll('.checkbox-movimiento');
-      const selectTodos = document.getElementById('selectTodosHeader');
-      checks.forEach(c => c.checked = selectTodos.checked);
+      const selectTodos = document.getElementById('selectTodosMovimientos');
+      const selectHeader = document.getElementById('selectTodosHeader');
+      const isChecked = selectTodos.checked || selectHeader.checked;
+      checks.forEach(c => c.checked = isChecked);
+      selectTodos.checked = isChecked;
+      selectHeader.checked = isChecked;
     }
     function exportarMovimientos() {
       const checks = document.querySelectorAll('.checkbox-movimiento:checked');
