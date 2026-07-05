@@ -757,12 +757,13 @@ app.post('/api/productos', async (req, res) => {
       res.json({ success: true, id: req.body.id });
     } else {
       // Crear
+      console.log('📝 Creando producto:', { codigo, nombre });
       const result = await executeQuery(
-        `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, contifico_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, contifico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, contifico_id]
       );
       const lastId = usePostgres ? result.rows[0].id : result.lastID;
+      console.log('✅ Producto creado con ID:', lastId);
       res.json({ success: true, id: lastId });
     }
   } catch (err) {
@@ -874,7 +875,7 @@ app.get('/api/movimientos', async (req, res) => {
       params.push(tipo);
     }
 
-    query += ' ORDER BY id DESC LIMIT 500';
+    query += ' ORDER BY id DESC LIMIT 5000';
 
     const result = await executeQuery(query, params);
     let rows = result.rows;
