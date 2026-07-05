@@ -620,6 +620,7 @@ const initializeDatabase = async () => {
       try {
         const checkProd = await pool.query('SELECT COUNT(*) as count FROM productos');
         console.log('📊 Productos en PostgreSQL:', checkProd.rows[0].count);
+        console.log('🔍 Verificando si count es 0:', checkProd.rows[0].count === 0);
         if (checkProd.rows[0].count === 0) {
           console.log('📥 PostgreSQL vacía. Intentando migrar desde data.json...');
           const fs = require('fs');
