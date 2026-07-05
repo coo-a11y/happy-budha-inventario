@@ -617,23 +617,33 @@ const initializeDatabase = async () => {
 
     // Migrar datos de data.json a PostgreSQL si está vacía
     if (usePostgres) {
-      const checkProd = await pool.query('SELECT COUNT(*) as count FROM productos');
-      if (checkProd.rows[0].count === 0) {
-        console.log('📥 Migrando datos de data.json a PostgreSQL...');
-        const fs = require('fs');
-        try {
-          const dataJson = JSON.parse(fs.readFileSync('./data.json', 'utf8'));
-          const productos = dataJson.productos?.rows || [];
-          for (const p of productos) {
-            await pool.query(
-              'INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, bodega, zona) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-              [p.codigo, p.nombre, p.categoria, p.presentacion, p.stock, p.stock_minimo, p.precio, p.fecha_caducidad, p.bodega, p.zona]
-            );
+      try {
+        const checkProd = await pool.query('SELECT COUNT(*) as count FROM productos');
+        console.log('📊 Productos en PostgreSQL:', checkProd.rows[0].count);
+        if (checkProd.rows[0].count === 0) {
+          console.log('📥 PostgreSQL vacía. Intentando migrar desde data.json...');
+          const fs = require('fs');
+          const path = require('path');
+          const dataPath = path.join(__dirname, 'data.json');
+          console.log('📂 Buscando:', dataPath);
+          if (fs.existsSync(dataPath)) {
+            console.log('✅ data.json encontrado');
+            const dataJson = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+            const productos = dataJson.productos?.rows || [];
+            console.log(`📥 Cargando ${productos.length} productos...`);
+            for (const p of productos) {
+              await pool.query(
+                'INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, bodega, zona) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+                [p.codigo, p.nombre, p.categoria, p.presentacion, p.stock, p.stock_minimo, p.precio, p.fecha_caducidad, p.bodega, p.zona]
+              );
+            }
+            console.log(`✅ ${productos.length} productos migrados a PostgreSQL`);
+          } else {
+            console.log('❌ data.json NO encontrado en:', dataPath);
           }
-          console.log(`✅ ${productos.length} productos migrados a PostgreSQL`);
-        } catch (err) {
-          console.log('⚠️ No se pudo migrar datos:', err.message);
         }
+      } catch (err) {
+        console.error('❌ Error en migración:', err.message);
       }
     }
 
