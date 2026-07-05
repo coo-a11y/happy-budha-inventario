@@ -615,6 +615,28 @@ const initializeDatabase = async () => {
     }
     console.log('✅ Tabla conversiones lista');
 
+    // Migrar datos de data.json a PostgreSQL si está vacía
+    if (usePostgres) {
+      const checkProd = await pool.query('SELECT COUNT(*) as count FROM productos');
+      if (checkProd.rows[0].count === 0) {
+        console.log('📥 Migrando datos de data.json a PostgreSQL...');
+        const fs = require('fs');
+        try {
+          const dataJson = JSON.parse(fs.readFileSync('./data.json', 'utf8'));
+          const productos = dataJson.productos?.rows || [];
+          for (const p of productos) {
+            await pool.query(
+              'INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, bodega, zona) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+              [p.codigo, p.nombre, p.categoria, p.presentacion, p.stock, p.stock_minimo, p.precio, p.fecha_caducidad, p.bodega, p.zona]
+            );
+          }
+          console.log(`✅ ${productos.length} productos migrados a PostgreSQL`);
+        } catch (err) {
+          console.log('⚠️ No se pudo migrar datos:', err.message);
+        }
+      }
+    }
+
     // 5. Iniciar servidor después de todo
     setTimeout(() => {
       app.listen(PORT, '0.0.0.0', () => {
