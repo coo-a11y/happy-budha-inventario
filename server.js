@@ -9,7 +9,13 @@ const PORT = 3000;
 
 // Middleware
 app.use(express.json());
-app.use(express.static('public'));
+const publicPath = path.join(__dirname, 'public');
+app.use(express.static(publicPath));
+
+// Ruta raíz - IMPORTANTE para servir index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(publicPath, 'index.html'));
+});
 
 // Inicializar BD
 const dbPath = path.join(__dirname, 'inventario.db');
