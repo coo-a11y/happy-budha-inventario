@@ -82,6 +82,32 @@ db.serialize(() => {
     factor REAL,
     FOREIGN KEY(producto_id) REFERENCES productos(id)
   )`);
+
+  // Migration: Agregar columnas faltantes si no existen
+  db.all("PRAGMA table_info(movimientos)", (err, columns) => {
+    if (!err && columns) {
+      const columnNames = columns.map(c => c.name);
+      const columnasAgregar = [
+        { name: 'cantidad_presentacion', type: 'REAL' },
+        { name: 'cantidad_salida', type: 'REAL' },
+        { name: 'zona_origen', type: 'TEXT' },
+        { name: 'zona_destino', type: 'TEXT' },
+        { name: 'costo_unitario', type: 'REAL' },
+        { name: 'costo_total', type: 'REAL' },
+        { name: 'created_at', type: 'DATETIME DEFAULT CURRENT_TIMESTAMP' }
+      ];
+
+      columnasAgregar.forEach(col => {
+        if (!columnNames.includes(col.name)) {
+          console.log(`📝 Agregando columna: ${col.name} a tabla movimientos`);
+          db.run(`ALTER TABLE movimientos ADD COLUMN ${col.name} ${col.type}`, (err) => {
+            if (err) console.log(`   ⚠️  Error agregando ${col.name}: ${err.message}`);
+            else console.log(`   ✅ Columna ${col.name} agregada`);
+          });
+        }
+      });
+    }
+  });
 });
 
 // ============ AUTENTICACIÓN SIMPLE ============
