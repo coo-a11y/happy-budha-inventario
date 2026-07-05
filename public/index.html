@@ -1069,10 +1069,16 @@
         .catch(err => mostrarAlerta('Error cargando productos: ' + err.message, 'error'));
     }
     function renderizarProductos() {
+      console.log('📋 renderizarProductos() llamada. Total productos:', productos.length);
       const tbody = document.getElementById('tablaProductosBody');
+      if (!tbody) {
+        console.error('❌ tablaProductosBody no encontrado!');
+        return;
+      }
       tbody.innerHTML = '';
       let html = '';
       productos.forEach((p, idx) => {
+        console.log(`  ${idx}: ${p.codigo} - ${p.nombre}`);
         const hoy = new Date().toISOString().split('T')[0];
         let estadoStock = 'stock-ok';
         if (p.stock <= (p.stock_minimo || 0)) estadoStock = 'stock-critico';
@@ -1092,6 +1098,7 @@
           </td>
         </tr>`;
       });
+      console.log(`✅ renderizarProductos() completado. ${html.match(/<tr>/g)?.length || 0} filas agregadas`);
       tbody.innerHTML = html;
     }
     function cargarEstadisticas() {
