@@ -1021,6 +1021,13 @@ app.delete('/api/movimientos/:id', async (req, res) => {
 
     // Si el producto queda con stock 0 (después de revertir), eliminarlo completamente
     if (nuevoStock <= 0) {
+      // Registrar eliminación en historial
+      const elimQuery = usePostgres
+        ? `INSERT INTO movimientos (producto_id, tipo, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?) RETURNING id`
+        : `INSERT INTO movimientos (producto_id, tipo, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?)`;
+      await executeQuery(elimQuery, [movimiento.producto_id, 'eliminación', 'Sistema', `Producto eliminado - Stock llegó a 0`, new Date().toISOString()]);
+      
+      // Eliminar el producto
       await executeQuery('DELETE FROM productos WHERE id = ?', [movimiento.producto_id]);
       console.log('🗑️ Producto eliminado porque quedó con stock 0');
     }
