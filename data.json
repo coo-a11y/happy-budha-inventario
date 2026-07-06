@@ -21,7 +21,7 @@
         "stock": 62.2,
         "stock_minimo": 5,
         "precio": 26.5,
-        "fecha_caducidad": "may-27",
+        "fecha_caducidad": "05-27",
         "bodega": "Almacén",
         "id": "02cd08db-270"
       },
@@ -33,7 +33,7 @@
         "stock": 800,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "jul-22",
+        "fecha_caducidad": "07-22",
         "bodega": "Almacén",
         "id": "6fbc66ec-4ab"
       },
@@ -45,7 +45,7 @@
         "stock": 2150,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "oct-26",
+        "fecha_caducidad": "10-26",
         "bodega": "Almacén",
         "id": "78529dab-284"
       },
@@ -57,7 +57,7 @@
         "stock": 775,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "ago-27",
+        "fecha_caducidad": "08-27",
         "bodega": "Almacén",
         "id": "74584253-f6b"
       },
@@ -69,7 +69,7 @@
         "stock": 743,
         "stock_minimo": 5,
         "precio": 46.9,
-        "fecha_caducidad": "jul-27",
+        "fecha_caducidad": "07-27",
         "bodega": "Almacén",
         "id": "d02f15ac-432"
       },
@@ -81,7 +81,7 @@
         "stock": 1225,
         "stock_minimo": 5,
         "precio": 18.3,
-        "fecha_caducidad": "sep-25",
+        "fecha_caducidad": "09-25",
         "bodega": "Almacén",
         "id": "596c6bb2-33d"
       },
@@ -129,7 +129,7 @@
         "stock": 186.1,
         "stock_minimo": 5,
         "precio": 48,
-        "fecha_caducidad": "nov-27",
+        "fecha_caducidad": "11-27",
         "bodega": "Almacén",
         "id": "0589ac05-da1"
       },
@@ -153,7 +153,7 @@
         "stock": 41.6,
         "stock_minimo": 5,
         "precio": 81,
-        "fecha_caducidad": "jul-27",
+        "fecha_caducidad": "07-27",
         "bodega": "Almacén",
         "id": "b1dab2c1-ce3"
       },
@@ -165,7 +165,7 @@
         "stock": 600,
         "stock_minimo": 5,
         "precio": 16,
-        "fecha_caducidad": "jul-28",
+        "fecha_caducidad": "07-28",
         "bodega": "Almacén",
         "id": "26446a6a-4a2"
       },
@@ -177,7 +177,7 @@
         "stock": 1000,
         "stock_minimo": 5,
         "precio": 13,
-        "fecha_caducidad": "ago-28",
+        "fecha_caducidad": "08-28",
         "bodega": "Almacén",
         "id": "e4adba30-8be"
       },
@@ -201,7 +201,7 @@
         "stock": 10,
         "stock_minimo": 5,
         "precio": 4.5,
-        "fecha_caducidad": "may-28",
+        "fecha_caducidad": "05-28",
         "bodega": "Almacén",
         "id": "fe4f5a99-60e"
       },
@@ -213,7 +213,7 @@
         "stock": 1200,
         "stock_minimo": 5,
         "precio": 13.5,
-        "fecha_caducidad": "sep-26",
+        "fecha_caducidad": "09-26",
         "bodega": "Almacén",
         "id": "d684dfd3-e2c"
       },
@@ -225,7 +225,7 @@
         "stock": 1400,
         "stock_minimo": 5,
         "precio": 17.5,
-        "fecha_caducidad": "sep-27",
+        "fecha_caducidad": "09-27",
         "bodega": "Almacén",
         "id": "fbeacc76-013"
       },
@@ -237,7 +237,7 @@
         "stock": 6200,
         "stock_minimo": 5,
         "precio": 17.5,
-        "fecha_caducidad": "feb-27",
+        "fecha_caducidad": "02-27",
         "bodega": "Almacén",
         "id": "3c749451-110"
       },
@@ -261,7 +261,7 @@
         "stock": 1000,
         "stock_minimo": 5,
         "precio": 22.5,
-        "fecha_caducidad": "sep-27",
+        "fecha_caducidad": "09-27",
         "bodega": "Almacén",
         "id": "ec0def0a-5f4"
       },
@@ -273,7 +273,7 @@
         "stock": 10,
         "stock_minimo": 5,
         "precio": 6,
-        "fecha_caducidad": "sep-26",
+        "fecha_caducidad": "09-26",
         "bodega": "Almacén",
         "id": "19883b53-104"
       },
@@ -309,7 +309,7 @@
         "stock": 300,
         "stock_minimo": 5,
         "precio": 52.5,
-        "fecha_caducidad": "ago-28",
+        "fecha_caducidad": "08-28",
         "bodega": "Almacén",
         "id": "f58ef95b-7b9"
       },
@@ -321,7 +321,7 @@
         "stock": 5400,
         "stock_minimo": 5,
         "precio": 15,
-        "fecha_caducidad": "dic-27",
+        "fecha_caducidad": "12-27",
         "bodega": "Almacén",
         "id": "59f8ba19-a1c"
       },
@@ -333,7 +333,7 @@
         "stock": 350,
         "stock_minimo": 5,
         "precio": 18.5,
-        "fecha_caducidad": "jul-30",
+        "fecha_caducidad": "07-30",
         "bodega": "Almacén",
         "id": "56b9f426-1f5"
       },
@@ -369,7 +369,7 @@
         "stock": 200,
         "stock_minimo": 5,
         "precio": 11.5,
-        "fecha_caducidad": "nov-29",
+        "fecha_caducidad": "11-29",
         "bodega": "Almacén",
         "id": "c439b182-7ba"
       },
@@ -381,7 +381,7 @@
         "stock": 100,
         "stock_minimo": 5,
         "precio": 11,
-        "fecha_caducidad": "mar-27",
+        "fecha_caducidad": "03-27",
         "bodega": "Almacén",
         "id": "6e46bfa5-72a"
       },
@@ -393,7 +393,7 @@
         "stock": 600,
         "stock_minimo": 5,
         "precio": 22.5,
-        "fecha_caducidad": "mar-27",
+        "fecha_caducidad": "03-27",
         "bodega": "Almacén",
         "id": "bdbe8483-e66"
       },
@@ -441,7 +441,7 @@
         "stock": 5,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "ene-26",
+        "fecha_caducidad": "01-26",
         "bodega": "Almacén",
         "id": "e306ecd0-867"
       },
@@ -489,7 +489,7 @@
         "stock": 500,
         "stock_minimo": 5,
         "precio": 10,
-        "fecha_caducidad": "jul-28",
+        "fecha_caducidad": "07-28",
         "bodega": "Almacén",
         "id": "ed8c4828-586"
       },
@@ -501,7 +501,7 @@
         "stock": 1,
         "stock_minimo": 5,
         "precio": 14,
-        "fecha_caducidad": "jul-28",
+        "fecha_caducidad": "07-28",
         "bodega": "Almacén",
         "id": "1585b130-930"
       },
@@ -513,7 +513,7 @@
         "stock": 1000,
         "stock_minimo": 5,
         "precio": 9,
-        "fecha_caducidad": "jul-28",
+        "fecha_caducidad": "07-28",
         "bodega": "Almacén",
         "id": "5686bb05-b37"
       },
@@ -525,7 +525,7 @@
         "stock": 500,
         "stock_minimo": 5,
         "precio": 8,
-        "fecha_caducidad": "dic-27",
+        "fecha_caducidad": "12-27",
         "bodega": "Almacén",
         "id": "8deb4081-7e7"
       },
@@ -537,7 +537,7 @@
         "stock": 3,
         "stock_minimo": 5,
         "precio": 32,
-        "fecha_caducidad": "feb-25",
+        "fecha_caducidad": "02-25",
         "bodega": "Almacén",
         "id": "95778586-cb5"
       },
@@ -609,7 +609,7 @@
         "stock": 700,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "jun-28",
+        "fecha_caducidad": "06-28",
         "bodega": "Almacén",
         "id": "07f2a838-b1e"
       },
@@ -645,7 +645,7 @@
         "stock": 10,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "nov-27",
+        "fecha_caducidad": "11-27",
         "bodega": "Almacén",
         "id": "02232161-b43"
       },
@@ -657,7 +657,7 @@
         "stock": 250,
         "stock_minimo": 5,
         "precio": 16.5,
-        "fecha_caducidad": "jun-27",
+        "fecha_caducidad": "06-27",
         "bodega": "Almacén",
         "id": "4ae917fc-581"
       },
@@ -669,7 +669,7 @@
         "stock": 225,
         "stock_minimo": 5,
         "precio": 4,
-        "fecha_caducidad": "feb-27",
+        "fecha_caducidad": "02-27",
         "bodega": "Almacén",
         "id": "8138db53-977"
       },
@@ -681,7 +681,7 @@
         "stock": 400,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "dic-25",
+        "fecha_caducidad": "12-25",
         "bodega": "Almacén",
         "id": "979b1662-a24"
       },
@@ -693,7 +693,7 @@
         "stock": 5500,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "mar-26",
+        "fecha_caducidad": "03-26",
         "bodega": "Almacén",
         "id": "242d8ecb-56a"
       },
@@ -729,7 +729,7 @@
         "stock": 800,
         "stock_minimo": 5,
         "precio": 9.5,
-        "fecha_caducidad": "abr-27",
+        "fecha_caducidad": "04-27",
         "bodega": "Almacén",
         "id": "da5645d9-576"
       },
@@ -753,7 +753,7 @@
         "stock": 12100,
         "stock_minimo": 5,
         "precio": 9.5,
-        "fecha_caducidad": "sep-26",
+        "fecha_caducidad": "09-26",
         "bodega": "Almacén",
         "id": "359619a4-1fe"
       },
@@ -777,7 +777,7 @@
         "stock": 190,
         "stock_minimo": 5,
         "precio": 9.5,
-        "fecha_caducidad": "feb-27",
+        "fecha_caducidad": "02-27",
         "bodega": "Almacén",
         "id": "eb1a0af9-f31"
       },
@@ -789,7 +789,7 @@
         "stock": 7.6,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "mar-27",
+        "fecha_caducidad": "03-27",
         "bodega": "Almacén",
         "id": "566668b5-8a3"
       },
@@ -801,7 +801,7 @@
         "stock": 950,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "jul-27",
+        "fecha_caducidad": "07-27",
         "bodega": "Almacén",
         "id": "5ccf981d-acb"
       },
@@ -837,7 +837,7 @@
         "stock": 100,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "jul-29",
+        "fecha_caducidad": "07-29",
         "bodega": "Almacén",
         "id": "0d216927-0a0"
       },
@@ -849,7 +849,7 @@
         "stock": 100,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "nov-26",
+        "fecha_caducidad": "11-26",
         "bodega": "Almacén",
         "id": "64e916ac-f9f"
       },
@@ -861,7 +861,7 @@
         "stock": 2500,
         "stock_minimo": 5,
         "precio": 12.5,
-        "fecha_caducidad": "jul-27",
+        "fecha_caducidad": "07-27",
         "bodega": "Almacén",
         "id": "a7d43048-e6c"
       },
@@ -873,7 +873,7 @@
         "stock": 225,
         "stock_minimo": 5,
         "precio": 6.5,
-        "fecha_caducidad": "jun-28",
+        "fecha_caducidad": "06-28",
         "bodega": "Almacén",
         "id": "38757097-b9f"
       },
@@ -885,7 +885,7 @@
         "stock": 200,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "ago-29",
+        "fecha_caducidad": "08-29",
         "bodega": "Almacén",
         "id": "0551076d-6b0"
       },
@@ -897,7 +897,7 @@
         "stock": 5000,
         "stock_minimo": 5,
         "precio": 15,
-        "fecha_caducidad": "sep-27",
+        "fecha_caducidad": "09-27",
         "bodega": "Almacén",
         "id": "1ebabce9-96b"
       },
@@ -909,7 +909,7 @@
         "stock": 450,
         "stock_minimo": 5,
         "precio": 14.5,
-        "fecha_caducidad": "dic-27",
+        "fecha_caducidad": "12-27",
         "bodega": "Almacén",
         "id": "07857b62-c65"
       },
@@ -921,7 +921,7 @@
         "stock": 3000,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "jul-27",
+        "fecha_caducidad": "07-27",
         "bodega": "Almacén",
         "id": "b620156a-153"
       },
@@ -933,7 +933,7 @@
         "stock": 10,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "abr-27",
+        "fecha_caducidad": "04-27",
         "bodega": "Almacén",
         "id": "cac1179c-44e"
       },
@@ -945,7 +945,7 @@
         "stock": 200,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "dic-26",
+        "fecha_caducidad": "12-26",
         "bodega": "Almacén",
         "id": "c8783a2c-702"
       },
@@ -957,7 +957,7 @@
         "stock": 750,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "jul-27",
+        "fecha_caducidad": "07-27",
         "bodega": "Almacén",
         "id": "6248d714-7df"
       },
@@ -969,7 +969,7 @@
         "stock": 1250,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "ago-35",
+        "fecha_caducidad": "08-35",
         "bodega": "Almacén",
         "id": "0c78a828-a17"
       },
@@ -981,7 +981,7 @@
         "stock": 800,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "jun-26",
+        "fecha_caducidad": "06-26",
         "bodega": "Almacén",
         "id": "8ea08690-2ae"
       },
@@ -1005,7 +1005,7 @@
         "stock": 1050,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "mar-28",
+        "fecha_caducidad": "03-28",
         "bodega": "Almacén",
         "id": "2986ccb9-397"
       },
@@ -1053,7 +1053,7 @@
         "stock": 0,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "12-2027",
+        "fecha_caducidad": "12-27",
         "bodega": "Almacén",
         "id": "a52fd5b3-249"
       },
@@ -1065,7 +1065,7 @@
         "stock": 1000,
         "stock_minimo": 5,
         "precio": 0,
-        "fecha_caducidad": "10-2027",
+        "fecha_caducidad": "10-27",
         "bodega": "Almacén",
         "id": "46a48a9f-453"
       },
