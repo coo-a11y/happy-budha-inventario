@@ -1087,7 +1087,9 @@ app.get('/api/estadisticas', async (req, res) => {
         let año = parseInt(partes[1]);
         if (año < 100 && año >= 0) año += 2000;
         if (mes > 0 && mes <= 12 && año > 1900) {
-          return new Date(año, mes, 0);
+          // Retornar el primer día del mes especificado (año y mes están en formato calendario 1-12)
+          // JavaScript Date usa 0-indexed meses, así que restamos 1
+          return new Date(año, mes - 1, 1);
         }
       }
       return null;
