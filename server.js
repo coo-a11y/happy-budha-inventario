@@ -1062,7 +1062,10 @@ app.delete('/api/productos/:id', async (req, res) => {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
-    // Primero: Registrar la eliminación en el historial
+    // Primero: Eliminar todos los movimientos previos del producto
+    await executeQuery('DELETE FROM movimientos WHERE producto_id = ?', [productoId]);
+
+    // Segundo: Registrar la eliminación en el historial
     const elimQuery = usePostgres
       ? `INSERT INTO movimientos (producto_id, tipo, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?) RETURNING id`
       : `INSERT INTO movimientos (producto_id, tipo, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?)`;
@@ -1074,9 +1077,6 @@ app.delete('/api/productos/:id', async (req, res) => {
       `Producto eliminado: ${producto.nombre} (Código: ${producto.codigo})`,
       new Date().toISOString()
     ]);
-
-    // Segundo: Eliminar todos los movimientos previos del producto
-    await executeQuery('DELETE FROM movimientos WHERE producto_id = ? AND tipo != ?', [productoId, 'eliminación']);
 
     // Tercero: Eliminar el producto
     await executeQuery('DELETE FROM productos WHERE id = ?', [productoId]);
