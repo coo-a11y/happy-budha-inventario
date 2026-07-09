@@ -708,6 +708,14 @@ app.get('/api/usuario-actual', (req, res) => {
   res.json(usuarioActual);
 });
 
+// ============ INFORMACIÓN DE USUARIO ============
+app.get('/api/usuario-actual', (req, res) => {
+  res.json({
+    rol: usuarioActual.rol,
+    nombre: usuarioActual.nombre
+  });
+});
+
 // ============ ENDPOINTS DE PRODUCTOS ============
 
 // Listar productos con filtros
@@ -1039,8 +1047,9 @@ app.delete('/api/movimientos/:id', async (req, res) => {
 // Eliminar producto
 app.delete('/api/productos/:id', async (req, res) => {
   try {
-    if (usuarioActual.rol !== 'admin' && usuarioActual.rol !== 'gerente') {
-      return res.status(403).json({ error: 'Permisos insuficientes' });
+    // Solo admin puede eliminar productos
+    if (usuarioActual.rol !== 'admin') {
+      return res.status(403).json({ error: 'Solo admin puede eliminar productos' });
     }
 
     const productoId = req.params.id;

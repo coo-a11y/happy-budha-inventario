@@ -594,7 +594,7 @@
         </div>
         <button class="btn btn-primary" onclick="filtrarMovimientos()">🔍 Filtrar</button>
         <button class="btn btn-primary" onclick="exportarMovimientos()">📥 Exportar Excel</button>
-        <button class="btn btn-danger" onclick="eliminarSeleccionados()" style="background: #ef4444;">🗑️ Eliminar Seleccionados</button>
+        <button id="btnEliminarSeleccionados" class="btn btn-danger" onclick="eliminarSeleccionados()" style="background: #ef4444;">🗑️ Eliminar Seleccionados</button>
       </div>
       <div style="margin-bottom: 1rem;">
         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600;">
@@ -1024,10 +1024,21 @@
     let productos = [];
     let movimientos = [];
     document.addEventListener('DOMContentLoaded', () => {
+      // Cargar rol del usuario
+      fetch('/api/usuario-actual')
+        .then(r => r.json())
+        .then(data => {
+          usuarioRol = data.rol;
+          document.getElementById('userName').textContent = data.rol.charAt(0).toUpperCase() + data.rol.slice(1);
+          // Mostrar/ocultar botón de eliminar seleccionados según rol
+          const btnEliminar = document.getElementById('btnEliminarSeleccionados');
+          if (btnEliminar) {
+            btnEliminar.style.display = data.rol === 'admin' ? 'inline-block' : 'none';
+          }
+        });
       cargarProductos();
       cargarEstadisticas();
       cargarMovimientos();
-      document.getElementById('userName').textContent = 'Admin';
       const ahora = new Date();
       document.getElementById('salida-fecha').value = ahora.toISOString().slice(0, 16);
       iniciarPolling();
@@ -1094,7 +1105,7 @@
           <td>$${(parseFloat(p.precio) || 0).toFixed(2)}</td>
           <td>
             <button class="btn btn-sm btn-primary" onclick="editarProducto('${p.id}')">✏️</button>
-            <button class="btn btn-sm btn-danger" onclick="eliminarProducto('${p.id}')">🗑️</button>
+            ${usuarioRol === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="eliminarProducto('${p.id}')">🗑️</button>` : ''}
           </td>
         </tr>`;
       });
@@ -1239,7 +1250,7 @@
             <td>${zona}</td>
             <td>${m.operario || '-'}</td>
             <td>$${(parseFloat(m.costo_total) || 0).toFixed(2)}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="eliminarMovimiento(${m.id})">🗑️ Eliminar</button></td>
+            <td>${usuarioRol === 'admin' ? `<button class="btn btn-danger btn-sm" onclick="eliminarMovimiento(${m.id})">🗑️ Eliminar</button>` : '-'}</td>
           </tr>
         `;
       });
