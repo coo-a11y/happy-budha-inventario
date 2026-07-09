@@ -1237,16 +1237,19 @@
         const fechaStr = m.created_at || m.fecha || '';
         const fechaObj = fechaStr ? new Date(fechaStr) : null;
         const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-ES')} ${fechaObj.toLocaleTimeString('es-ES')}` : '-';
-        const cantidad = m.tipo === 'entrada' ? (m.cantidad_presentacion || 0) : (m.cantidad_salida || 0);
-        const zona = m.tipo === 'entrada' ? (m.zona_destino || '-') : (m.zona_origen || '-');
+        const cantidad = m.tipo === 'eliminación' ? (m.cantidad_presentacion || 0) : (m.tipo === 'entrada' ? (m.cantidad_presentacion || 0) : (m.cantidad_salida || 0));
+        const zona = m.tipo === 'eliminación' ? (m.zona_origen || '-') : (m.tipo === 'entrada' ? (m.zona_destino || '-') : (m.zona_origen || '-'));
+        const unidad = m.unidad_salida || '-';
+        // Para eliminaciones, mostrar descripcion; para otros, mostrar nombre del producto
+        const nombreProducto = m.tipo === 'eliminación' ? (m.descripcion || '-') : (m.nombre || '-');
         tbody.innerHTML += `
           <tr>
             <td><input type="checkbox" class="checkbox-movimiento" data-id="${m.id}"></td>
             <td>${fecha}</td>
-            <td><span class="badge ${m.tipo === 'entrada' ? 'badge-success' : 'badge-warning'}">${m.tipo}</span></td>
-            <td>${m.nombre || '-'}</td>
+            <td><span class="badge ${m.tipo === 'entrada' ? 'badge-success' : m.tipo === 'eliminación' ? 'badge-danger' : 'badge-warning'}">${m.tipo}</span></td>
+            <td>${nombreProducto}</td>
             <td>${cantidad}</td>
-            <td>${m.unidad_salida || '-'}</td>
+            <td>${unidad}</td>
             <td>${zona}</td>
             <td>${m.operario || '-'}</td>
             <td>$${(parseFloat(m.costo_total) || 0).toFixed(2)}</td>
