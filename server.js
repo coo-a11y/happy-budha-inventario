@@ -1075,10 +1075,14 @@ app.delete('/api/productos/:id', async (req, res) => {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
-    // Primero: Eliminar todos los movimientos previos del producto
+    // Primero: Calcular la cantidad original que se ingresó
+    const entradaResult = await executeQuery('SELECT SUM(cantidad_presentacion) as total FROM movimientos WHERE producto_id = ? AND tipo = ?', [productoId, 'entrada']);
+    const cantidadOriginal = parseInt(entradaResult.rows[0]?.total) || 0;
+
+    // Segundo: Eliminar todos los movimientos previos del producto
     await executeQuery('DELETE FROM movimientos WHERE producto_id = ?', [productoId]);
 
-    // Segundo: Registrar la eliminación en el historial con todos los detalles
+    // Tercero: Registrar la eliminación en el historial con todos los detalles
     const elimQuery = usePostgres
       ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_origen, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
       : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_origen, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
@@ -1086,11 +1090,11 @@ app.delete('/api/productos/:id', async (req, res) => {
     await executeQuery(elimQuery, [
       productoId, 
       'eliminación', 
-      producto.stock || 0,
+      cantidadOriginal,
       producto.presentacion || '',
       producto.zona || 'N/A',
       'Admin', 
-      `ELIMINADO: ${producto.nombre} (Código: ${producto.codigo}) - Stock: ${producto.stock || 0}`,
+      `ELIMINADO: ${producto.nombre} (Código: ${producto.codigo}) - Cantidad original: ${cantidadOriginal}`,
       new Date().toISOString()
     ]);
 
