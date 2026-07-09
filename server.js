@@ -1054,17 +1054,31 @@ app.delete('/api/productos/:id', async (req, res) => {
 
     const productoId = req.params.id;
 
-    // Primero verificar si hay movimientos asociados
-    const countResult = await executeQuery('SELECT COUNT(*) as count FROM movimientos WHERE producto_id = ?', [productoId]);
-    const count = parseInt(countResult.rows[0].count) || 0;
+    // Obtener datos del producto antes de eliminar
+    const prodResult = await executeQuery('SELECT * FROM productos WHERE id = ?', [productoId]);
+    const producto = prodResult.rows[0];
 
-    if (count > 0) {
-      return res.status(400).json({ error: `No se puede eliminar: hay ${count} movimiento(s) asociado(s)` });
+    if (!producto) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
     // Eliminar producto
     await executeQuery('DELETE FROM productos WHERE id = ?', [productoId]);
-    res.json({ success: true, mensaje: 'Producto eliminado' });
+
+    // Registrar la eliminación en el historial de movimientos
+    const elimQuery = usePostgres
+      ? `INSERT INTO movimientos (producto_id, tipo, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO movimientos (producto_id, tipo, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?)`;
+    
+    await executeQuery(elimQuery, [
+      productoId, 
+      'eliminación', 
+      'Admin', 
+      `Producto eliminado: ${producto.nombre} (Código: ${producto.codigo})`,
+      new Date().toISOString()
+    ]);
+
+    res.json({ success: true, mensaje: 'Producto eliminado y registro creado en historial' });
   } catch (err) {
     console.error('Error en DELETE /api/productos/:id:', err);
     res.status(500).json({ error: err.message });
