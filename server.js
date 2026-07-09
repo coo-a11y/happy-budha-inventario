@@ -551,7 +551,7 @@ const initializeDatabase = async () => {
         descripcion TEXT,
         contifico_kardex_id TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE CASCADE
+        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL
       )`);
     } else {
       await executeQuery(`CREATE TABLE IF NOT EXISTS movimientos (
@@ -569,7 +569,7 @@ const initializeDatabase = async () => {
         descripcion TEXT,
         contifico_kardex_id TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE CASCADE
+        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL
       )`);
     }
     console.log('✅ Tabla movimientos lista');
@@ -577,9 +577,11 @@ const initializeDatabase = async () => {
     // Corregir constraint de clave foránea si existe
     try {
       if (usePostgres) {
+        // Cambiar producto_id para permitir NULL
+        await pool.query(`ALTER TABLE movimientos ALTER COLUMN producto_id DROP NOT NULL`).catch(() => {});
         await pool.query(`ALTER TABLE movimientos DROP CONSTRAINT IF EXISTS movimientos_producto_id_fkey`);
-        await pool.query(`ALTER TABLE movimientos ADD CONSTRAINT movimientos_producto_id_fkey FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE CASCADE`);
-        console.log('✅ FK constraint actualizado para ON DELETE CASCADE');
+        await pool.query(`ALTER TABLE movimientos ADD CONSTRAINT movimientos_producto_id_fkey FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL`);
+        console.log('✅ FK constraint actualizado para ON DELETE SET NULL');
       }
     } catch (err) {
       console.log('⚠️ FK constraint ya existe o no necesita actualizar');
@@ -615,7 +617,7 @@ const initializeDatabase = async () => {
         unidad_presentacion TEXT,
         unidad_salida TEXT,
         factor REAL,
-        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE CASCADE
+        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL
       )`);
     } else {
       await executeQuery(`CREATE TABLE IF NOT EXISTS conversiones (
@@ -624,7 +626,7 @@ const initializeDatabase = async () => {
         unidad_presentacion TEXT,
         unidad_salida TEXT,
         factor REAL,
-        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE CASCADE
+        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL
       )`);
     }
     console.log('✅ Tabla conversiones lista');
