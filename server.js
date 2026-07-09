@@ -573,6 +573,17 @@ const initializeDatabase = async () => {
       )`);
     }
     console.log('✅ Tabla movimientos lista');
+    
+    // Corregir constraint de clave foránea si existe
+    try {
+      if (usePostgres) {
+        await pool.query(`ALTER TABLE movimientos DROP CONSTRAINT IF EXISTS movimientos_producto_id_fkey`);
+        await pool.query(`ALTER TABLE movimientos ADD CONSTRAINT movimientos_producto_id_fkey FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE CASCADE`);
+        console.log('✅ FK constraint actualizado para ON DELETE CASCADE');
+      }
+    } catch (err) {
+      console.log('⚠️ FK constraint ya existe o no necesita actualizar');
+    }
 
     // 3. Crear tabla usuarios
     if (usePostgres) {
