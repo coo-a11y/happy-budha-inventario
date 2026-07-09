@@ -1616,7 +1616,16 @@
         document.getElementById('formStock').value = producto.stock || 0;
         document.getElementById('formMinimo').value = producto.stock_minimo || 0;
         document.getElementById('formPrecio').value = producto.precio || 0;
-        document.getElementById('formCaducidad').value = producto.fecha_caducidad || '';
+        
+        // Convertir fecha a formato YYYY-MM-DD para el input type="date"
+        let fechaDisplay = producto.fecha_caducidad || '';
+        if (fechaDisplay && fechaDisplay.match(/^\d{2}-\d{2,4}$/)) {
+          // Si es MM-YY o MM-YYYY, convertir a YYYY-MM-DD (asumiendo día 15)
+          const [month, year] = fechaDisplay.split('-');
+          const fullYear = year.length === 2 ? '20' + year : year;
+          fechaDisplay = `${fullYear}-${month}-15`;
+        }
+        document.getElementById('formCaducidad').value = fechaDisplay;
         document.getElementById('formBodega').value = producto.zona || '';
       } else {
         titulo.textContent = '➕ Nuevo Producto';
