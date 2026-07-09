@@ -1644,14 +1644,8 @@
         mostrarAlerta('⚠️ Completa código, nombre y categoría', 'error');
         return;
       }
-      // Convertir fecha de YYYY-MM-DD a mes-año
-      let fechaCaducidad = document.getElementById('formCaducidad').value;
-      if (fechaCaducidad && fechaCaducidad.includes('-')) {
-        // Convertir de YYYY-MM-DD a MM-YY
-        const [year, month, day] = fechaCaducidad.split('-');
-        const yearShort = year.slice(-2);
-        fechaCaducidad = `${month}-${yearShort}`;
-      }
+      // Guardar fecha directamente en formato YYYY-MM-DD (día, mes, año completo)
+      const fechaCaducidad = document.getElementById('formCaducidad').value;
       
       const datos = {
         codigo,
