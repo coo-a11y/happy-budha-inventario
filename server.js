@@ -1078,16 +1078,19 @@ app.delete('/api/productos/:id', async (req, res) => {
     // Primero: Eliminar todos los movimientos previos del producto
     await executeQuery('DELETE FROM movimientos WHERE producto_id = ?', [productoId]);
 
-    // Segundo: Registrar la eliminación en el historial
+    // Segundo: Registrar la eliminación en el historial con todos los detalles
     const elimQuery = usePostgres
-      ? `INSERT INTO movimientos (producto_id, tipo, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?) RETURNING id`
-      : `INSERT INTO movimientos (producto_id, tipo, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?)`;
+      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_origen, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_origen, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
     
     await executeQuery(elimQuery, [
       productoId, 
       'eliminación', 
+      producto.stock || 0,
+      producto.presentacion || '',
+      producto.zona || 'N/A',
       'Admin', 
-      `Producto eliminado: ${producto.nombre} (Código: ${producto.codigo})`,
+      `ELIMINADO: ${producto.nombre} (Código: ${producto.codigo}) - Stock: ${producto.stock || 0}`,
       new Date().toISOString()
     ]);
 
