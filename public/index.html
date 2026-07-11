@@ -613,6 +613,7 @@
               <th>Cantidad</th>
               <th>Unidad</th>
               <th>Zona</th>
+              <th>Fecha Caducidad</th>
               <th>Operario</th>
               <th>Costo</th>
               <th>Acciones</th>
@@ -1103,7 +1104,7 @@
           <td class="${estadoStock}">${p.stock || 0}</td>
           <td>${p.stock_minimo || 0}</td>
           <td>${p.zona || '-'}</td>
-          <td>${p.fecha_caducidad || '-'}</td>
+          <td>${p.fecha_caducidad_proxima ? new Date(p.fecha_caducidad_proxima).toLocaleDateString('es-ES') : '-'}</td>
           <td>$${(parseFloat(p.precio) || 0).toFixed(2)}</td>
           <td>
             <button class="btn btn-sm btn-primary" onclick="editarProducto('${p.id}')">✏️</button>
@@ -1217,7 +1218,7 @@
               <td>${p.nombre}</td>
               <td>${p.stock || 0}</td>
               <td>${p.stock_minimo || 0}</td>
-              <td>${p.fecha_caducidad || '-'}</td>
+              <td>${p.fecha_caducidad_proxima ? new Date(p.fecha_caducidad_proxima).toLocaleDateString('es-ES') : '-'}</td>
               <td><span class="badge ${badgeClass}">${p.estado}</span></td>
             </tr>
           `;
@@ -1244,6 +1245,7 @@
         const unidad = m.unidad_salida || '-';
         // Para eliminaciones, mostrar descripcion; para otros, mostrar nombre del producto
         const nombreProducto = m.tipo === 'eliminación' ? (m.descripcion || '-') : (m.nombre || '-');
+        const fechaCaducidad = m.fecha_caducidad ? new Date(m.fecha_caducidad).toLocaleDateString('es-ES') : '-';
         tbody.innerHTML += `
           <tr>
             <td><input type="checkbox" class="checkbox-movimiento" data-id="${m.id}"></td>
@@ -1253,6 +1255,7 @@
             <td>${cantidad}</td>
             <td>${unidad}</td>
             <td>${zona}</td>
+            <td>${fechaCaducidad}</td>
             <td>${m.operario || '-'}</td>
             <td>$${(parseFloat(m.costo_total) || 0).toFixed(2)}</td>
             <td>${usuarioRol === 'admin' ? `<button class="btn btn-danger btn-sm" onclick="eliminarMovimiento(${m.id})">🗑️ Eliminar</button>` : '-'}</td>
