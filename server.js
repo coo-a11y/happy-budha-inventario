@@ -534,6 +534,34 @@ const initializeDatabase = async () => {
     }
     console.log('✅ Tabla productos lista');
 
+    // 1B. Crear tabla lotes (para gestionar lotes por fecha de caducidad)
+    if (usePostgres) {
+      await pool.query(`CREATE TABLE IF NOT EXISTS lotes (
+        id SERIAL PRIMARY KEY,
+        producto_id INTEGER NOT NULL,
+        cantidad REAL,
+        fecha_caducidad DATE,
+        fecha_ingreso DATE,
+        operario TEXT,
+        descripcion TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL
+      )`);
+    } else {
+      await executeQuery(`CREATE TABLE IF NOT EXISTS lotes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        producto_id INTEGER,
+        cantidad REAL,
+        fecha_caducidad DATE,
+        fecha_ingreso DATE,
+        operario TEXT,
+        descripcion TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL
+      )`);
+    }
+    console.log('✅ Tabla lotes lista');
+
     // 2. Crear tabla movimientos
     if (usePostgres) {
       await pool.query(`CREATE TABLE IF NOT EXISTS movimientos (
@@ -870,10 +898,10 @@ app.post('/api/productos', async (req, res) => {
 
 // ============ ENDPOINTS DE MOVIMIENTOS ============
 
-// Registrar entrada
+// Registrar entrada (crea un lote nuevo)
 app.post('/api/movimientos/entrada', async (req, res) => {
   try {
-    const { producto_id, cantidad, unidad_salida, zona_destino, operario, descripcion } = req.body;
+    const { producto_id, cantidad, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad } = req.body;
 
     const result = await executeQuery('SELECT * FROM productos WHERE id = ?', [producto_id]);
     const producto = result.rows[0];
@@ -882,23 +910,35 @@ app.post('/api/movimientos/entrada', async (req, res) => {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
-    // Validar stock: si es NULL o undefined, usar 0
-    const stockActual = producto.stock !== null && producto.stock !== undefined ? parseFloat(producto.stock) : 0;
-    const nuevoStock = stockActual + parseFloat(cantidad || 0);
+    // 1. Crear nuevo lote
+    const loteQuery = usePostgres
+      ? `INSERT INTO lotes (producto_id, cantidad, fecha_caducidad, fecha_ingreso, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO lotes (producto_id, cantidad, fecha_caducidad, fecha_ingreso, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    
+    const hoy = new Date().toISOString().split('T')[0];
+    const loteResult = await executeQuery(
+      loteQuery,
+      [producto_id, cantidad, fecha_caducidad || hoy, hoy, operario, descripcion, new Date().toISOString()]
+    );
+    const loteId = usePostgres ? loteResult.rows[0].id : loteResult.lastID;
 
+    // 2. Actualizar stock del producto (suma de todos los lotes)
+    const lotesResult = await executeQuery('SELECT SUM(cantidad) as total FROM lotes WHERE producto_id = ?', [producto_id]);
+    const nuevoStock = parseFloat(lotesResult.rows[0]?.total) || 0;
     await executeQuery('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id]);
 
+    // 3. Registrar en movimientos
     const movQuery = usePostgres
       ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
       : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
     
     const movResult = await executeQuery(
       movQuery,
-      [producto_id, 'entrada', cantidad, unidad_salida, zona_destino, operario, descripcion, new Date().toISOString()]
+      [producto_id, 'entrada', cantidad, unidad_salida, zona_destino, operario, `Lote: ${loteId} - ${descripcion}`, new Date().toISOString()]
     );
 
     const movId = usePostgres ? movResult.rows[0].id : movResult.lastID;
-    res.json({ success: true, id: movId, nuevoStock });
+    res.json({ success: true, id: movId, loteId, nuevoStock });
   } catch (err) {
     console.error('Error en POST /api/movimientos/entrada:', err);
     res.status(500).json({ error: err.message });
