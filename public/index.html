@@ -1804,17 +1804,27 @@
       let desde = document.getElementById('filtroFechaCultivoDesde').value;
       let hasta = document.getElementById('filtroFechaCultivoHasta').value;
       const zona = document.getElementById('filtroZonaCultivo').value;
-      
-      // Si no hay filtro de fecha, usar hoy
-      const hoy = new Date().toISOString().split('T')[0];
+
+      // Fecha local en formato YYYY-MM-DD (sin desfase de zona horaria)
+      const fechaLocalYMD = (raw) => {
+        if (!raw) return '';
+        const d = new Date(raw);
+        if (!isNaN(d.getTime())) {
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+        return String(raw).split('T')[0].split(' ')[0];
+      };
+
+      // Si no hay filtro de fecha, usar hoy (en local)
       if (!desde && !hasta) {
+        const hoy = fechaLocalYMD(new Date());
         desde = hoy;
         hasta = hoy;
       }
-      
+
       let filtrados = movimientos.filter(m => {
-        const fechaStr = m.created_at || m.fecha || '';
-        const fecha = fechaStr ? fechaStr.split('T')[0].split(' ')[0] : '';
+        // Filtrar por la fecha del movimiento (operativa); si no hay, por la de registro
+        const fecha = fechaLocalYMD(m.fecha_movimiento || m.created_at || m.fecha);
         const zonaMovimiento = m.zona_origen || '';
         if (desde && fecha < desde) return false;
         if (hasta && fecha > hasta) return false;
@@ -1828,9 +1838,9 @@
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--gray-600);">No hay registros para los filtros seleccionados</td></tr>';
       } else {
         filtrados.forEach(m => {
-          const fechaStr = m.created_at || m.fecha || '';
+          const fechaStr = m.fecha_movimiento || m.created_at || m.fecha || '';
           const fechaObj = fechaStr ? new Date(fechaStr) : null;
-          const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-ES')} ${fechaObj.toLocaleTimeString('es-ES')}` : '-';
+          const fecha = (fechaObj && !isNaN(fechaObj.getTime())) ? `${fechaObj.toLocaleDateString('es-ES')} ${fechaObj.toLocaleTimeString('es-ES')}` : '-';
           tbody.innerHTML += `
             <tr>
               <td>${fecha}</td>
@@ -1850,9 +1860,16 @@
       const desde = document.getElementById('filtroFechaCultivoDesde').value;
       const hasta = document.getElementById('filtroFechaCultivoHasta').value;
       const zona = document.getElementById('filtroZonaCultivo').value;
+      const fechaLocalYMD = (raw) => {
+        if (!raw) return '';
+        const d = new Date(raw);
+        if (!isNaN(d.getTime())) {
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+        return String(raw).split('T')[0].split(' ')[0];
+      };
       let filtrados = movimientos.filter(m => {
-        const fechaStr = m.created_at || m.fecha || '';
-        const fecha = fechaStr.split('T')[0];
+        const fecha = fechaLocalYMD(m.fecha_movimiento || m.created_at || m.fecha);
         const zonaMovimiento = m.zona_origen || '';
         if (desde && fecha < desde) return false;
         if (hasta && fecha > hasta) return false;
@@ -1865,7 +1882,7 @@
         return;
       }
       const datos = filtrados.map(m => {
-        const fechaStr = m.created_at || m.fecha || '';
+        const fechaStr = m.fecha_movimiento || m.created_at || m.fecha || '';
         const fechaFormato = fechaStr ? new Date(fechaStr).toLocaleString('es-ES') : '-';
         return {
           'Fecha y Hora': fechaFormato,
