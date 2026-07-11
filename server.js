@@ -910,7 +910,24 @@ app.post('/api/movimientos/entrada', async (req, res) => {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
-    // 1. Crear nuevo lote
+    // 1. Verificar si existe lote inicial (stock anterior)
+    const lotesExistentes = await executeQuery('SELECT COUNT(*) as count FROM lotes WHERE producto_id = ?', [producto_id]);
+    const existenLotes = parseInt(lotesExistentes.rows[0]?.count) || 0;
+    
+    // Si no hay lotes y el producto tiene stock, crear lote inicial
+    if (existenLotes === 0 && producto.stock > 0) {
+      const loteInicialQuery = usePostgres
+        ? `INSERT INTO lotes (producto_id, cantidad, fecha_caducidad, fecha_ingreso, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`
+        : `INSERT INTO lotes (producto_id, cantidad, fecha_caducidad, fecha_ingreso, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+      
+      const hoy = new Date().toISOString().split('T')[0];
+      await executeQuery(
+        loteInicialQuery,
+        [producto_id, producto.stock, producto.fecha_caducidad || hoy, hoy, 'Sistema', 'Lote inicial (stock existente)', new Date().toISOString()]
+      );
+    }
+
+    // 2. Crear nuevo lote
     const loteQuery = usePostgres
       ? `INSERT INTO lotes (producto_id, cantidad, fecha_caducidad, fecha_ingreso, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`
       : `INSERT INTO lotes (producto_id, cantidad, fecha_caducidad, fecha_ingreso, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`;
@@ -922,7 +939,7 @@ app.post('/api/movimientos/entrada', async (req, res) => {
     );
     const loteId = usePostgres ? loteResult.rows[0].id : loteResult.lastID;
 
-    // 2. Actualizar stock del producto (suma de todos los lotes)
+    // 3. Actualizar stock del producto (suma de todos los lotes)
     const lotesResult = await executeQuery('SELECT SUM(cantidad) as total FROM lotes WHERE producto_id = ?', [producto_id]);
     const nuevoStock = parseFloat(lotesResult.rows[0]?.total) || 0;
     await executeQuery('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id]);
