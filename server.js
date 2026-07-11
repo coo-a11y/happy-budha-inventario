@@ -1192,12 +1192,18 @@ app.delete('/api/movimientos/:id', async (req, res) => {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
-    // Revertir stock según el tipo de movimiento
-    let nuevoStock = producto.stock;
+    // Revertir stock según el tipo de movimiento. Se convierte a la unidad base
+    // (igual que al registrar el movimiento) para revertir exactamente lo que se
+    // descontó/sumó. Si la unidad no es convertible, se usa el valor tal cual.
+    const revertir = (valor) => {
+      const c = convertirAUnidadBase(parseFloat(valor) || 0, movimiento.unidad_salida, producto.presentacion);
+      return c.ok ? c.cantidad : (parseFloat(valor) || 0);
+    };
+    let nuevoStock = parseFloat(producto.stock) || 0;
     if (movimiento.tipo === 'salida') {
-      nuevoStock = producto.stock + movimiento.cantidad_salida;
+      nuevoStock = nuevoStock + revertir(movimiento.cantidad_salida);
     } else if (movimiento.tipo === 'entrada') {
-      nuevoStock = producto.stock - movimiento.cantidad_presentacion;
+      nuevoStock = nuevoStock - revertir(movimiento.cantidad_presentacion);
     }
 
     // Actualizar stock
