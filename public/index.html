@@ -667,6 +667,10 @@
             </select>
           </div>
           <div class="form-grupo">
+            <label>💲 Precio unitario (por presentación)</label>
+            <input type="number" id="salida-precio" step="0.01" placeholder="0.00" oninput="calcularCosto()">
+          </div>
+          <div class="form-grupo">
             <label>💰 Costo Calculado</label>
             <input type="text" id="salida-costo" readonly="" style="background: var(--gray-100); font-weight: bold; color: var(--primary);">
           </div>
@@ -1461,6 +1465,9 @@
       document.getElementById('salida-producto').value = id;
       document.getElementById('salida-presentacion').value = presentacion;
       document.getElementById('salida-lista-productos').style.display = 'none';
+      // Autollenar el precio con el del producto (editable por el usuario)
+      const prod = productos.find(p => p.id == id);
+      document.getElementById('salida-precio').value = (prod && prod.precio) ? prod.precio : '';
       calcularCosto();
     }
     function actualizarZonasSeleccionadas() {
@@ -1521,7 +1528,9 @@
         return;
       }
 
-      if (!producto.precio || !producto.presentacion) {
+      // Usar el precio del formulario (editable). Si está vacío, no hay costo.
+      const precio = parseFloat(document.getElementById('salida-precio').value) || 0;
+      if (!precio || !producto.presentacion) {
         document.getElementById('salida-costo').value = '$0.00';
         return;
       }
@@ -1540,7 +1549,7 @@
         return;
       }
       const cantPres = parseFloat(match[1]);
-      const costo = (producto.precio / cantPres) * conv.cantidad;
+      const costo = (precio / cantPres) * conv.cantidad;
       document.getElementById('salida-costo').value = '$' + costo.toFixed(2);
     }
     function registrarMovimiento() {
@@ -1573,7 +1582,8 @@
           producto_id: productoId,
           operario,
           descripcion: document.getElementById('salida-descripcion').value,
-          fecha: document.getElementById('salida-fecha').value
+          fecha: document.getElementById('salida-fecha').value,
+          precio: document.getElementById('salida-precio').value
         };
 
         if (tipo === 'entrada') {
@@ -1638,6 +1648,7 @@
       document.getElementById('salida-operario').value = '';
       document.getElementById('salida-descripcion').value = '';
       document.getElementById('salida-caducidad').value = '';
+      document.getElementById('salida-precio').value = '';
       document.getElementById('salida-costo').value = '';
       document.getElementById('salida-lista-productos').style.display = 'none';
       actualizarZonasSeleccionadas();

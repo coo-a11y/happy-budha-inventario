@@ -968,7 +968,7 @@ function convertirAUnidadBase(cantidad, unidadOrigen, presentacion) {
 // Registrar entrada (crea un lote nuevo)
 app.post('/api/movimientos/entrada', async (req, res) => {
   try {
-    const { producto_id, cantidad, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, fecha } = req.body;
+    const { producto_id, cantidad, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, fecha, precio } = req.body;
 
     // Fecha operativa del movimiento (la que ingresa el usuario, puede ser pasada).
     // Si no viene, se usa el momento actual.
@@ -1040,25 +1040,40 @@ app.post('/api/movimientos/entrada', async (req, res) => {
       if (!isNaN(ts) && ts < tsMasProximo) { tsMasProximo = ts; fechaMasProxima = f; }
     }
 
-    if (fechaMasProxima) {
-      await executeQuery('UPDATE productos SET stock = ?, fecha_caducidad = ? WHERE id = ?', [nuevoStock, fechaMasProxima, producto_id]);
-    } else {
-      await executeQuery('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id]);
+    // Precio: el que envía el formulario o, si no viene, el guardado del producto.
+    const hayPrecioNuevo = (precio !== undefined && precio !== null && String(precio).trim() !== '' && !isNaN(parseFloat(precio)) && parseFloat(precio) > 0);
+    const precioUsar = hayPrecioNuevo ? parseFloat(precio) : (parseFloat(producto.precio) || 0);
+
+    // Costo de la entrada = (precio por presentación / cantidad de la presentación) * cantidad ingresada (en base)
+    let costoTotalEntrada = 0;
+    if (precioUsar && producto.presentacion) {
+      const match = producto.presentacion.match(/(\d+\.?\d*)/);
+      if (match) {
+        costoTotalEntrada = (precioUsar / parseFloat(match[1])) * cantidadBase;
+      }
     }
 
+    // Actualizar producto: stock, (opcional) fecha más próxima y (opcional) precio nuevo
+    const sets = ['stock = ?'];
+    const vals = [nuevoStock];
+    if (fechaMasProxima) { sets.push('fecha_caducidad = ?'); vals.push(fechaMasProxima); }
+    if (hayPrecioNuevo) { sets.push('precio = ?'); vals.push(precioUsar); }
+    vals.push(producto_id);
+    await executeQuery(`UPDATE productos SET ${sets.join(', ')} WHERE id = ?`, vals);
+
     // 3. Registrar en movimientos (fecha_movimiento = fecha del usuario,
-    //    created_at = momento real del registro como prueba)
+    //    created_at = momento real del registro como prueba, costo_total = costo de la entrada)
     const movQuery = usePostgres
-      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, fecha_movimiento, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
-      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, fecha_movimiento, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, fecha_movimiento, costo_total, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, fecha_movimiento, costo_total, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     const movResult = await executeQuery(
       movQuery,
-      [producto_id, 'entrada', cantidad, unidad_salida, zona_destino, operario, `Lote: ${loteId} - ${descripcion}`, fecha_caducidad || hoy, fechaMovimiento, new Date().toISOString()]
+      [producto_id, 'entrada', cantidad, unidad_salida, zona_destino, operario, `Lote: ${loteId} - ${descripcion}`, fecha_caducidad || hoy, fechaMovimiento, costoTotalEntrada, new Date().toISOString()]
     );
 
     const movId = usePostgres ? movResult.rows[0].id : movResult.lastID;
-    res.json({ success: true, id: movId, loteId, nuevoStock });
+    res.json({ success: true, id: movId, loteId, nuevoStock, costoTotal: costoTotalEntrada });
   } catch (err) {
     console.error('Error en POST /api/movimientos/entrada:', err);
     res.status(500).json({ error: err.message });
@@ -1068,7 +1083,7 @@ app.post('/api/movimientos/entrada', async (req, res) => {
 // Registrar salida (con cálculo automático de costo)
 app.post('/api/movimientos/salida', async (req, res) => {
   try {
-    const { producto_id, cantidad_salida, unidad_salida, zona_origen, operario, descripcion, fecha } = req.body;
+    const { producto_id, cantidad_salida, unidad_salida, zona_origen, operario, descripcion, fecha, precio } = req.body;
     console.log('📝 Movimiento salida recibido:', { producto_id, cantidad_salida, unidad_salida, zona_origen });
 
     // Fecha operativa del movimiento (la que ingresa el usuario, puede ser pasada).
@@ -1103,12 +1118,17 @@ app.post('/api/movimientos/salida', async (req, res) => {
     let costoUnitario = 0;
     let costoTotal = 0;
 
-    if (producto.precio && producto.presentacion) {
+    // Usar el precio que envía el formulario; si no viene, el precio guardado del producto
+    const precioUsar = (precio !== undefined && precio !== null && String(precio).trim() !== '' && !isNaN(parseFloat(precio)))
+      ? parseFloat(precio)
+      : (parseFloat(producto.precio) || 0);
+
+    if (precioUsar && producto.presentacion) {
       // Extraer cantidad de la presentación (ej: "25 KG" -> 25)
       const match = producto.presentacion.match(/(\d+\.?\d*)/);
       if (match) {
         const cantidadPresentacion = parseFloat(match[1]);
-        costoUnitario = producto.precio / cantidadPresentacion;
+        costoUnitario = precioUsar / cantidadPresentacion;
         costoTotal = costoUnitario * cantidadSalida;
       }
     }
