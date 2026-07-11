@@ -1535,11 +1535,9 @@
         return;
       }
 
+      // Número de la presentación (ej. "25 KG" -> 25). Si no trae número (ej. "L"), asumir 1.
       const match = producto.presentacion.match(/(\d+\.?\d*)/);
-      if (!match) {
-        document.getElementById('salida-costo').value = '$0.00';
-        return;
-      }
+      const cantPres = match ? parseFloat(match[1]) : 1;
 
       // Convertir la cantidad a la unidad base del producto antes de calcular el costo
       const unidad = document.getElementById('salida-unidad').value;
@@ -1548,7 +1546,6 @@
         document.getElementById('salida-costo').value = '⚠️ Unidad incompatible';
         return;
       }
-      const cantPres = parseFloat(match[1]);
       const costo = (precio / cantPres) * conv.cantidad;
       document.getElementById('salida-costo').value = '$' + costo.toFixed(2);
     }

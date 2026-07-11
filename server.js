@@ -1048,9 +1048,8 @@ app.post('/api/movimientos/entrada', async (req, res) => {
     let costoTotalEntrada = 0;
     if (precioUsar && producto.presentacion) {
       const match = producto.presentacion.match(/(\d+\.?\d*)/);
-      if (match) {
-        costoTotalEntrada = (precioUsar / parseFloat(match[1])) * cantidadBase;
-      }
+      const cantPresEnt = match ? parseFloat(match[1]) : 1;
+      costoTotalEntrada = (precioUsar / cantPresEnt) * cantidadBase;
     }
 
     // Actualizar producto: stock, (opcional) fecha más próxima y (opcional) precio nuevo
@@ -1124,13 +1123,11 @@ app.post('/api/movimientos/salida', async (req, res) => {
       : (parseFloat(producto.precio) || 0);
 
     if (precioUsar && producto.presentacion) {
-      // Extraer cantidad de la presentación (ej: "25 KG" -> 25)
+      // Extraer cantidad de la presentación (ej: "25 KG" -> 25). Si no trae número (ej. "L"), asumir 1.
       const match = producto.presentacion.match(/(\d+\.?\d*)/);
-      if (match) {
-        const cantidadPresentacion = parseFloat(match[1]);
-        costoUnitario = precioUsar / cantidadPresentacion;
-        costoTotal = costoUnitario * cantidadSalida;
-      }
+      const cantidadPresentacion = match ? parseFloat(match[1]) : 1;
+      costoUnitario = precioUsar / cantidadPresentacion;
+      costoTotal = costoUnitario * cantidadSalida;
     }
 
     const nuevoStock = stockActual - cantidadSalida;
