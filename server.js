@@ -888,8 +888,12 @@ app.post('/api/movimientos/entrada', async (req, res) => {
 
     await executeQuery('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id]);
 
+    const movQuery = usePostgres
+      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    
     const movResult = await executeQuery(
-      `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      movQuery,
       [producto_id, 'entrada', cantidad, unidad_salida, zona_destino, operario, descripcion, new Date().toISOString()]
     );
 
