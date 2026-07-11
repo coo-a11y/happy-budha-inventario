@@ -508,12 +508,13 @@
               <th>Stock</th>
               <th>Mín</th>
               <th>Caducidad</th>
+              <th>Proveedor</th>
               <th>Estado</th>
             </tr>
           </thead>
           <tbody id="tablaCriticaBody">
             <tr>
-              <td colspan="6" style="text-align: center; color: var(--gray-600);">Cargando...</td>
+              <td colspan="7" style="text-align: center; color: var(--gray-600);">Cargando...</td>
             </tr>
           </tbody>
         </table>
@@ -573,11 +574,12 @@
               <th>Zona</th>
               <th>Caducidad</th>
               <th>Precio</th>
+              <th>Proveedor</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="tablaProductosBody">
-            <tr><td colspan="11" style="text-align: center; color: var(--gray-600);">Cargando productos...</td></tr>
+            <tr><td colspan="12" style="text-align: center; color: var(--gray-600);">Cargando productos...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1042,6 +1044,10 @@
           <label>Bodega/Zona</label>
           <input type="text" id="formBodega" placeholder="Ej: Almacén">
         </div>
+        <div class="form-grupo">
+          <label>🏢 Proveedor</label>
+          <input type="text" id="formProveedor" placeholder="Ej: Agripac, Ecuaquímica...">
+        </div>
       </div>
       <div class="form-acciones" style="margin-top: 1.5rem;">
         <button class="btn btn-primary" onclick="guardarProducto()">💾 Guardar</button>
@@ -1133,6 +1139,7 @@
           <td>${p.zona || '-'}</td>
           <td>${p.fecha_caducidad && String(p.fecha_caducidad).trim() !== '' ? String(p.fecha_caducidad).split('T')[0] : '-'}</td>
           <td>$${(parseFloat(p.precio) || 0).toFixed(2)}</td>
+          <td>${p.proveedor || '-'}</td>
           <td>
             <button class="btn btn-sm btn-primary" onclick="editarProducto('${p.id}')">✏️</button>
             ${usuarioRol === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="eliminarProducto('${p.id}')">🗑️</button>` : ''}
@@ -1235,7 +1242,7 @@
       const tbody = document.getElementById('tablaCriticaBody');
       tbody.innerHTML = '';
       if (productosCriticos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--gray-600);">✅ Todos los productos están en orden</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--gray-600);">✅ Todos los productos están en orden</td></tr>';
       } else {
         productosCriticos.forEach(p => {
           const badgeClass = p.prioridad === 1 ? 'badge-danger' : p.prioridad === 2 ? 'badge-danger' : 'badge-warning';
@@ -1246,6 +1253,7 @@
               <td>${p.stock || 0}</td>
               <td>${p.stock_minimo || 0}</td>
               <td>${p.fecha_caducidad && String(p.fecha_caducidad).trim() !== '' ? String(p.fecha_caducidad).split('T')[0] : '-'}</td>
+              <td>${p.proveedor || '-'}</td>
               <td><span class="badge ${badgeClass}">${p.estado}</span></td>
             </tr>
           `;
@@ -1439,7 +1447,8 @@
         'Stock Mínimo': p.stock_minimo || p.minimo || 0,
         'Precio': p.precio || 0,
         'Fecha Caducidad': p.fecha_caducidad || '',
-        'Bodega/Zona': p.bodega || p.zona || ''
+        'Bodega/Zona': p.bodega || p.zona || '',
+        'Proveedor': p.proveedor || ''
       }));
       const ws = XLSX.utils.json_to_sheet(datos);
       const wb = XLSX.utils.book_new();
@@ -1786,6 +1795,7 @@
         }
         document.getElementById('formCaducidad').value = fechaDisplay;
         document.getElementById('formBodega').value = producto.zona || '';
+        document.getElementById('formProveedor').value = producto.proveedor || '';
       } else {
         titulo.textContent = '➕ Nuevo Producto';
         document.getElementById('formCodigo').value = '';
@@ -1797,6 +1807,7 @@
         document.getElementById('formPrecio').value = 0;
         document.getElementById('formCaducidad').value = '';
         document.getElementById('formBodega').value = '';
+        document.getElementById('formProveedor').value = '';
       }
       modal.classList.add('active');
       
@@ -1855,7 +1866,8 @@
         stock_minimo: parseFloat(document.getElementById('formMinimo').value) || 0,
         precio: parseFloat(document.getElementById('formPrecio').value) || 0,
         fecha_caducidad: fechaCaducidad,
-        zona: document.getElementById('formBodega').value
+        zona: document.getElementById('formBodega').value,
+        proveedor: document.getElementById('formProveedor').value
       };
       if (productoEnEdicion) {
         datos.id = productoEnEdicion.id;
