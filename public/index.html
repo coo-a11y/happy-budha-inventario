@@ -1656,6 +1656,37 @@
         document.getElementById('formBodega').value = '';
       }
       modal.classList.add('active');
+      
+      // Cargar lotes si es edición
+      if (producto) {
+        cargarLotes(producto.id);
+      }
+    }
+    
+    function cargarLotes(productoId) {
+      fetch(`/api/lotes/${productoId}`)
+        .then(r => r.json())
+        .then(lotes => {
+          const tbody = document.getElementById('cuerpoTablaLotes');
+          if (lotes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1rem;">Sin lotes registrados</td></tr>';
+            return;
+          }
+          
+          tbody.innerHTML = lotes.map(lote => {
+            const fechaVence = lote.fecha_caducidad ? new Date(lote.fecha_caducidad).toLocaleDateString('es-ES') : '-';
+            const fechaIngreso = lote.fecha_ingreso ? new Date(lote.fecha_ingreso).toLocaleDateString('es-ES') : '-';
+            return `
+              <tr>
+                <td style="border: 1px solid var(--gray-300); padding: 0.5rem;">${lote.cantidad || 0}</td>
+                <td style="border: 1px solid var(--gray-300); padding: 0.5rem;">${fechaVence}</td>
+                <td style="border: 1px solid var(--gray-300); padding: 0.5rem;">${fechaIngreso}</td>
+                <td style="border: 1px solid var(--gray-300); padding: 0.5rem;">${lote.operario || '-'}</td>
+              </tr>
+            `;
+          }).join('');
+        })
+        .catch(err => console.error('Error cargando lotes:', err));
     }
     function cerrarModalProducto() {
       document.getElementById('modalProducto').classList.remove('active');
