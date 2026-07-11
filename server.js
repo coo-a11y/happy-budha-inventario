@@ -1152,6 +1152,18 @@ app.delete('/api/productos/:id', async (req, res) => {
   }
 });
 
+// ============ ENDPOINTS DE LOTES ============
+app.get('/api/lotes/:producto_id', async (req, res) => {
+  try {
+    const { producto_id } = req.params;
+    const result = await executeQuery('SELECT * FROM lotes WHERE producto_id = ? ORDER BY fecha_caducidad ASC', [producto_id]);
+    res.json(result.rows || []);
+  } catch (err) {
+    console.error('Error en GET /api/lotes:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ============ ESTADÍSTICAS PARA DASHBOARD ============
 
 app.get('/api/estadisticas', async (req, res) => {
