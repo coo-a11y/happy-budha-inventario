@@ -1681,16 +1681,29 @@
         return;
       }
 
-      const promesas = items.map(it => fetch(it.endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(it.datos)
-      }).then(r => r.json()));
+      const btn = document.getElementById('btnRegistrar');
+      btn.disabled = true;
 
-      Promise.all(promesas).then(results => {
-        const exitosos = results.filter(r => r.success).length;
-        const fallidos = results.filter(r => !r.success).length;
+      // IMPORTANTE: enviar en SECUENCIA (no en paralelo). Si varios movimientos son
+      // del mismo producto, en paralelo se pisan el stock entre sí. En secuencia,
+      // cada uno lee el stock ya actualizado por el anterior.
+      (async () => {
+        let exitosos = 0;
+        let fallidos = 0;
+        for (const it of items) {
+          try {
+            const r = await fetch(it.endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(it.datos)
+            }).then(resp => resp.json());
+            if (r && r.success) exitosos++; else fallidos++;
+          } catch (e) {
+            fallidos++;
+          }
+        }
 
+        btn.disabled = false;
         if (exitosos > 0) {
           mostrarAlerta(`✅ ${exitosos} movimiento(s) registrado(s) exitosamente`, 'success');
           movimientosPendientes = [];
@@ -1703,8 +1716,7 @@
         if (fallidos > 0) {
           mostrarAlerta(`⚠️ ${fallidos} movimiento(s) fallaron`, 'error');
         }
-      })
-      .catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
+      })();
     }
     function aplicarFiltros() {
       const buscar = document.getElementById('buscar').value;
