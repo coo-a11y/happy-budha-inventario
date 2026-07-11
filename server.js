@@ -919,6 +919,7 @@ const FACTOR_UNIDAD = {
   lb: 453.592, libra: 453.592, libras: 453.592,
   ml: 1, cc: 1, mililitro: 1, mililitros: 1,
   l: 1000, lt: 1000, litro: 1000, litros: 1000,
+  gal: 3785.41, galon: 3785.41, 'galón': 3785.41, galones: 3785.41, 'galones': 3785.41,
   un: 1, u: 1, und: 1, unidad: 1, unidades: 1
 };
 const DIM_UNIDAD = {
@@ -927,6 +928,7 @@ const DIM_UNIDAD = {
   lb: 'masa', libra: 'masa', libras: 'masa',
   ml: 'volumen', cc: 'volumen', mililitro: 'volumen', mililitros: 'volumen',
   l: 'volumen', lt: 'volumen', litro: 'volumen', litros: 'volumen',
+  gal: 'volumen', galon: 'volumen', 'galón': 'volumen', galones: 'volumen',
   un: 'conteo', u: 'conteo', und: 'conteo', unidad: 'conteo', unidades: 'conteo'
 };
 
