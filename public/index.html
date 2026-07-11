@@ -563,6 +563,7 @@
         <table id="tablaProductos">
           <thead>
             <tr>
+              <th>Item</th>
               <th>Código</th>
               <th>Nombre</th>
               <th>Categoría</th>
@@ -576,7 +577,7 @@
             </tr>
           </thead>
           <tbody id="tablaProductosBody">
-            <tr><td colspan="10" style="text-align: center; color: var(--gray-600);">Cargando productos...</td></tr>
+            <tr><td colspan="11" style="text-align: center; color: var(--gray-600);">Cargando productos...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1121,6 +1122,7 @@
         let estadoStock = 'stock-ok';
         if (p.stock <= (p.stock_minimo || 0)) estadoStock = 'stock-critico';
         html += `<tr>
+          <td><strong>${idx + 1}</strong></td>
           <td><strong>${p.codigo || ''}</strong></td>
           <td>${p.nombre || ''}</td>
           <td>${p.categoria || ''}</td>
