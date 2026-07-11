@@ -1104,12 +1104,16 @@ app.post('/api/movimientos/salida', async (req, res) => {
 
     // En el historial se guarda lo que el usuario ingresó (cantidad + unidad),
     // aunque el descuento al stock se haya hecho ya convertido a la unidad base.
+    const movQuery = usePostgres
+      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
     const movResult = await executeQuery(
-      `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      movQuery,
       [producto_id, 'salida', stockActual, cantidadIngresada, unidad_salida, zona_origen, operario, costoUnitario, costoTotal, descripcion, new Date().toISOString()]
     );
 
-    const movId = usePostgres ? movResult.rows[0].id : movResult.lastID;
+    const movId = usePostgres ? movResult.rows[0]?.id : movResult.lastID;
     res.json({ success: true, id: movId, nuevoStock, costoTotal, cantidadDescontada: cantidadSalida, convertido: conv.convertido });
   } catch (err) {
     console.error('Error en POST /api/movimientos/salida:', err);
