@@ -578,6 +578,7 @@ const initializeDatabase = async () => {
         costo_total REAL,
         descripcion TEXT,
         contifico_kardex_id TEXT,
+        fecha_caducidad TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL
       )`);
@@ -596,6 +597,7 @@ const initializeDatabase = async () => {
         costo_total REAL,
         descripcion TEXT,
         contifico_kardex_id TEXT,
+        fecha_caducidad TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL
       )`);
@@ -663,6 +665,11 @@ const initializeDatabase = async () => {
     if (usePostgres) {
       try {
         await pool.query('ALTER TABLE productos ADD COLUMN bodega TEXT');
+      } catch (err) {
+        // Columna ya existe, ignorar
+      }
+      try {
+        await pool.query('ALTER TABLE movimientos ADD COLUMN fecha_caducidad TEXT');
       } catch (err) {
         // Columna ya existe, ignorar
       }
@@ -939,19 +946,43 @@ app.post('/api/movimientos/entrada', async (req, res) => {
     );
     const loteId = usePostgres ? loteResult.rows[0].id : loteResult.lastID;
 
-    // 3. Actualizar stock del producto (suma de todos los lotes)
-    const lotesResult = await executeQuery('SELECT SUM(cantidad) as total FROM lotes WHERE producto_id = ?', [producto_id]);
-    const nuevoStock = parseFloat(lotesResult.rows[0]?.total) || 0;
-    await executeQuery('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id]);
+    // 3. Actualizar stock del producto (suma de todos los lotes) y fijar la
+    //    fecha_caducidad = la más próxima a vencer (mínima) entre sus lotes.
+    //    Se calcula en JS para que funcione igual en PostgreSQL y en LocalDB.
+    const lotesProd = await executeQuery('SELECT cantidad, fecha_caducidad FROM lotes WHERE producto_id = ?', [producto_id]);
+    const filasLotes = lotesProd.rows || [];
+    const nuevoStock = filasLotes.reduce((sum, l) => sum + (parseFloat(l.cantidad) || 0), 0);
+
+    // Elegir la fecha más cercana a vencer, preservando el formato YYYY-MM-DD
+    let fechaMasProxima = null;
+    let tsMasProximo = Infinity;
+    for (const l of filasLotes) {
+      if (!l.fecha_caducidad) continue;
+      const ts = new Date(l.fecha_caducidad).getTime();
+      if (isNaN(ts) || ts >= tsMasProximo) continue;
+      tsMasProximo = ts;
+      if (l.fecha_caducidad instanceof Date) {
+        const d = l.fecha_caducidad;
+        fechaMasProxima = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      } else {
+        fechaMasProxima = String(l.fecha_caducidad).split('T')[0];
+      }
+    }
+
+    if (fechaMasProxima) {
+      await executeQuery('UPDATE productos SET stock = ?, fecha_caducidad = ? WHERE id = ?', [nuevoStock, fechaMasProxima, producto_id]);
+    } else {
+      await executeQuery('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id]);
+    }
 
     // 3. Registrar en movimientos
     const movQuery = usePostgres
-      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
-      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-    
+      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
     const movResult = await executeQuery(
       movQuery,
-      [producto_id, 'entrada', cantidad, unidad_salida, zona_destino, operario, `Lote: ${loteId} - ${descripcion}`, new Date().toISOString()]
+      [producto_id, 'entrada', cantidad, unidad_salida, zona_destino, operario, `Lote: ${loteId} - ${descripcion}`, fecha_caducidad || hoy, new Date().toISOString()]
     );
 
     const movId = usePostgres ? movResult.rows[0].id : movResult.lastID;

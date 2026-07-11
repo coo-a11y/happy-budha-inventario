@@ -1104,7 +1104,7 @@
           <td class="${estadoStock}">${p.stock || 0}</td>
           <td>${p.stock_minimo || 0}</td>
           <td>${p.zona || '-'}</td>
-          <td>${p.fecha_caducidad_proxima ? new Date(p.fecha_caducidad_proxima).toLocaleDateString('es-ES') : '-'}</td>
+          <td>${p.fecha_caducidad && String(p.fecha_caducidad).trim() !== '' ? String(p.fecha_caducidad).split('T')[0] : '-'}</td>
           <td>$${(parseFloat(p.precio) || 0).toFixed(2)}</td>
           <td>
             <button class="btn btn-sm btn-primary" onclick="editarProducto('${p.id}')">✏️</button>
@@ -1218,7 +1218,7 @@
               <td>${p.nombre}</td>
               <td>${p.stock || 0}</td>
               <td>${p.stock_minimo || 0}</td>
-              <td>${p.fecha_caducidad_proxima ? new Date(p.fecha_caducidad_proxima).toLocaleDateString('es-ES') : '-'}</td>
+              <td>${p.fecha_caducidad && String(p.fecha_caducidad).trim() !== '' ? String(p.fecha_caducidad).split('T')[0] : '-'}</td>
               <td><span class="badge ${badgeClass}">${p.estado}</span></td>
             </tr>
           `;
@@ -1245,7 +1245,10 @@
         const unidad = m.unidad_salida || '-';
         // Para eliminaciones, mostrar descripcion; para otros, mostrar nombre del producto
         const nombreProducto = m.tipo === 'eliminación' ? (m.descripcion || '-') : (m.nombre || '-');
-        const fechaCaducidad = m.fecha_caducidad ? new Date(m.fecha_caducidad).toLocaleDateString('es-ES') : '-';
+        let fechaCaducidad = '-';
+        if (m.fecha_caducidad && String(m.fecha_caducidad).trim() !== '') {
+          fechaCaducidad = String(m.fecha_caducidad).split('T')[0];
+        }
         tbody.innerHTML += `
           <tr>
             <td><input type="checkbox" class="checkbox-movimiento" data-id="${m.id}"></td>
