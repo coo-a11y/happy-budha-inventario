@@ -1486,6 +1486,17 @@
         labelCantidad.textContent = 'Cantidad a Sacar *';
       }
     }
+    // Conversión de unidades (misma lógica que el backend)
+    const FACTOR_UNIDAD = { g:1, gr:1, gramo:1, gramos:1, kg:1000, kilo:1000, kilogramo:1000, kilogramos:1000, lb:453.592, libra:453.592, libras:453.592, ml:1, cc:1, mililitro:1, mililitros:1, l:1000, lt:1000, litro:1000, litros:1000, un:1, u:1, und:1, unidad:1, unidades:1 };
+    const DIM_UNIDAD = { g:'masa', gr:'masa', gramo:'masa', gramos:'masa', kg:'masa', kilo:'masa', kilogramo:'masa', kilogramos:'masa', lb:'masa', libra:'masa', libras:'masa', ml:'volumen', cc:'volumen', mililitro:'volumen', mililitros:'volumen', l:'volumen', lt:'volumen', litro:'volumen', litros:'volumen', un:'conteo', u:'conteo', und:'conteo', unidad:'conteo', unidades:'conteo' };
+    function normalizarUnidad(t){ if(!t) return null; const k=String(t).trim().toLowerCase(); return DIM_UNIDAD[k]?k:null; }
+    function unidadBasePresentacion(p){ if(!p) return null; const m=String(p).match(/[a-zA-Z]+/); return m?normalizarUnidad(m[0]):null; }
+    function convertirAUnidadBase(cant, uOrigTxt, presentacion){
+      const uo=normalizarUnidad(uOrigTxt), ub=unidadBasePresentacion(presentacion);
+      if(!uo||!ub) return {ok:true, cantidad:cant, convertido:false};
+      if(DIM_UNIDAD[uo]!==DIM_UNIDAD[ub]) return {ok:false, uo, ub};
+      return {ok:true, cantidad: cant*(FACTOR_UNIDAD[uo]/FACTOR_UNIDAD[ub]), convertido: uo!==ub};
+    }
     function calcularCosto() {
       const productoId = document.getElementById('salida-producto').value;
       const cantidad = parseFloat(document.getElementById('salida-cantidad').value) || 0;
@@ -1512,8 +1523,15 @@
         return;
       }
 
+      // Convertir la cantidad a la unidad base del producto antes de calcular el costo
+      const unidad = document.getElementById('salida-unidad').value;
+      const conv = convertirAUnidadBase(cantidad, unidad, producto.presentacion);
+      if (!conv.ok) {
+        document.getElementById('salida-costo').value = '⚠️ Unidad incompatible';
+        return;
+      }
       const cantPres = parseFloat(match[1]);
-      const costo = (producto.precio / cantPres) * cantidad;
+      const costo = (producto.precio / cantPres) * conv.cantidad;
       document.getElementById('salida-costo').value = '$' + costo.toFixed(2);
     }
     function registrarMovimiento() {

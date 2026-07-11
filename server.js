@@ -903,6 +903,59 @@ app.post('/api/productos', async (req, res) => {
   }
 });
 
+// ============ CONVERSIÓN DE UNIDADES DE MEDIDA ============
+// Cada unidad tiene una dimensión (masa/volumen/conteo) y un factor hacia la
+// unidad base de esa dimensión: masa->gramo, volumen->mililitro, conteo->unidad.
+const FACTOR_UNIDAD = {
+  g: 1, gr: 1, gramo: 1, gramos: 1,
+  kg: 1000, kilo: 1000, kilogramo: 1000, kilogramos: 1000,
+  lb: 453.592, libra: 453.592, libras: 453.592,
+  ml: 1, cc: 1, mililitro: 1, mililitros: 1,
+  l: 1000, lt: 1000, litro: 1000, litros: 1000,
+  un: 1, u: 1, und: 1, unidad: 1, unidades: 1
+};
+const DIM_UNIDAD = {
+  g: 'masa', gr: 'masa', gramo: 'masa', gramos: 'masa',
+  kg: 'masa', kilo: 'masa', kilogramo: 'masa', kilogramos: 'masa',
+  lb: 'masa', libra: 'masa', libras: 'masa',
+  ml: 'volumen', cc: 'volumen', mililitro: 'volumen', mililitros: 'volumen',
+  l: 'volumen', lt: 'volumen', litro: 'volumen', litros: 'volumen',
+  un: 'conteo', u: 'conteo', und: 'conteo', unidad: 'conteo', unidades: 'conteo'
+};
+
+function normalizarUnidad(txt) {
+  if (!txt) return null;
+  const k = String(txt).trim().toLowerCase();
+  return DIM_UNIDAD[k] ? k : null;
+}
+
+// Deduce la unidad base del producto a partir de su presentación.
+// Ej: "25 KG" -> "kg", "250 CC" -> "cc", "1 litro" -> "litro", "1 und" -> "und".
+function unidadBasePresentacion(presentacion) {
+  if (!presentacion) return null;
+  const m = String(presentacion).match(/[a-zA-Z]+/);
+  return m ? normalizarUnidad(m[0]) : null;
+}
+
+// Convierte 'cantidad' expresada en 'unidadOrigen' a la unidad base del producto.
+// Devuelve { ok, cantidad, convertido, error }.
+// Si no se puede determinar alguna unidad, no convierte (resta directa segura).
+function convertirAUnidadBase(cantidad, unidadOrigen, presentacion) {
+  const uOrig = normalizarUnidad(unidadOrigen);
+  const uBase = unidadBasePresentacion(presentacion);
+  if (!uOrig || !uBase) {
+    return { ok: true, cantidad, convertido: false };
+  }
+  if (DIM_UNIDAD[uOrig] !== DIM_UNIDAD[uBase]) {
+    return {
+      ok: false,
+      error: `No se puede convertir "${unidadOrigen}" a la unidad del producto (${uBase}): son de distinto tipo (${DIM_UNIDAD[uOrig]} vs ${DIM_UNIDAD[uBase]}).`
+    };
+  }
+  const factor = FACTOR_UNIDAD[uOrig] / FACTOR_UNIDAD[uBase];
+  return { ok: true, cantidad: cantidad * factor, convertido: uOrig !== uBase, unidadBase: uBase };
+}
+
 // ============ ENDPOINTS DE MOVIMIENTOS ============
 
 // Registrar entrada (crea un lote nuevo)
@@ -1007,9 +1060,17 @@ app.post('/api/movimientos/salida', async (req, res) => {
 
     // Validar stock: si es NULL o undefined, usar 0
     const stockActual = producto.stock !== null && producto.stock !== undefined ? parseFloat(producto.stock) : 0;
-    const cantidadSalida = parseFloat(cantidad_salida || 0);
+    const cantidadIngresada = parseFloat(cantidad_salida || 0);
 
-    // Validar que hay suficiente stock
+    // Convertir la cantidad a la unidad base del producto (según su presentación).
+    // Ej: producto en "25 KG"; el usuario saca 500 g -> 0.5 kg descontados del stock.
+    const conv = convertirAUnidadBase(cantidadIngresada, unidad_salida, producto.presentacion);
+    if (!conv.ok) {
+      return res.status(400).json({ error: conv.error });
+    }
+    const cantidadSalida = conv.cantidad; // ya en la unidad base del stock
+
+    // Validar que hay suficiente stock (comparando en la misma unidad)
     if (stockActual < cantidadSalida) {
       return res.status(400).json({ error: 'Stock insuficiente' });
     }
@@ -1033,13 +1094,15 @@ app.post('/api/movimientos/salida', async (req, res) => {
 
     await executeQuery('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id]);
 
+    // En el historial se guarda lo que el usuario ingresó (cantidad + unidad),
+    // aunque el descuento al stock se haya hecho ya convertido a la unidad base.
     const movResult = await executeQuery(
       `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [producto_id, 'salida', stockActual, cantidadSalida, unidad_salida, zona_origen, operario, costoUnitario, costoTotal, descripcion, new Date().toISOString()]
+      [producto_id, 'salida', stockActual, cantidadIngresada, unidad_salida, zona_origen, operario, costoUnitario, costoTotal, descripcion, new Date().toISOString()]
     );
 
     const movId = usePostgres ? movResult.rows[0].id : movResult.lastID;
-    res.json({ success: true, id: movId, nuevoStock, costoTotal });
+    res.json({ success: true, id: movId, nuevoStock, costoTotal, cantidadDescontada: cantidadSalida, convertido: conv.convertido });
   } catch (err) {
     console.error('Error en POST /api/movimientos/salida:', err);
     res.status(500).json({ error: err.message });
