@@ -579,6 +579,7 @@ const initializeDatabase = async () => {
         descripcion TEXT,
         contifico_kardex_id TEXT,
         fecha_caducidad TEXT,
+        fecha_movimiento TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL
       )`);
@@ -598,6 +599,7 @@ const initializeDatabase = async () => {
         descripcion TEXT,
         contifico_kardex_id TEXT,
         fecha_caducidad TEXT,
+        fecha_movimiento TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL
       )`);
@@ -670,6 +672,11 @@ const initializeDatabase = async () => {
       }
       try {
         await pool.query('ALTER TABLE movimientos ADD COLUMN fecha_caducidad TEXT');
+      } catch (err) {
+        // Columna ya existe, ignorar
+      }
+      try {
+        await pool.query('ALTER TABLE movimientos ADD COLUMN fecha_movimiento TEXT');
       } catch (err) {
         // Columna ya existe, ignorar
       }
@@ -961,7 +968,11 @@ function convertirAUnidadBase(cantidad, unidadOrigen, presentacion) {
 // Registrar entrada (crea un lote nuevo)
 app.post('/api/movimientos/entrada', async (req, res) => {
   try {
-    const { producto_id, cantidad, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad } = req.body;
+    const { producto_id, cantidad, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, fecha } = req.body;
+
+    // Fecha operativa del movimiento (la que ingresa el usuario, puede ser pasada).
+    // Si no viene, se usa el momento actual.
+    const fechaMovimiento = fecha && String(fecha).trim() !== '' ? fecha : new Date().toISOString();
 
     const result = await executeQuery('SELECT * FROM productos WHERE id = ?', [producto_id]);
     const producto = result.rows[0];
@@ -1035,14 +1046,15 @@ app.post('/api/movimientos/entrada', async (req, res) => {
       await executeQuery('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, producto_id]);
     }
 
-    // 3. Registrar en movimientos
+    // 3. Registrar en movimientos (fecha_movimiento = fecha del usuario,
+    //    created_at = momento real del registro como prueba)
     const movQuery = usePostgres
-      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
-      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, fecha_movimiento, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, fecha_caducidad, fecha_movimiento, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     const movResult = await executeQuery(
       movQuery,
-      [producto_id, 'entrada', cantidad, unidad_salida, zona_destino, operario, `Lote: ${loteId} - ${descripcion}`, fecha_caducidad || hoy, new Date().toISOString()]
+      [producto_id, 'entrada', cantidad, unidad_salida, zona_destino, operario, `Lote: ${loteId} - ${descripcion}`, fecha_caducidad || hoy, fechaMovimiento, new Date().toISOString()]
     );
 
     const movId = usePostgres ? movResult.rows[0].id : movResult.lastID;
@@ -1056,8 +1068,11 @@ app.post('/api/movimientos/entrada', async (req, res) => {
 // Registrar salida (con cálculo automático de costo)
 app.post('/api/movimientos/salida', async (req, res) => {
   try {
-    const { producto_id, cantidad_salida, unidad_salida, zona_origen, operario, descripcion } = req.body;
+    const { producto_id, cantidad_salida, unidad_salida, zona_origen, operario, descripcion, fecha } = req.body;
     console.log('📝 Movimiento salida recibido:', { producto_id, cantidad_salida, unidad_salida, zona_origen });
+
+    // Fecha operativa del movimiento (la que ingresa el usuario, puede ser pasada).
+    const fechaMovimiento = fecha && String(fecha).trim() !== '' ? fecha : new Date().toISOString();
 
     const result = await executeQuery('SELECT * FROM productos WHERE id = ?', [producto_id]);
     const producto = result.rows[0];
@@ -1105,12 +1120,12 @@ app.post('/api/movimientos/salida', async (req, res) => {
     // En el historial se guarda lo que el usuario ingresó (cantidad + unidad),
     // aunque el descuento al stock se haya hecho ya convertido a la unidad base.
     const movQuery = usePostgres
-      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
-      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, fecha_movimiento, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, fecha_movimiento, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     const movResult = await executeQuery(
       movQuery,
-      [producto_id, 'salida', stockActual, cantidadIngresada, unidad_salida, zona_origen, operario, costoUnitario, costoTotal, descripcion, new Date().toISOString()]
+      [producto_id, 'salida', stockActual, cantidadIngresada, unidad_salida, zona_origen, operario, costoUnitario, costoTotal, descripcion, fechaMovimiento, new Date().toISOString()]
     );
 
     const movId = usePostgres ? movResult.rows[0]?.id : movResult.lastID;

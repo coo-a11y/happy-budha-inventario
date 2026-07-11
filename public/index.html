@@ -607,7 +607,8 @@
           <thead>
             <tr>
               <th style="width: 30px;"><input type="checkbox" id="selectTodosHeader" onchange="seleccionarTodosMovimientos()"></th>
-              <th>Fecha y Hora</th>
+              <th>Fecha del movimiento</th>
+              <th>Registrado</th>
               <th>Tipo</th>
               <th>Producto</th>
               <th>Cantidad</th>
@@ -1237,9 +1238,14 @@
       const tbody = document.getElementById('tablaMovimientosBody');
       tbody.innerHTML = '';
       data.forEach((m, idx) => {
-        const fechaStr = m.created_at || m.fecha || '';
-        const fechaObj = fechaStr ? new Date(fechaStr) : null;
-        const fecha = fechaObj ? `${fechaObj.toLocaleDateString('es-ES')} ${fechaObj.toLocaleTimeString('es-ES')}` : '-';
+        const fmtFecha = (v) => {
+          if (!v) return '-';
+          const d = new Date(v);
+          return isNaN(d.getTime()) ? String(v) : `${d.toLocaleDateString('es-ES')} ${d.toLocaleTimeString('es-ES')}`;
+        };
+        // Fecha del movimiento = la que puso el usuario; Registrado = cuándo se guardó (prueba)
+        const fechaMovimiento = fmtFecha(m.fecha_movimiento || m.created_at || m.fecha);
+        const fechaRegistro = fmtFecha(m.created_at);
         const cantidad = m.tipo === 'eliminación' ? (m.cantidad_presentacion || 0) : (m.tipo === 'entrada' ? (m.cantidad_presentacion || 0) : (m.cantidad_salida || 0));
         const zona = m.tipo === 'eliminación' ? (m.zona_origen || '-') : (m.tipo === 'entrada' ? (m.zona_destino || '-') : (m.zona_origen || '-'));
         const unidad = m.unidad_salida || '-';
@@ -1252,7 +1258,8 @@
         tbody.innerHTML += `
           <tr>
             <td><input type="checkbox" class="checkbox-movimiento" data-id="${m.id}"></td>
-            <td>${fecha}</td>
+            <td>${fechaMovimiento}</td>
+            <td>${fechaRegistro}</td>
             <td><span class="badge ${m.tipo === 'entrada' ? 'badge-success' : m.tipo === 'eliminación' ? 'badge-danger' : 'badge-warning'}">${m.tipo}</span></td>
             <td>${nombreProducto}</td>
             <td>${cantidad}</td>
@@ -1373,14 +1380,16 @@
         const fila = c.closest('tr');
         const celdas = fila.querySelectorAll('td');
         return {
-          'Fecha': celdas[1].textContent,
-          'Tipo': celdas[2].textContent.trim(),
-          'Producto': celdas[3].textContent,
-          'Cantidad': celdas[4].textContent,
-          'Unidad': celdas[5].textContent,
-          'Zona': celdas[6].textContent,
-          'Operario': celdas[7].textContent,
-          'Costo': celdas[8].textContent
+          'Fecha del movimiento': celdas[1].textContent,
+          'Registrado': celdas[2].textContent,
+          'Tipo': celdas[3].textContent.trim(),
+          'Producto': celdas[4].textContent,
+          'Cantidad': celdas[5].textContent,
+          'Unidad': celdas[6].textContent,
+          'Zona': celdas[7].textContent,
+          'Fecha Caducidad': celdas[8].textContent,
+          'Operario': celdas[9].textContent,
+          'Costo': celdas[10].textContent
         };
       });
       const ws = XLSX.utils.json_to_sheet(seleccionados);
