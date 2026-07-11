@@ -970,6 +970,14 @@ app.post('/api/movimientos/entrada', async (req, res) => {
       return res.status(404).json({ error: 'Producto no encontrado' });
     }
 
+    // Convertir la cantidad ingresada a la unidad base del producto (según su
+    // presentación), igual que en la salida. Se valida ANTES de escribir nada.
+    const convEnt = convertirAUnidadBase(parseFloat(cantidad || 0), unidad_salida, producto.presentacion);
+    if (!convEnt.ok) {
+      return res.status(400).json({ error: convEnt.error });
+    }
+    const cantidadBase = convEnt.cantidad; // en la unidad base del stock
+
     // 1. Verificar si existe lote inicial (stock anterior)
     const lotesExistentes = await executeQuery('SELECT COUNT(*) as count FROM lotes WHERE producto_id = ?', [producto_id]);
     const existenLotes = parseInt(lotesExistentes.rows[0]?.count) || 0;
@@ -995,7 +1003,7 @@ app.post('/api/movimientos/entrada', async (req, res) => {
     const hoy = new Date().toISOString().split('T')[0];
     const loteResult = await executeQuery(
       loteQuery,
-      [producto_id, cantidad, fecha_caducidad || hoy, hoy, operario, descripcion, new Date().toISOString()]
+      [producto_id, cantidadBase, fecha_caducidad || hoy, hoy, operario, descripcion, new Date().toISOString()]
     );
     const loteId = usePostgres ? loteResult.rows[0].id : loteResult.lastID;
 
@@ -1004,7 +1012,7 @@ app.post('/api/movimientos/entrada', async (req, res) => {
     //    ajustado por importación de Excel, edición manual o salidas —cambios que
     //    no modifican la tabla de lotes— y recalcular desde lotes borraría el stock real.
     const stockAntes = (producto.stock !== null && producto.stock !== undefined) ? parseFloat(producto.stock) : 0;
-    const nuevoStock = stockAntes + (parseFloat(cantidad) || 0);
+    const nuevoStock = stockAntes + cantidadBase;
 
     // fecha_caducidad del producto = la más próxima a vencer entre la que ya tenía
     // y la del nuevo ingreso (normalizada a YYYY-MM-DD).
