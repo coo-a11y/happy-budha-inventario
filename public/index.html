@@ -1605,21 +1605,22 @@
       }
 
       const endpoint = tipo === 'entrada' ? '/api/movimientos/entrada' : '/api/movimientos/salida';
-      const items = zonas.map(zona => {
-        let datos = { producto_id: productoId, operario, descripcion, fecha, precio };
-        if (tipo === 'entrada') {
-          datos.cantidad = cantidad;
-          datos.unidad_salida = unidad;
-          datos.zona_destino = zona;
-          if (caducidad) datos.fecha_caducidad = caducidad;
-        } else {
-          datos.cantidad_salida = cantidad;
-          datos.unidad_salida = unidad;
-          datos.zona_origen = zona;
-        }
-        return { endpoint, datos, resumen: { producto: productoTexto, tipo, cantidad, unidad, zona, precio: precio || '' } };
-      });
-      return { ok: true, items };
+      // Un solo movimiento con la cantidad total y las zonas juntas (ej. "C10, C11").
+      // La cantidad NO se multiplica por zona: es el total para todas las seleccionadas.
+      const zonaTexto = zonas.join(', ');
+      let datos = { producto_id: productoId, operario, descripcion, fecha, precio };
+      if (tipo === 'entrada') {
+        datos.cantidad = cantidad;
+        datos.unidad_salida = unidad;
+        datos.zona_destino = zonaTexto;
+        if (caducidad) datos.fecha_caducidad = caducidad;
+      } else {
+        datos.cantidad_salida = cantidad;
+        datos.unidad_salida = unidad;
+        datos.zona_origen = zonaTexto;
+      }
+      const item = { endpoint, datos, resumen: { producto: productoTexto, tipo, cantidad, unidad, zona: zonaTexto, precio: precio || '' } };
+      return { ok: true, items: [item] };
     }
 
     function agregarMovimientoALista() {
@@ -1926,10 +1927,10 @@
       let filtrados = movimientos.filter(m => {
         // Filtrar por la fecha del movimiento (operativa); si no hay, por la de registro
         const fecha = fechaLocalYMD(m.fecha_movimiento || m.created_at || m.fecha);
-        const zonaMovimiento = m.zona_origen || '';
+        const zonasMovimiento = String(m.zona_origen || '').split(',').map(z => z.trim());
         if (desde && fecha < desde) return false;
         if (hasta && fecha > hasta) return false;
-        if (zona && zonaMovimiento !== zona) return false;
+        if (zona && !zonasMovimiento.includes(zona)) return false;
         return true;
       });
       filtrados = filtrados.filter(m => m.tipo === 'salida');
@@ -1971,10 +1972,10 @@
       };
       let filtrados = movimientos.filter(m => {
         const fecha = fechaLocalYMD(m.fecha_movimiento || m.created_at || m.fecha);
-        const zonaMovimiento = m.zona_origen || '';
+        const zonasMovimiento = String(m.zona_origen || '').split(',').map(z => z.trim());
         if (desde && fecha < desde) return false;
         if (hasta && fecha > hasta) return false;
-        if (zona && zonaMovimiento !== zona) return false;
+        if (zona && !zonasMovimiento.includes(zona)) return false;
         return true;
       });
       filtrados = filtrados.filter(m => m.tipo === 'salida');
