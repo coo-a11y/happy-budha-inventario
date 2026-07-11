@@ -887,8 +887,12 @@ app.post('/api/productos', async (req, res) => {
         try {
           let costoTotal = 0;
           if (precio && precio > 0) {
-            // Costo = precio por unidad * cantidad de unidades
-            costoTotal = precio * stock;
+            // El precio es por presentación (ej. $30 por saco de 50 KG). El costo total
+            // = (precio / número de la presentación) * stock. Si la presentación no trae
+            // número (ej. "L"), se asume 1. Consistente con el cálculo de entrada/salida.
+            const matchPres = (presentacion || '').match(/(\d+\.?\d*)/);
+            const cantPresInicial = matchPres ? parseFloat(matchPres[1]) : 1;
+            costoTotal = (precio / cantPresInicial) * stock;
           }
           console.log('💰 Costo calculado:', { precio, stock, costoTotal });
           const movQuery = usePostgres
