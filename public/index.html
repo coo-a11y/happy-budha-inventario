@@ -868,9 +868,28 @@
             <input type="text" id="salida-descripcion" placeholder="Observaciones...">
           </div>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem; align-items: flex-start;">
-          <button class="btn btn-primary" id="btnRegistrar" onclick="registrarMovimiento()" style="min-width: 180px; padding: 0.75rem 1.5rem;">✅ Registrar Salida</button>
-          <button class="btn btn-secondary" onclick="limpiarFormularioSalida()" style="min-width: 180px; padding: 0.75rem 1.5rem;">🔄 Limpiar</button>
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; align-items: flex-start;">
+          <button class="btn btn-secondary" id="btnAgregarMov" onclick="agregarMovimientoALista()" style="min-width: 200px; padding: 0.75rem 1.5rem;">➕ Agregar a la lista</button>
+          <button class="btn btn-primary" id="btnRegistrar" onclick="registrarMovimiento()" style="min-width: 200px; padding: 0.75rem 1.5rem;">✅ Registrar Salida</button>
+          <button class="btn btn-secondary" onclick="limpiarFormularioSalida()" style="min-width: 140px; padding: 0.75rem 1.5rem;">🔄 Limpiar</button>
+        </div>
+        <div id="listaMovimientosPendientes" style="display: none; margin-top: 1.5rem;">
+          <h3 style="margin-bottom: 0.75rem;">📋 Movimientos por registrar</h3>
+          <div class="tabla-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Producto</th>
+                  <th>Cantidad</th>
+                  <th>Zona</th>
+                  <th>Precio</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="bodyMovimientosPendientes"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -1501,6 +1520,8 @@
         btnRegistrar.textContent = '✅ Registrar Salida';
         labelCantidad.textContent = 'Cantidad a Sacar *';
       }
+      // Mantener el texto del botón acorde a la lista de pendientes
+      if (typeof renderMovimientosPendientes === 'function') renderMovimientosPendientes();
     }
     // Conversión de unidades (misma lógica que el backend)
     const FACTOR_UNIDAD = { g:1, gr:1, gramo:1, gramos:1, kg:1000, kilo:1000, kilogramo:1000, kilogramos:1000, lb:453.592, libra:453.592, libras:453.592, ml:1, cc:1, mililitro:1, mililitros:1, l:1000, lt:1000, litro:1000, litros:1000, un:1, u:1, und:1, unidad:1, unidades:1 };
@@ -1549,59 +1570,122 @@
       const costo = (precio / cantPres) * conv.cantidad;
       document.getElementById('salida-costo').value = '$' + costo.toFixed(2);
     }
-    function registrarMovimiento() {
+    // Lista de movimientos acumulados antes de registrarlos todos juntos
+    let movimientosPendientes = [];
+
+    // Lee el formulario, valida y devuelve { ok, items } (un item por zona seleccionada)
+    function construirMovimientosDesdeFormulario() {
       const tipo = document.querySelector('input[name="tipoMov"]:checked').value;
       const productoId = document.getElementById('salida-producto').value;
+      const productoTexto = document.getElementById('salida-buscar-producto').value;
       const cantidad = parseFloat(document.getElementById('salida-cantidad').value);
       const unidad = document.getElementById('salida-unidad').value;
       let zonas = Array.from(document.querySelectorAll('.zona-checkbox:checked')).map(cb => cb.value);
       const operario = document.getElementById('salida-operario').value;
+      const descripcion = document.getElementById('salida-descripcion').value;
+      const fecha = document.getElementById('salida-fecha').value;
+      const precio = document.getElementById('salida-precio').value;
+      const caducidad = document.getElementById('salida-caducidad').value;
 
       if (zonas.includes('Otros')) {
         const otroNombre = document.getElementById('otroZonaNombre').value.trim();
         if (!otroNombre) {
           mostrarAlerta('⚠️ Especifica el nombre de la otra zona', 'error');
-          return;
+          return { ok: false };
         }
         zonas = zonas.map(z => z === 'Otros' ? otroNombre : z);
       }
 
       if (!productoId || !cantidad || !unidad || zonas.length === 0 || !operario) {
         mostrarAlerta('⚠️ Completa todos los campos requeridos', 'error');
-        return;
+        return { ok: false };
       }
 
       const endpoint = tipo === 'entrada' ? '/api/movimientos/entrada' : '/api/movimientos/salida';
-
-      // Registrar movimiento para CADA zona seleccionada
-      const promesas = zonas.map(zona => {
-        let datos = {
-          producto_id: productoId,
-          operario,
-          descripcion: document.getElementById('salida-descripcion').value,
-          fecha: document.getElementById('salida-fecha').value,
-          precio: document.getElementById('salida-precio').value
-        };
-
+      const items = zonas.map(zona => {
+        let datos = { producto_id: productoId, operario, descripcion, fecha, precio };
         if (tipo === 'entrada') {
           datos.cantidad = cantidad;
           datos.unidad_salida = unidad;
           datos.zona_destino = zona;
-          if (document.getElementById('salida-caducidad').value) {
-            datos.fecha_caducidad = document.getElementById('salida-caducidad').value;
-          }
+          if (caducidad) datos.fecha_caducidad = caducidad;
         } else {
           datos.cantidad_salida = cantidad;
           datos.unidad_salida = unidad;
           datos.zona_origen = zona;
         }
-
-        return fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(datos)
-        }).then(r => r.json());
+        return { endpoint, datos, resumen: { producto: productoTexto, tipo, cantidad, unidad, zona, precio: precio || '' } };
       });
+      return { ok: true, items };
+    }
+
+    function agregarMovimientoALista() {
+      const res = construirMovimientosDesdeFormulario();
+      if (!res.ok) return;
+      movimientosPendientes.push(...res.items);
+      renderMovimientosPendientes();
+      mostrarAlerta(`➕ ${res.items.length} movimiento(s) agregado(s) a la lista`, 'success');
+      // Limpiar los campos del producto (conservar operario y fecha para el siguiente)
+      document.getElementById('salida-buscar-producto').value = '';
+      document.getElementById('salida-producto').value = '';
+      document.getElementById('salida-presentacion').value = '';
+      document.getElementById('salida-cantidad').value = '';
+      document.getElementById('salida-unidad').value = '';
+      document.getElementById('salida-precio').value = '';
+      document.getElementById('salida-costo').value = '';
+      document.getElementById('salida-caducidad').value = '';
+      document.getElementById('salida-descripcion').value = '';
+      document.querySelectorAll('.zona-checkbox').forEach(cb => cb.checked = false);
+      actualizarZonasSeleccionadas();
+    }
+
+    function quitarMovimientoPendiente(idx) {
+      movimientosPendientes.splice(idx, 1);
+      renderMovimientosPendientes();
+    }
+
+    function renderMovimientosPendientes() {
+      const cont = document.getElementById('listaMovimientosPendientes');
+      const tbody = document.getElementById('bodyMovimientosPendientes');
+      const btn = document.getElementById('btnRegistrar');
+      if (movimientosPendientes.length === 0) {
+        cont.style.display = 'none';
+        tbody.innerHTML = '';
+        const tipo = document.querySelector('input[name="tipoMov"]:checked').value;
+        btn.textContent = tipo === 'entrada' ? '✅ Registrar Entrada' : '✅ Registrar Salida';
+        return;
+      }
+      cont.style.display = 'block';
+      tbody.innerHTML = movimientosPendientes.map((it, i) => `
+        <tr>
+          <td><span class="badge ${it.resumen.tipo === 'entrada' ? 'badge-success' : 'badge-warning'}">${it.resumen.tipo}</span></td>
+          <td>${it.resumen.producto || '-'}</td>
+          <td>${it.resumen.cantidad} ${it.resumen.unidad}</td>
+          <td>${it.resumen.zona}</td>
+          <td>${it.resumen.precio ? '$' + it.resumen.precio : '-'}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="quitarMovimientoPendiente(${i})">🗑️</button></td>
+        </tr>`).join('');
+      btn.textContent = `✅ Registrar todos (${movimientosPendientes.length})`;
+    }
+
+    function registrarMovimiento() {
+      let items = [...movimientosPendientes];
+      // Si el formulario tiene un producto cargado (no agregado aún), incluirlo también
+      if (document.getElementById('salida-producto').value) {
+        const res = construirMovimientosDesdeFormulario();
+        if (!res.ok) return;
+        items.push(...res.items);
+      }
+      if (items.length === 0) {
+        mostrarAlerta('⚠️ Agrega al menos un movimiento', 'error');
+        return;
+      }
+
+      const promesas = items.map(it => fetch(it.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(it.datos)
+      }).then(r => r.json()));
 
       Promise.all(promesas).then(results => {
         const exitosos = results.filter(r => r.success).length;
@@ -1609,6 +1693,8 @@
 
         if (exitosos > 0) {
           mostrarAlerta(`✅ ${exitosos} movimiento(s) registrado(s) exitosamente`, 'success');
+          movimientosPendientes = [];
+          renderMovimientosPendientes();
           limpiarFormularioSalida();
           cargarProductos();
           cargarEstadisticas();
