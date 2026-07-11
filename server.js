@@ -1364,6 +1364,46 @@ app.post('/api/importar/excel', async (req, res) => {
   }
 });
 
+// ============ NORMALIZACIÓN TEMPORAL: FORMATO DE FECHAS ============
+// Endpoint de un solo uso: convierte fechas de caducidad en formato viejo
+// MM-YY o MM-YYYY (ej. "07-27") al estándar YYYY-MM-DD usando día 15.
+// Uso: abrir en el navegador https://TU-APP/api/normalizar-fechas?clave=mindmind4482
+// IMPORTANTE: eliminar este bloque después de usarlo una vez.
+app.get('/api/normalizar-fechas', async (req, res) => {
+  try {
+    if (req.query.clave !== 'mindmind4482') {
+      return res.status(403).json({ error: 'Clave incorrecta' });
+    }
+
+    const result = await executeQuery('SELECT id, codigo, fecha_caducidad FROM productos');
+    const productos = result.rows || [];
+    const cambios = [];
+
+    for (const p of productos) {
+      const f = p.fecha_caducidad ? String(p.fecha_caducidad).trim() : '';
+      // Solo formato MM-YY o MM-YYYY (2 dígitos - 2 a 4 dígitos)
+      const m = f.match(/^(\d{2})-(\d{2,4})$/);
+      if (!m) continue;
+      const mes = parseInt(m[1], 10);
+      let anio = parseInt(m[2], 10);
+      if (anio < 100) anio += 2000;
+      if (mes < 1 || mes > 12) continue;
+      const nueva = `${anio}-${String(mes).padStart(2, '0')}-15`;
+      await executeModify('UPDATE productos SET fecha_caducidad = ? WHERE id = ?', [nueva, p.id]);
+      cambios.push({ codigo: p.codigo, antes: f, despues: nueva });
+    }
+
+    res.json({
+      success: true,
+      mensaje: `${cambios.length} fechas normalizadas a YYYY-MM-DD`,
+      cambios
+    });
+  } catch (err) {
+    console.error('Error en GET /api/normalizar-fechas:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ============ HEALTH CHECK ============
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
