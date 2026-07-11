@@ -946,27 +946,26 @@ app.post('/api/movimientos/entrada', async (req, res) => {
     );
     const loteId = usePostgres ? loteResult.rows[0].id : loteResult.lastID;
 
-    // 3. Actualizar stock del producto (suma de todos los lotes) y fijar la
-    //    fecha_caducidad = la más próxima a vencer (mínima) entre sus lotes.
-    //    Se calcula en JS para que funcione igual en PostgreSQL y en LocalDB.
-    const lotesProd = await executeQuery('SELECT cantidad, fecha_caducidad FROM lotes WHERE producto_id = ?', [producto_id]);
-    const filasLotes = lotesProd.rows || [];
-    const nuevoStock = filasLotes.reduce((sum, l) => sum + (parseFloat(l.cantidad) || 0), 0);
+    // 3. Actualizar stock: SUMAR la cantidad ingresada al stock actual del producto.
+    //    NO se recalcula desde la tabla de lotes, porque el stock puede haberse
+    //    ajustado por importación de Excel, edición manual o salidas —cambios que
+    //    no modifican la tabla de lotes— y recalcular desde lotes borraría el stock real.
+    const stockAntes = (producto.stock !== null && producto.stock !== undefined) ? parseFloat(producto.stock) : 0;
+    const nuevoStock = stockAntes + (parseFloat(cantidad) || 0);
 
-    // Elegir la fecha más cercana a vencer, preservando el formato YYYY-MM-DD
+    // fecha_caducidad del producto = la más próxima a vencer entre la que ya tenía
+    // y la del nuevo ingreso (normalizada a YYYY-MM-DD).
+    const normFecha = (v) => {
+      if (!v) return null;
+      if (v instanceof Date) return `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, '0')}-${String(v.getDate()).padStart(2, '0')}`;
+      return String(v).split('T')[0];
+    };
     let fechaMasProxima = null;
     let tsMasProximo = Infinity;
-    for (const l of filasLotes) {
-      if (!l.fecha_caducidad) continue;
-      const ts = new Date(l.fecha_caducidad).getTime();
-      if (isNaN(ts) || ts >= tsMasProximo) continue;
-      tsMasProximo = ts;
-      if (l.fecha_caducidad instanceof Date) {
-        const d = l.fecha_caducidad;
-        fechaMasProxima = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      } else {
-        fechaMasProxima = String(l.fecha_caducidad).split('T')[0];
-      }
+    for (const f of [normFecha(producto.fecha_caducidad), normFecha(fecha_caducidad)]) {
+      if (!f) continue;
+      const ts = new Date(f).getTime();
+      if (!isNaN(ts) && ts < tsMasProximo) { tsMasProximo = ts; fechaMasProxima = f; }
     }
 
     if (fechaMasProxima) {
