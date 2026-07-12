@@ -510,6 +510,7 @@ const initializeDatabase = async () => {
         bodega TEXT,
         zona TEXT,
         proveedor TEXT,
+        foto TEXT,
         contifico_id TEXT,
         tipo_producto TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -528,6 +529,7 @@ const initializeDatabase = async () => {
         fecha_caducidad TEXT,
         zona TEXT,
         proveedor TEXT,
+        foto TEXT,
         contifico_id TEXT,
         tipo_producto TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -674,6 +676,11 @@ const initializeDatabase = async () => {
       }
       try {
         await pool.query('ALTER TABLE productos ADD COLUMN proveedor TEXT');
+      } catch (err) {
+        // Columna ya existe, ignorar
+      }
+      try {
+        await pool.query('ALTER TABLE productos ADD COLUMN foto TEXT');
       } catch (err) {
         // Columna ya existe, ignorar
       }
@@ -828,6 +835,13 @@ app.get('/api/productos', async (req, res) => {
     const result = await executeQuery(query, params);
     let rows = result.rows;
 
+    // Excluir la foto del listado (puede ser pesada); solo marcar si tiene o no.
+    // La imagen se carga aparte con GET /api/productos/:id/foto
+    rows = rows.map(r => {
+      const { foto, ...resto } = r;
+      return { ...resto, tiene_foto: !!(foto && String(foto).trim() !== '') };
+    });
+
     // Si el usuario es operario, ocultar precios
     if (usuarioActual.rol === 'operario') {
       rows = rows.map(r => ({ ...r, precio: null, costo_total: null }));
@@ -835,6 +849,29 @@ app.get('/api/productos', async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error('Error en GET /api/productos:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Servir la foto de un producto (imagen binaria). Se cachea con la versión del
+// producto (updated_at) para refrescar solo cuando cambia la foto.
+app.get('/api/productos/:id/foto', async (req, res) => {
+  try {
+    const result = await executeQuery('SELECT foto FROM productos WHERE id = ?', [req.params.id]);
+    const foto = result.rows[0] && result.rows[0].foto;
+    if (!foto || String(foto).trim() === '') {
+      return res.status(404).send('Sin foto');
+    }
+    const match = String(foto).match(/^data:(.+?);base64,(.*)$/);
+    if (match) {
+      const buffer = Buffer.from(match[2], 'base64');
+      res.setHeader('Content-Type', match[1]);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.send(buffer);
+    }
+    res.send(foto);
+  } catch (err) {
+    console.error('Error en GET /api/productos/:id/foto:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -866,25 +903,30 @@ app.post('/api/productos', async (req, res) => {
       return res.status(403).json({ error: 'Permisos insuficientes' });
     }
 
-    const { codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, contifico_id, proveedor } = req.body;
+    const { codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, contifico_id, proveedor, foto } = req.body;
 
     if (req.body.id) {
-      // Actualizar
-      const updateTime = usePostgres ? 'CURRENT_TIMESTAMP' : 'CURRENT_TIMESTAMP';
-      const query = usePostgres
-        ? `UPDATE productos SET codigo=?, nombre=?, categoria=?, presentacion=?, stock=?, stock_minimo=?, precio=?, fecha_caducidad=?, zona=?, proveedor=?, contifico_id=?, updated_at=${updateTime} WHERE id=?`
-        : `UPDATE productos SET codigo=?, nombre=?, categoria=?, presentacion=?, stock=?, stock_minimo=?, precio=?, fecha_caducidad=?, zona=?, proveedor=?, contifico_id=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`;
-      await executeQuery(query, [codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, contifico_id, req.body.id]);
+      // Actualizar. La foto solo se toca si viene en el body (para no borrarla al
+      // editar otros campos): foto undefined = dejar igual; '' o null = quitar.
+      const cols = ['codigo', 'nombre', 'categoria', 'presentacion', 'stock', 'stock_minimo', 'precio', 'fecha_caducidad', 'zona', 'proveedor', 'contifico_id'];
+      const vals = [codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, contifico_id];
+      if (foto !== undefined) {
+        cols.push('foto');
+        vals.push(foto || null);
+      }
+      const setClause = cols.map(c => `${c}=?`).join(', ') + ', updated_at=CURRENT_TIMESTAMP';
+      vals.push(req.body.id);
+      await executeQuery(`UPDATE productos SET ${setClause} WHERE id=?`, vals);
       res.json({ success: true, id: req.body.id });
     } else {
       // Crear
       console.log('📝 Creando producto:', { codigo, nombre });
       const query = usePostgres
-        ? `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, contifico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (codigo) DO UPDATE SET nombre=?, categoria=?, presentacion=?, stock=?, stock_minimo=?, precio=?, fecha_caducidad=?, zona=?, proveedor=?, contifico_id=? RETURNING id`
-        : `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, contifico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        ? `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto, contifico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (codigo) DO UPDATE SET nombre=?, categoria=?, presentacion=?, stock=?, stock_minimo=?, precio=?, fecha_caducidad=?, zona=?, proveedor=?, foto=?, contifico_id=? RETURNING id`
+        : `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto, contifico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
       const params = usePostgres
-        ? [codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, contifico_id, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, contifico_id]
-        : [codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, contifico_id];
+        ? [codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto || null, contifico_id, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto || null, contifico_id]
+        : [codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto || null, contifico_id];
       const result = await executeQuery(query, params);
       const lastId = usePostgres ? result.rows[0]?.id : result.lastID;
       console.log('✅ Producto creado con ID:', lastId);
