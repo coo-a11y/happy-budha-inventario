@@ -983,6 +983,7 @@
               <th>Cantidad</th>
               <th>Unidad</th>
               <th>Operario</th>
+              <th>Costo</th>
             </tr>
           </thead>
           <tbody id="tablaCultivoBody"></tbody>
@@ -1949,12 +1950,15 @@
       const tbody = document.getElementById('tablaCultivoBody');
       tbody.innerHTML = '';
       if (filtrados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--gray-600);">No hay registros para los filtros seleccionados</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--gray-600);">No hay registros para los filtros seleccionados</td></tr>';
       } else {
+        let totalCosto = 0;
         filtrados.forEach(m => {
           const fechaStr = m.fecha_movimiento || m.created_at || m.fecha || '';
           const fechaObj = fechaStr ? new Date(fechaStr) : null;
           const fecha = (fechaObj && !isNaN(fechaObj.getTime())) ? `${fechaObj.toLocaleDateString('es-ES')} ${fechaObj.toLocaleTimeString('es-ES')}` : '-';
+          const costo = parseFloat(m.costo_total) || 0;
+          totalCosto += costo;
           tbody.innerHTML += `
             <tr>
               <td>${fecha}</td>
@@ -1963,9 +1967,17 @@
               <td>${m.cantidad_salida || 0}</td>
               <td>${m.unidad_salida || '-'}</td>
               <td>${m.operario || '-'}</td>
+              <td>$${costo.toFixed(2)}</td>
             </tr>
           `;
         });
+        // Fila de total: suma del costo de lo filtrado (gasto por zona/periodo)
+        tbody.innerHTML += `
+          <tr style="font-weight: bold; background: var(--gray-100);">
+            <td colspan="6" style="text-align: right;">TOTAL GASTADO:</td>
+            <td>$${totalCosto.toFixed(2)}</td>
+          </tr>
+        `;
       }
       console.log(`🌱 Filtrados ${filtrados.length} movimientos de cultivo`);
     }
@@ -2004,9 +2016,13 @@
           'Producto': m.nombre || '-',
           'Cantidad': m.cantidad_salida || 0,
           'Unidad': m.unidad_salida || '-',
-          'Operario': m.operario || '-'
+          'Operario': m.operario || '-',
+          'Costo': parseFloat(m.costo_total) || 0
         };
       });
+      // Fila de total al final
+      const totalCosto = filtrados.reduce((s, m) => s + (parseFloat(m.costo_total) || 0), 0);
+      datos.push({ 'Fecha y Hora': '', 'Zona': '', 'Producto': '', 'Cantidad': '', 'Unidad': '', 'Operario': 'TOTAL GASTADO', 'Costo': totalCosto });
       const ws = XLSX.utils.json_to_sheet(datos);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Cultivo por Lote');
