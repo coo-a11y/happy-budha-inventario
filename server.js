@@ -7,7 +7,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(express.json());
+// Límite amplio para permitir fotos de productos (base64) en el cuerpo JSON
+app.use(express.json({ limit: '25mb' }));
 const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 
