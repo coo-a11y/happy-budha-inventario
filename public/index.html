@@ -565,6 +565,7 @@
           <thead>
             <tr>
               <th>Item</th>
+              <th>Foto</th>
               <th>Código</th>
               <th>Nombre</th>
               <th>Categoría</th>
@@ -579,7 +580,7 @@
             </tr>
           </thead>
           <tbody id="tablaProductosBody">
-            <tr><td colspan="12" style="text-align: center; color: var(--gray-600);">Cargando productos...</td></tr>
+            <tr><td colspan="13" style="text-align: center; color: var(--gray-600);">Cargando productos...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1050,6 +1051,15 @@
           <label>🏢 Proveedor</label>
           <input type="text" id="formProveedor" placeholder="Ej: Agripac, Ecuaquímica...">
         </div>
+        <div class="form-grupo">
+          <label>📷 Foto del producto</label>
+          <input type="file" id="formFotoInput" accept="image/*" onchange="procesarFotoProducto(this)">
+          <small style="color: var(--gray-600);">Puedes tomarla con la cámara o elegirla del álbum/computador.</small>
+          <div id="formFotoPreviewWrap" style="margin-top: 0.5rem; display: none; align-items: center; gap: 0.75rem;">
+            <img id="formFotoPreview" style="max-width: 120px; max-height: 120px; border-radius: 8px; border: 1px solid var(--gray-300); object-fit: cover;">
+            <button type="button" class="btn btn-danger btn-sm" onclick="quitarFotoProducto()">🗑️ Quitar foto</button>
+          </div>
+        </div>
       </div>
       <div class="form-acciones" style="margin-top: 1.5rem;">
         <button class="btn btn-primary" onclick="guardarProducto()">💾 Guardar</button>
@@ -1057,7 +1067,18 @@
       </div>
     </div>
   </div>
+  <!-- Visor de foto ampliada -->
+  <div id="fotoOverlay" onclick="cerrarFotoOverlay()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:2000; align-items:center; justify-content:center; cursor:zoom-out;">
+    <img id="fotoOverlayImg" style="max-width:92%; max-height:92%; border-radius:8px;">
+  </div>
   <script>
+    function ampliarFoto(id, v) {
+      document.getElementById('fotoOverlayImg').src = `/api/productos/${id}/foto?v=${v}`;
+      document.getElementById('fotoOverlay').style.display = 'flex';
+    }
+    function cerrarFotoOverlay() {
+      document.getElementById('fotoOverlay').style.display = 'none';
+    }
     let productos = [];
     let movimientos = [];
     document.addEventListener('DOMContentLoaded', () => {
@@ -1130,8 +1151,12 @@
         const hoy = new Date().toISOString().split('T')[0];
         let estadoStock = 'stock-ok';
         if (p.stock <= (p.stock_minimo || 0)) estadoStock = 'stock-critico';
+        const fotoCell = p.tiene_foto
+          ? `<img src="/api/productos/${p.id}/foto?v=${encodeURIComponent(p.updated_at || '')}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--gray-300)" onclick="ampliarFoto('${p.id}','${encodeURIComponent(p.updated_at || '')}')">`
+          : '<span style="color:var(--gray-400)">—</span>';
         html += `<tr>
           <td><strong>${idx + 1}</strong></td>
+          <td>${fotoCell}</td>
           <td><strong>${p.codigo || ''}</strong></td>
           <td>${p.nombre || ''}</td>
           <td>${p.categoria || ''}</td>
@@ -1782,6 +1807,41 @@
       setTimeout(() => alert.remove(), 4000);
     }
     let productoEnEdicion = null;
+    // Estado de la foto en el modal: undefined = no cambiar; '' = quitar; dataURL = nueva
+    let fotoProductoNueva = undefined;
+
+    // Toma el archivo, lo redimensiona (máx 800px) y lo comprime a JPEG para no pesar
+    function procesarFotoProducto(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 800;
+          let w = img.width, h = img.height;
+          if (w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else if (h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          fotoProductoNueva = dataUrl;
+          document.getElementById('formFotoPreview').src = dataUrl;
+          document.getElementById('formFotoPreviewWrap').style.display = 'flex';
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function quitarFotoProducto() {
+      fotoProductoNueva = '';
+      document.getElementById('formFotoInput').value = '';
+      document.getElementById('formFotoPreview').src = '';
+      document.getElementById('formFotoPreviewWrap').style.display = 'none';
+    }
+
     function abrirModalProducto(producto = null) {
       productoEnEdicion = producto;
       const modal = document.getElementById('modalProducto');
@@ -1807,6 +1867,16 @@
         document.getElementById('formCaducidad').value = fechaDisplay;
         document.getElementById('formBodega').value = producto.zona || '';
         document.getElementById('formProveedor').value = producto.proveedor || '';
+        // Foto existente (si tiene)
+        fotoProductoNueva = undefined;
+        document.getElementById('formFotoInput').value = '';
+        if (producto.tiene_foto) {
+          document.getElementById('formFotoPreview').src = `/api/productos/${producto.id}/foto?v=${encodeURIComponent(producto.updated_at || '')}`;
+          document.getElementById('formFotoPreviewWrap').style.display = 'flex';
+        } else {
+          document.getElementById('formFotoPreview').src = '';
+          document.getElementById('formFotoPreviewWrap').style.display = 'none';
+        }
       } else {
         titulo.textContent = '➕ Nuevo Producto';
         document.getElementById('formCodigo').value = '';
@@ -1819,6 +1889,11 @@
         document.getElementById('formCaducidad').value = '';
         document.getElementById('formBodega').value = '';
         document.getElementById('formProveedor').value = '';
+        // Sin foto al crear
+        fotoProductoNueva = undefined;
+        document.getElementById('formFotoInput').value = '';
+        document.getElementById('formFotoPreview').src = '';
+        document.getElementById('formFotoPreviewWrap').style.display = 'none';
       }
       modal.classList.add('active');
       
@@ -1880,6 +1955,10 @@
         zona: document.getElementById('formBodega').value,
         proveedor: document.getElementById('formProveedor').value
       };
+      // Solo enviar foto si se cambió/quitó (undefined = dejar la actual)
+      if (fotoProductoNueva !== undefined) {
+        datos.foto = fotoProductoNueva;
+      }
       if (productoEnEdicion) {
         datos.id = productoEnEdicion.id;
       }
