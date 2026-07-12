@@ -620,6 +620,7 @@
               <th>Fecha Caducidad</th>
               <th>Operario</th>
               <th>Costo</th>
+              <th>Observaciones</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -1290,6 +1291,13 @@
         if (m.fecha_caducidad && String(m.fecha_caducidad).trim() !== '') {
           fechaCaducidad = String(m.fecha_caducidad).split('T')[0];
         }
+        // Observaciones = la nota del usuario. En entradas se guarda como
+        // "Lote: N - <nota>", así que se limpia ese prefijo. En eliminaciones la
+        // descripción ya se muestra en la columna Producto.
+        let observaciones = '-';
+        if (m.tipo !== 'eliminación' && m.descripcion) {
+          observaciones = String(m.descripcion).replace(/^Lote:\s*\d+\s*-\s*/, '').trim() || '-';
+        }
         tbody.innerHTML += `
           <tr>
             <td><input type="checkbox" class="checkbox-movimiento" data-id="${m.id}"></td>
@@ -1303,6 +1311,7 @@
             <td>${fechaCaducidad}</td>
             <td>${m.operario || '-'}</td>
             <td>$${(parseFloat(m.costo_total) || 0).toFixed(2)}</td>
+            <td>${observaciones}</td>
             <td>${usuarioRol === 'admin' ? `<button class="btn btn-danger btn-sm" onclick="eliminarMovimiento(${m.id})">🗑️ Eliminar</button>` : '-'}</td>
           </tr>
         `;
@@ -1424,7 +1433,8 @@
           'Zona': celdas[7].textContent,
           'Fecha Caducidad': celdas[8].textContent,
           'Operario': celdas[9].textContent,
-          'Costo': celdas[10].textContent
+          'Costo': celdas[10].textContent,
+          'Observaciones': celdas[11].textContent
         };
       });
       const ws = XLSX.utils.json_to_sheet(seleccionados);
