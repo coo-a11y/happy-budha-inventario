@@ -532,11 +532,11 @@
       <div class="filtros-panel">
         <div class="filtro-grupo">
           <label>🔍 Buscar</label>
-          <input type="text" id="buscar" placeholder="Código o nombre..." onkeypress="if(event.key==='Enter') aplicarFiltros()">
+          <input type="text" id="buscar" placeholder="Código o nombre..." oninput="renderizarProductos()" onkeypress="if(event.key==='Enter') aplicarFiltros()">
         </div>
         <div class="filtro-grupo">
           <label>📂 Categoría</label>
-          <select id="filtroCategoria">
+          <select id="filtroCategoria" onchange="renderizarProductos()">
             <option value="">Todas</option>
             <option value="Fertilizantes">Fertilizantes</option>
             <option value="Fungicidas">Fungicidas</option>
@@ -548,7 +548,7 @@
         </div>
         <div class="filtro-grupo">
           <label>📍 Zona</label>
-          <select id="filtroZona">
+          <select id="filtroZona" onchange="renderizarProductos()">
             <option value="">Todas</option>
             <option value="C1">C1</option>
             <option value="C2">C2</option>
@@ -1145,9 +1145,27 @@
         return;
       }
       tbody.innerHTML = '';
+      // Filtrar en vivo por el buscador y los selects, sobre la lista ya cargada
+      // (así el polling no borra la búsqueda; al vaciar el buscador vuelve todo).
+      const fBuscar = (document.getElementById('buscar')?.value || '').toLowerCase().trim();
+      const fCategoria = document.getElementById('filtroCategoria')?.value || '';
+      const fZona = document.getElementById('filtroZona')?.value || '';
+      const lista = productos.filter(p => {
+        if (fCategoria && (p.categoria || '') !== fCategoria) return false;
+        if (fZona && (p.zona || '') !== fZona) return false;
+        if (fBuscar) {
+          const cod = String(p.codigo || '').toLowerCase();
+          const nom = String(p.nombre || '').toLowerCase();
+          if (!cod.includes(fBuscar) && !nom.includes(fBuscar)) return false;
+        }
+        return true;
+      });
+      if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--gray-600);padding:1.5rem;">No se encontraron productos</td></tr>';
+        return;
+      }
       let html = '';
-      productos.forEach((p, idx) => {
-        console.log(`  ${idx}: ${p.codigo} - ${p.nombre}`);
+      lista.forEach((p, idx) => {
         const hoy = new Date().toISOString().split('T')[0];
         let estadoStock = 'stock-ok';
         if (p.stock <= (p.stock_minimo || 0)) estadoStock = 'stock-critico';
@@ -1768,19 +1786,8 @@
       })();
     }
     function aplicarFiltros() {
-      const buscar = document.getElementById('buscar').value;
-      const categoria = document.getElementById('filtroCategoria').value;
-      const zona = document.getElementById('filtroZona').value;
-      let url = '/api/productos?';
-      if (buscar) url += `buscar=${encodeURIComponent(buscar)}&`;
-      if (categoria) url += `categoria=${encodeURIComponent(categoria)}&`;
-      if (zona) url += `zona=${encodeURIComponent(zona)}&`;
-      fetch(url)
-        .then(r => r.json())
-        .then(data => {
-          productos = data;
-          renderizarProductos();
-        });
+      // Filtra en el momento sobre la lista ya cargada (no re-consulta al servidor)
+      renderizarProductos();
     }
     function limpiarFormularioSalida() {
       document.getElementById('salida-buscar-producto').value = '';
