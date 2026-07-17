@@ -589,6 +589,7 @@ const initializeDatabase = async () => {
         fecha_movimiento TEXT,
         litros_agua REAL,
         ph_agua REAL,
+        mezcla_id TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL
       )`);
@@ -611,6 +612,7 @@ const initializeDatabase = async () => {
         fecha_movimiento TEXT,
         litros_agua REAL,
         ph_agua REAL,
+        mezcla_id TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL
       )`);
@@ -713,6 +715,11 @@ const initializeDatabase = async () => {
       }
       try {
         await pool.query('ALTER TABLE movimientos ADD COLUMN ph_agua REAL');
+      } catch (err) {
+        // Columna ya existe, ignorar
+      }
+      try {
+        await pool.query('ALTER TABLE movimientos ADD COLUMN mezcla_id TEXT');
       } catch (err) {
         // Columna ya existe, ignorar
       }
@@ -1159,10 +1166,12 @@ app.post('/api/movimientos/entrada', async (req, res) => {
 // Registrar salida (con cálculo automático de costo)
 app.post('/api/movimientos/salida', async (req, res) => {
   try {
-    const { producto_id, cantidad_salida, unidad_salida, zona_origen, operario, descripcion, fecha, precio, litros_agua, ph_agua } = req.body;
-    // Mezcla (opcional): litros de agua y pH del agua con que se aplicó
+    const { producto_id, cantidad_salida, unidad_salida, zona_origen, operario, descripcion, fecha, precio, litros_agua, ph_agua, mezcla_id } = req.body;
+    // Mezcla (opcional): litros de agua y pH del agua del tanque; mezcla_id agrupa
+    // todos los productos que se mezclaron juntos en el mismo registro.
     const litrosAgua = (litros_agua !== undefined && litros_agua !== null && String(litros_agua).trim() !== '' && !isNaN(parseFloat(litros_agua))) ? parseFloat(litros_agua) : null;
     const phAgua = (ph_agua !== undefined && ph_agua !== null && String(ph_agua).trim() !== '' && !isNaN(parseFloat(ph_agua))) ? parseFloat(ph_agua) : null;
+    const mezclaId = (mezcla_id !== undefined && mezcla_id !== null && String(mezcla_id).trim() !== '') ? String(mezcla_id) : null;
     console.log('📝 Movimiento salida recibido:', { producto_id, cantidad_salida, unidad_salida, zona_origen });
 
     // Fecha operativa del movimiento (la que ingresa el usuario, puede ser pasada).
@@ -1217,12 +1226,12 @@ app.post('/api/movimientos/salida', async (req, res) => {
     // En el historial se guarda lo que el usuario ingresó (cantidad + unidad),
     // aunque el descuento al stock se haya hecho ya convertido a la unidad base.
     const movQuery = usePostgres
-      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, fecha_movimiento, litros_agua, ph_agua, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
-      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, fecha_movimiento, litros_agua, ph_agua, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, fecha_movimiento, litros_agua, ph_agua, mezcla_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, cantidad_salida, unidad_salida, zona_origen, operario, costo_unitario, costo_total, descripcion, fecha_movimiento, litros_agua, ph_agua, mezcla_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     const movResult = await executeQuery(
       movQuery,
-      [producto_id, 'salida', stockActual, cantidadIngresada, unidad_salida, zona_origen, operario, costoUnitario, costoTotal, descripcion, fechaMovimiento, litrosAgua, phAgua, new Date().toISOString()]
+      [producto_id, 'salida', stockActual, cantidadIngresada, unidad_salida, zona_origen, operario, costoUnitario, costoTotal, descripcion, fechaMovimiento, litrosAgua, phAgua, mezclaId, new Date().toISOString()]
     );
 
     const movId = usePostgres ? movResult.rows[0]?.id : movResult.lastID;
