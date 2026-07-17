@@ -623,6 +623,8 @@
               <th>Operario</th>
               <th>Costo</th>
               <th>Observaciones</th>
+              <th>Agua (L)</th>
+              <th>pH</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -866,6 +868,14 @@
             <label>Fecha de Caducidad</label>
             <input type="date" id="salida-caducidad">
           </div>
+          <div class="form-grupo" id="grupoLitrosAgua">
+            <label>💧 Litros de agua (mezcla)</label>
+            <input type="number" id="salida-litros-agua" step="0.01" placeholder="Opcional, ej: 20">
+          </div>
+          <div class="form-grupo" id="grupoPhAgua">
+            <label>🧪 pH del agua</label>
+            <input type="number" id="salida-ph-agua" step="0.1" min="0" max="14" placeholder="Opcional, ej: 6.5">
+          </div>
           <div class="form-grupo">
             <label>Operario *</label>
             <input type="text" id="salida-operario" placeholder="Nombre" required="">
@@ -985,6 +995,9 @@
               <th>Producto</th>
               <th>Cantidad</th>
               <th>Unidad</th>
+              <th>Agua (L)</th>
+              <th>pH</th>
+              <th>Dosis por litro</th>
               <th>Operario</th>
               <th>Costo</th>
             </tr>
@@ -1362,6 +1375,8 @@
             <td>${m.operario || '-'}</td>
             <td>$${(parseFloat(m.costo_total) || 0).toFixed(2)}</td>
             <td>${observaciones}</td>
+            <td>${(m.litros_agua != null && m.litros_agua !== '') ? m.litros_agua : '-'}</td>
+            <td>${(m.ph_agua != null && m.ph_agua !== '') ? m.ph_agua : '-'}</td>
             <td>${usuarioRol === 'admin' ? `<button class="btn btn-danger btn-sm" onclick="eliminarMovimiento(${m.id})">🗑️ Eliminar</button>` : '-'}</td>
           </tr>
         `;
@@ -1484,7 +1499,9 @@
           'Fecha Caducidad': celdas[8].textContent,
           'Operario': celdas[9].textContent,
           'Costo': celdas[10].textContent,
-          'Observaciones': celdas[11].textContent
+          'Observaciones': celdas[11].textContent,
+          'Agua (L)': celdas[12].textContent,
+          'pH': celdas[13].textContent
         };
       });
       const ws = XLSX.utils.json_to_sheet(seleccionados);
@@ -1583,14 +1600,20 @@
     function actualizarTipoMovimiento() {
       const tipo = document.querySelector('input[name="tipoMov"]:checked').value;
       const grupoFecha = document.getElementById('grupoFechaCaducidad');
+      const grupoLitros = document.getElementById('grupoLitrosAgua');
+      const grupoPh = document.getElementById('grupoPhAgua');
       const btnRegistrar = document.getElementById('btnRegistrar');
       const labelCantidad = document.getElementById('labelCantidad');
       if (tipo === 'entrada') {
         grupoFecha.style.display = 'block';
+        grupoLitros.style.display = 'none';
+        grupoPh.style.display = 'none';
         btnRegistrar.textContent = '✅ Registrar Entrada';
         labelCantidad.textContent = 'Cantidad a Ingresar *';
       } else {
         grupoFecha.style.display = 'none';
+        grupoLitros.style.display = 'block';
+        grupoPh.style.display = 'block';
         btnRegistrar.textContent = '✅ Registrar Salida';
         labelCantidad.textContent = 'Cantidad a Sacar *';
       }
@@ -1660,6 +1683,8 @@
       const fecha = document.getElementById('salida-fecha').value;
       const precio = document.getElementById('salida-precio').value;
       const caducidad = document.getElementById('salida-caducidad').value;
+      const litrosAgua = document.getElementById('salida-litros-agua').value;
+      const phAgua = document.getElementById('salida-ph-agua').value;
 
       if (zonas.includes('Otros')) {
         const otroNombre = document.getElementById('otroZonaNombre').value.trim();
@@ -1689,6 +1714,8 @@
         datos.cantidad_salida = cantidad;
         datos.unidad_salida = unidad;
         datos.zona_origen = zonaTexto;
+        if (litrosAgua) datos.litros_agua = litrosAgua;
+        if (phAgua) datos.ph_agua = phAgua;
       }
       const item = { endpoint, datos, resumen: { producto: productoTexto, tipo, cantidad, unidad, zona: zonaTexto, precio: precio || '' } };
       return { ok: true, items: [item] };
@@ -1710,6 +1737,8 @@
       document.getElementById('salida-costo').value = '';
       document.getElementById('salida-caducidad').value = '';
       document.getElementById('salida-descripcion').value = '';
+      document.getElementById('salida-litros-agua').value = '';
+      document.getElementById('salida-ph-agua').value = '';
       document.querySelectorAll('.zona-checkbox').forEach(cb => cb.checked = false);
       actualizarZonasSeleccionadas();
     }
@@ -1809,6 +1838,8 @@
       document.getElementById('salida-caducidad').value = '';
       document.getElementById('salida-precio').value = '';
       document.getElementById('salida-costo').value = '';
+      document.getElementById('salida-litros-agua').value = '';
+      document.getElementById('salida-ph-agua').value = '';
       document.getElementById('salida-lista-productos').style.display = 'none';
       actualizarZonasSeleccionadas();
       const ahora = new Date();
@@ -2057,7 +2088,7 @@
       const tbody = document.getElementById('tablaCultivoBody');
       tbody.innerHTML = '';
       if (filtrados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--gray-600);">No hay registros para los filtros seleccionados</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 2rem; color: var(--gray-600);">No hay registros para los filtros seleccionados</td></tr>';
       } else {
         let totalCosto = 0;
         filtrados.forEach(m => {
@@ -2066,6 +2097,13 @@
           const fecha = (fechaObj && !isNaN(fechaObj.getTime())) ? `${fechaObj.toLocaleDateString('es-ES')} ${fechaObj.toLocaleTimeString('es-ES')}` : '-';
           const costo = parseFloat(m.costo_total) || 0;
           totalCosto += costo;
+          const agua = (m.litros_agua != null && m.litros_agua !== '') ? parseFloat(m.litros_agua) : null;
+          const ph = (m.ph_agua != null && m.ph_agua !== '') ? m.ph_agua : '-';
+          // Dosis por litro = cantidad de producto / litros de agua (en la unidad de la salida)
+          let dosis = '-';
+          if (agua && agua > 0 && m.cantidad_salida != null) {
+            dosis = (parseFloat(m.cantidad_salida) / agua).toFixed(2) + ' ' + (m.unidad_salida || '') + '/L';
+          }
           tbody.innerHTML += `
             <tr>
               <td>${fecha}</td>
@@ -2073,6 +2111,9 @@
               <td>${m.nombre || '-'}</td>
               <td>${m.cantidad_salida || 0}</td>
               <td>${m.unidad_salida || '-'}</td>
+              <td>${agua != null ? agua : '-'}</td>
+              <td>${ph}</td>
+              <td>${dosis}</td>
               <td>${m.operario || '-'}</td>
               <td>$${costo.toFixed(2)}</td>
             </tr>
@@ -2081,7 +2122,7 @@
         // Fila de total: suma del costo de lo filtrado (gasto por zona/periodo)
         tbody.innerHTML += `
           <tr style="font-weight: bold; background: var(--gray-100);">
-            <td colspan="6" style="text-align: right;">TOTAL GASTADO:</td>
+            <td colspan="9" style="text-align: right;">TOTAL GASTADO:</td>
             <td>$${totalCosto.toFixed(2)}</td>
           </tr>
         `;
@@ -2117,12 +2158,20 @@
       const datos = filtrados.map(m => {
         const fechaStr = m.fecha_movimiento || m.created_at || m.fecha || '';
         const fechaFormato = fechaStr ? new Date(fechaStr).toLocaleString('es-ES') : '-';
+        const agua = (m.litros_agua != null && m.litros_agua !== '') ? parseFloat(m.litros_agua) : '';
+        let dosis = '';
+        if (agua && agua > 0 && m.cantidad_salida != null) {
+          dosis = (parseFloat(m.cantidad_salida) / agua).toFixed(2) + ' ' + (m.unidad_salida || '') + '/L';
+        }
         return {
           'Fecha y Hora': fechaFormato,
           'Zona': m.zona_origen || '-',
           'Producto': m.nombre || '-',
           'Cantidad': m.cantidad_salida || 0,
           'Unidad': m.unidad_salida || '-',
+          'Agua (L)': agua,
+          'pH': (m.ph_agua != null && m.ph_agua !== '') ? m.ph_agua : '',
+          'Dosis por litro': dosis,
           'Operario': m.operario || '-',
           'Costo': parseFloat(m.costo_total) || 0
         };
