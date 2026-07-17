@@ -502,6 +502,7 @@ const initializeDatabase = async () => {
         id SERIAL PRIMARY KEY,
         codigo TEXT UNIQUE,
         nombre TEXT,
+        nombre_referencia TEXT,
         categoria TEXT,
         presentacion TEXT,
         stock REAL,
@@ -522,6 +523,7 @@ const initializeDatabase = async () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         codigo TEXT UNIQUE,
         nombre TEXT,
+        nombre_referencia TEXT,
         categoria TEXT,
         presentacion TEXT,
         stock REAL,
@@ -682,6 +684,11 @@ const initializeDatabase = async () => {
       }
       try {
         await pool.query('ALTER TABLE productos ADD COLUMN foto TEXT');
+      } catch (err) {
+        // Columna ya existe, ignorar
+      }
+      try {
+        await pool.query('ALTER TABLE productos ADD COLUMN nombre_referencia TEXT');
       } catch (err) {
         // Columna ya existe, ignorar
       }
@@ -904,13 +911,13 @@ app.post('/api/productos', async (req, res) => {
       return res.status(403).json({ error: 'Permisos insuficientes' });
     }
 
-    const { codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, contifico_id, proveedor, foto } = req.body;
+    const { codigo, nombre, nombre_referencia, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, contifico_id, proveedor, foto } = req.body;
 
     if (req.body.id) {
       // Actualizar. La foto solo se toca si viene en el body (para no borrarla al
       // editar otros campos): foto undefined = dejar igual; '' o null = quitar.
-      const cols = ['codigo', 'nombre', 'categoria', 'presentacion', 'stock', 'stock_minimo', 'precio', 'fecha_caducidad', 'zona', 'proveedor', 'contifico_id'];
-      const vals = [codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, contifico_id];
+      const cols = ['codigo', 'nombre', 'nombre_referencia', 'categoria', 'presentacion', 'stock', 'stock_minimo', 'precio', 'fecha_caducidad', 'zona', 'proveedor', 'contifico_id'];
+      const vals = [codigo, nombre, nombre_referencia, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, contifico_id];
       if (foto !== undefined) {
         cols.push('foto');
         vals.push(foto || null);
@@ -923,11 +930,11 @@ app.post('/api/productos', async (req, res) => {
       // Crear
       console.log('📝 Creando producto:', { codigo, nombre });
       const query = usePostgres
-        ? `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto, contifico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (codigo) DO UPDATE SET nombre=?, categoria=?, presentacion=?, stock=?, stock_minimo=?, precio=?, fecha_caducidad=?, zona=?, proveedor=?, foto=?, contifico_id=? RETURNING id`
-        : `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto, contifico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        ? `INSERT INTO productos (codigo, nombre, nombre_referencia, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto, contifico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (codigo) DO UPDATE SET nombre=?, nombre_referencia=?, categoria=?, presentacion=?, stock=?, stock_minimo=?, precio=?, fecha_caducidad=?, zona=?, proveedor=?, foto=?, contifico_id=? RETURNING id`
+        : `INSERT INTO productos (codigo, nombre, nombre_referencia, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto, contifico_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
       const params = usePostgres
-        ? [codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto || null, contifico_id, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto || null, contifico_id]
-        : [codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto || null, contifico_id];
+        ? [codigo, nombre, nombre_referencia, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto || null, contifico_id, nombre, nombre_referencia, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto || null, contifico_id]
+        : [codigo, nombre, nombre_referencia, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, zona, proveedor, foto || null, contifico_id];
       const result = await executeQuery(query, params);
       const lastId = usePostgres ? result.rows[0]?.id : result.lastID;
       console.log('✅ Producto creado con ID:', lastId);

@@ -567,7 +567,8 @@
               <th>Item</th>
               <th>Foto</th>
               <th>Código</th>
-              <th>Nombre</th>
+              <th>Nombre comercial</th>
+              <th>Nombre de referencia</th>
               <th>Categoría</th>
               <th>Presentación</th>
               <th>Stock</th>
@@ -580,7 +581,7 @@
             </tr>
           </thead>
           <tbody id="tablaProductosBody">
-            <tr><td colspan="13" style="text-align: center; color: var(--gray-600);">Cargando productos...</td></tr>
+            <tr><td colspan="14" style="text-align: center; color: var(--gray-600);">Cargando productos...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1006,8 +1007,12 @@
           <input type="text" id="formCodigo" placeholder="Ej: FERT-001">
         </div>
         <div class="form-grupo">
-          <label>Nombre *</label>
-          <input type="text" id="formNombre" placeholder="Nombre del producto">
+          <label>Nombre comercial *</label>
+          <input type="text" id="formNombre" placeholder="Nombre comercial del producto">
+        </div>
+        <div class="form-grupo">
+          <label>Nombre de referencia</label>
+          <input type="text" id="formNombreReferencia" placeholder="Nombre de referencia">
         </div>
         <div class="form-grupo">
           <label>Categoría *</label>
@@ -1156,12 +1161,13 @@
         if (fBuscar) {
           const cod = String(p.codigo || '').toLowerCase();
           const nom = String(p.nombre || '').toLowerCase();
-          if (!cod.includes(fBuscar) && !nom.includes(fBuscar)) return false;
+          const ref = String(p.nombre_referencia || '').toLowerCase();
+          if (!cod.includes(fBuscar) && !nom.includes(fBuscar) && !ref.includes(fBuscar)) return false;
         }
         return true;
       });
       if (lista.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--gray-600);padding:1.5rem;">No se encontraron productos</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--gray-600);padding:1.5rem;">No se encontraron productos</td></tr>';
         return;
       }
       let html = '';
@@ -1177,6 +1183,7 @@
           <td>${fotoCell}</td>
           <td><strong>${p.codigo || ''}</strong></td>
           <td>${p.nombre || ''}</td>
+          <td>${p.nombre_referencia || '-'}</td>
           <td>${p.categoria || ''}</td>
           <td>${p.presentacion || '-'}</td>
           <td class="${estadoStock}">${p.stock || 0}</td>
@@ -1494,7 +1501,8 @@
       }
       const datos = productos.map(p => ({
         'Código': p.codigo || '',
-        'Nombre': p.nombre || '',
+        'Nombre comercial': p.nombre || '',
+        'Nombre de referencia': p.nombre_referencia || '',
         'Categoría': p.categoria || '',
         'Presentación': p.presentacion || '',
         'Stock': p.stock || 0,
@@ -1857,6 +1865,7 @@
         titulo.textContent = '✏️ Editar Producto';
         document.getElementById('formCodigo').value = producto.codigo || '';
         document.getElementById('formNombre').value = producto.nombre || '';
+        document.getElementById('formNombreReferencia').value = producto.nombre_referencia || '';
         document.getElementById('formCategoria').value = producto.categoria || '';
         document.getElementById('formPresentacion').value = producto.presentacion || '';
         document.getElementById('formStock').value = producto.stock || 0;
@@ -1888,6 +1897,7 @@
         titulo.textContent = '➕ Nuevo Producto';
         document.getElementById('formCodigo').value = '';
         document.getElementById('formNombre').value = '';
+        document.getElementById('formNombreReferencia').value = '';
         document.getElementById('formCategoria').value = '';
         document.getElementById('formPresentacion').value = '';
         document.getElementById('formStock').value = 0;
@@ -1953,6 +1963,7 @@
       const datos = {
         codigo,
         nombre,
+        nombre_referencia: document.getElementById('formNombreReferencia').value,
         categoria,
         presentacion: document.getElementById('formPresentacion').value,
         stock: parseFloat(document.getElementById('formStock').value) || 0,
