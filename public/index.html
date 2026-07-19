@@ -468,6 +468,7 @@
     <button class="nav-btn active" data-tab="dashboard" onclick="cambiarTab('dashboard')">📊 Dashboard</button>
     <button class="nav-btn" data-tab="salida" onclick="cambiarTab('salida')">📝 Registrar Movimiento</button>
     <button class="nav-btn" data-tab="cultivo" onclick="cambiarTab('cultivo')">🌱 Cultivo por Lote</button>
+    <button class="nav-btn" data-tab="medicion" onclick="cambiarTab('medicion')">📏 Medición de Plantas</button>
     <button class="nav-btn" data-tab="productos" onclick="cambiarTab('productos')">📦 Productos</button>
     <button class="nav-btn" data-tab="movimientos" onclick="cambiarTab('movimientos')">📤 Historial</button>
   </div>
@@ -1007,6 +1008,68 @@
         </table>
       </div>
     </section>
+    <!-- MEDICIÓN DE PLANTAS -->
+    <section class="dashboard" data-tab="medicion">
+      <h2 style="margin-bottom: 1.5rem;">📏 Informe de Medición de Plantas</h2>
+      <div class="formulario-panel active">
+        <div class="formulario-grid">
+          <div class="form-grupo">
+            <label>📅 Fecha y Hora de medición *</label>
+            <input type="datetime-local" id="medicion-fecha">
+          </div>
+          <div class="form-grupo">
+            <label>📍 Zona *</label>
+            <select id="medicion-zona"><option value="">Seleccionar zona</option></select>
+          </div>
+          <div class="form-grupo">
+            <label>Operario</label>
+            <input type="text" id="medicion-operario" placeholder="Nombre">
+          </div>
+        </div>
+        <div style="margin-top: 1.5rem;">
+          <h3 style="margin-bottom: 0.75rem;">Mediciones (cm) — se recomiendan de 10 a 50 plantas</h3>
+          <div class="tabla-container">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 110px;">Línea #</th>
+                  <th>Medida (cm)</th>
+                  <th style="width: 60px;"></th>
+                </tr>
+              </thead>
+              <tbody id="medicionLineasBody"></tbody>
+            </table>
+          </div>
+          <button class="btn btn-secondary" onclick="agregarLineaMedicion()" style="margin-top: 0.75rem;">➕ Agregar línea</button>
+        </div>
+        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--gray-50); border-radius: 8px; font-size: 1.1rem;">
+          <strong>Plantas medidas:</strong> <span id="medicionCantidad">0</span>
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          <strong>Promedio:</strong> <span id="medicionPromedio" style="color: var(--primary); font-weight: bold;">0.00</span> cm
+        </div>
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="guardarMedicion()">💾 Guardar informe</button>
+          <button class="btn btn-secondary" onclick="limpiarMedicion()">🔄 Limpiar</button>
+        </div>
+      </div>
+      <h3 style="margin-top: 2rem; margin-bottom: 0.75rem;">📋 Informes guardados</h3>
+      <div class="tabla-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha y Hora</th>
+              <th>Zona</th>
+              <th>N° plantas</th>
+              <th>Promedio (cm)</th>
+              <th>Operario</th>
+              <th>Medidas</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaMedicionesBody"></tbody>
+        </table>
+      </div>
+    </section>
   </div>
   <!-- MODAL PRODUCTO -->
   <div id="modalProducto" class="modal">
@@ -1118,8 +1181,115 @@
       cargarMovimientos();
       const ahora = new Date();
       document.getElementById('salida-fecha').value = ahora.toISOString().slice(0, 16);
+      poblarZonasMedicion();
+      limpiarMedicion();
+      cargarMediciones();
       iniciarPolling();
     });
+
+    // ====== MEDICIÓN DE PLANTAS ======
+    function poblarZonasMedicion() {
+      const sel = document.getElementById('medicion-zona');
+      if (!sel) return;
+      const zonas = ['Zona Experimental', 'Chicotes', 'Nursery', 'Invernadero', 'Almacén', 'Cercas', 'Calles', 'Jardineras'];
+      for (let i = 1; i <= 4; i++) zonas.push('H' + i);
+      for (let i = 1; i <= 42; i++) zonas.push('C' + i);
+      sel.innerHTML = '<option value="">Seleccionar zona</option>' + zonas.map(z => `<option value="${z}">${z}</option>`).join('');
+    }
+    function agregarLineaMedicion(medida) {
+      const tbody = document.getElementById('medicionLineasBody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="linea-num" style="font-weight: bold;"></td>
+        <td><input type="number" step="0.1" min="0" class="medicion-cm" oninput="calcularPromedioMedicion()" placeholder="cm"></td>
+        <td><button class="btn btn-danger btn-sm" onclick="quitarLineaMedicion(this)">🗑️</button></td>
+      `;
+      tbody.appendChild(tr);
+      if (medida !== undefined && medida !== null && medida !== '') {
+        tr.querySelector('.medicion-cm').value = medida;
+      }
+      renumerarLineasMedicion();
+    }
+    function quitarLineaMedicion(btn) {
+      btn.closest('tr').remove();
+      renumerarLineasMedicion();
+      calcularPromedioMedicion();
+    }
+    function renumerarLineasMedicion() {
+      document.querySelectorAll('#medicionLineasBody .linea-num').forEach((td, i) => td.textContent = i + 1);
+    }
+    function calcularPromedioMedicion() {
+      const valores = Array.from(document.querySelectorAll('#medicionLineasBody .medicion-cm'))
+        .map(inp => parseFloat(inp.value)).filter(v => !isNaN(v));
+      const n = valores.length;
+      const prom = n > 0 ? valores.reduce((a, b) => a + b, 0) / n : 0;
+      document.getElementById('medicionCantidad').textContent = n;
+      document.getElementById('medicionPromedio').textContent = prom.toFixed(2);
+    }
+    function limpiarMedicion() {
+      const tbody = document.getElementById('medicionLineasBody');
+      if (tbody) tbody.innerHTML = '';
+      for (let i = 0; i < 10; i++) agregarLineaMedicion();
+      const z = document.getElementById('medicion-zona'); if (z) z.value = '';
+      const o = document.getElementById('medicion-operario'); if (o) o.value = '';
+      const f = document.getElementById('medicion-fecha');
+      if (f) f.value = new Date().toISOString().slice(0, 16);
+      calcularPromedioMedicion();
+    }
+    function guardarMedicion() {
+      const fecha = document.getElementById('medicion-fecha').value;
+      const zona = document.getElementById('medicion-zona').value;
+      const operario = document.getElementById('medicion-operario').value;
+      const lineas = Array.from(document.querySelectorAll('#medicionLineasBody tr')).map((tr, i) => {
+        const v = tr.querySelector('.medicion-cm').value;
+        return { linea: i + 1, medida: v === '' ? null : parseFloat(v) };
+      }).filter(l => l.medida !== null && !isNaN(l.medida));
+      if (!zona) { mostrarAlerta('⚠️ Selecciona la zona', 'error'); return; }
+      if (lineas.length === 0) { mostrarAlerta('⚠️ Ingresa al menos una medida', 'error'); return; }
+      fetch('/api/mediciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fecha_hora: fecha, zona, operario, lineas })
+      }).then(r => r.json()).then(data => {
+        if (data.success) {
+          mostrarAlerta(`✅ Informe guardado. Promedio: ${data.promedio.toFixed(2)} cm (${data.cantidad} plantas)`, 'success');
+          limpiarMedicion();
+          cargarMediciones();
+        } else { mostrarAlerta(data.error || 'Error al guardar', 'error'); }
+      }).catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
+    }
+    function cargarMediciones() {
+      fetch('/api/mediciones').then(r => r.json()).then(data => renderMediciones(data)).catch(() => {});
+    }
+    function renderMediciones(data) {
+      const tbody = document.getElementById('tablaMedicionesBody');
+      if (!tbody) return;
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--gray-600)">Sin informes guardados</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(m => {
+        const f = m.fecha_hora ? new Date(m.fecha_hora) : null;
+        const fecha = (f && !isNaN(f.getTime())) ? `${f.toLocaleDateString('es-ES')} ${f.toLocaleTimeString('es-ES')}` : (m.fecha_hora || '-');
+        const medidas = (m.lineas || []).map(l => l.medida).join(', ');
+        return `<tr>
+          <td>${fecha}</td>
+          <td><strong>${m.zona || '-'}</strong></td>
+          <td>${m.cantidad_plantas || 0}</td>
+          <td style="font-weight:bold;color:var(--primary)">${(parseFloat(m.promedio) || 0).toFixed(2)} cm</td>
+          <td>${m.operario || '-'}</td>
+          <td><button class="btn btn-sm btn-secondary" onclick="alert('Medidas (cm):\\n${medidas}')">👁️ Ver</button></td>
+          <td>${usuarioRol === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="eliminarMedicion(${m.id})">🗑️</button>` : '-'}</td>
+        </tr>`;
+      }).join('');
+    }
+    function eliminarMedicion(id) {
+      if (!confirm('¿Eliminar este informe de medición?')) return;
+      fetch(`/api/mediciones/${id}`, { method: 'DELETE' }).then(r => r.json()).then(d => {
+        if (d.success) { mostrarAlerta('✅ Informe eliminado', 'success'); cargarMediciones(); }
+        else mostrarAlerta(d.error || 'Error', 'error');
+      });
+    }
 
     // Polling automático cada 10 segundos
     function iniciarPolling() {
