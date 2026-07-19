@@ -676,6 +676,32 @@ const initializeDatabase = async () => {
     }
     console.log('✅ Tabla conversiones lista');
 
+    // 5. Crear tabla mediciones (informe de medición de plantas)
+    if (usePostgres) {
+      await pool.query(`CREATE TABLE IF NOT EXISTS mediciones (
+        id SERIAL PRIMARY KEY,
+        fecha_hora TEXT,
+        zona TEXT,
+        cantidad_plantas INTEGER,
+        promedio REAL,
+        lineas TEXT,
+        operario TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+    } else {
+      await executeQuery(`CREATE TABLE IF NOT EXISTS mediciones (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fecha_hora TEXT,
+        zona TEXT,
+        cantidad_plantas INTEGER,
+        promedio REAL,
+        lineas TEXT,
+        operario TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+    }
+    console.log('✅ Tabla mediciones lista');
+
     // Agregar columnas faltantes si es PostgreSQL
     if (usePostgres) {
       try {
@@ -1601,6 +1627,61 @@ app.get('/api/normalizar-fechas', async (req, res) => {
     });
   } catch (err) {
     console.error('Error en GET /api/normalizar-fechas:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============ MEDICIÓN DE PLANTAS ============
+
+// Crear un informe de medición
+app.post('/api/mediciones', async (req, res) => {
+  try {
+    const { fecha_hora, zona, lineas, operario } = req.body;
+    const arr = Array.isArray(lineas) ? lineas : [];
+    // Solo medidas numéricas válidas cuentan para el promedio
+    const valores = arr.map(l => parseFloat(l && l.medida)).filter(v => !isNaN(v));
+    const cantidad = valores.length;
+    const promedio = cantidad > 0 ? (valores.reduce((a, b) => a + b, 0) / cantidad) : 0;
+    const lineasJson = JSON.stringify(arr);
+
+    const query = usePostgres
+      ? `INSERT INTO mediciones (fecha_hora, zona, cantidad_plantas, promedio, lineas, operario, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO mediciones (fecha_hora, zona, cantidad_plantas, promedio, lineas, operario, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    const result = await executeQuery(query, [fecha_hora || new Date().toISOString(), zona || '', cantidad, promedio, lineasJson, operario || '', new Date().toISOString()]);
+    const id = usePostgres ? result.rows[0]?.id : result.lastID;
+    res.json({ success: true, id, promedio, cantidad });
+  } catch (err) {
+    console.error('Error en POST /api/mediciones:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Listar informes de medición
+app.get('/api/mediciones', async (req, res) => {
+  try {
+    const result = await executeQuery('SELECT * FROM mediciones ORDER BY id DESC LIMIT 2000');
+    const rows = (result.rows || []).map(r => {
+      let lineas = [];
+      try { lineas = JSON.parse(r.lineas || '[]'); } catch (e) { lineas = []; }
+      return { ...r, lineas };
+    });
+    res.json(rows);
+  } catch (err) {
+    console.error('Error en GET /api/mediciones:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Eliminar un informe de medición (solo admin)
+app.delete('/api/mediciones/:id', async (req, res) => {
+  try {
+    if (usuarioActual.rol !== 'admin') {
+      return res.status(403).json({ error: 'Solo admin puede eliminar informes' });
+    }
+    await executeQuery('DELETE FROM mediciones WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error en DELETE /api/mediciones/:id:', err);
     res.status(500).json({ error: err.message });
   }
 });
