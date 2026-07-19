@@ -682,6 +682,7 @@ const initializeDatabase = async () => {
         id SERIAL PRIMARY KEY,
         fecha_hora TEXT,
         zona TEXT,
+        linea TEXT,
         cantidad_plantas INTEGER,
         promedio REAL,
         lineas TEXT,
@@ -693,6 +694,7 @@ const initializeDatabase = async () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         fecha_hora TEXT,
         zona TEXT,
+        linea TEXT,
         cantidad_plantas INTEGER,
         promedio REAL,
         lineas TEXT,
@@ -746,6 +748,11 @@ const initializeDatabase = async () => {
       }
       try {
         await pool.query('ALTER TABLE movimientos ADD COLUMN mezcla_id TEXT');
+      } catch (err) {
+        // Columna ya existe, ignorar
+      }
+      try {
+        await pool.query('ALTER TABLE mediciones ADD COLUMN linea TEXT');
       } catch (err) {
         // Columna ya existe, ignorar
       }
@@ -1636,7 +1643,7 @@ app.get('/api/normalizar-fechas', async (req, res) => {
 // Crear un informe de medición
 app.post('/api/mediciones', async (req, res) => {
   try {
-    const { fecha_hora, zona, lineas, operario } = req.body;
+    const { fecha_hora, zona, linea, lineas, operario } = req.body;
     const arr = Array.isArray(lineas) ? lineas : [];
     // Solo medidas numéricas válidas cuentan para el promedio
     const valores = arr.map(l => parseFloat(l && l.medida)).filter(v => !isNaN(v));
@@ -1645,9 +1652,9 @@ app.post('/api/mediciones', async (req, res) => {
     const lineasJson = JSON.stringify(arr);
 
     const query = usePostgres
-      ? `INSERT INTO mediciones (fecha_hora, zona, cantidad_plantas, promedio, lineas, operario, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`
-      : `INSERT INTO mediciones (fecha_hora, zona, cantidad_plantas, promedio, lineas, operario, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-    const result = await executeQuery(query, [fecha_hora || new Date().toISOString(), zona || '', cantidad, promedio, lineasJson, operario || '', new Date().toISOString()]);
+      ? `INSERT INTO mediciones (fecha_hora, zona, linea, cantidad_plantas, promedio, lineas, operario, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO mediciones (fecha_hora, zona, linea, cantidad_plantas, promedio, lineas, operario, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    const result = await executeQuery(query, [fecha_hora || new Date().toISOString(), zona || '', linea || '', cantidad, promedio, lineasJson, operario || '', new Date().toISOString()]);
     const id = usePostgres ? result.rows[0]?.id : result.lastID;
     res.json({ success: true, id, promedio, cantidad });
   } catch (err) {

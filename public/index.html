@@ -1022,17 +1022,21 @@
             <select id="medicion-zona"><option value="">Seleccionar zona</option></select>
           </div>
           <div class="form-grupo">
+            <label>🔢 Línea #</label>
+            <input type="text" id="medicion-linea" placeholder="Ej: 5">
+          </div>
+          <div class="form-grupo">
             <label>Operario</label>
             <input type="text" id="medicion-operario" placeholder="Nombre">
           </div>
         </div>
         <div style="margin-top: 1.5rem;">
-          <h3 style="margin-bottom: 0.75rem;">Mediciones (cm) — se recomiendan de 10 a 50 plantas</h3>
+          <h3 style="margin-bottom: 0.75rem;">Medidas de las plantas (cm) — se recomiendan de 10 a 50 plantas</h3>
           <div class="tabla-container">
             <table>
               <thead>
                 <tr>
-                  <th style="width: 110px;">Línea #</th>
+                  <th style="width: 110px;">N° planta</th>
                   <th>Medida (cm)</th>
                   <th style="width: 60px;"></th>
                 </tr>
@@ -1059,6 +1063,7 @@
             <tr>
               <th>Fecha y Hora</th>
               <th>Zona</th>
+              <th>Línea #</th>
               <th>N° plantas</th>
               <th>Promedio (cm)</th>
               <th>Operario</th>
@@ -1231,6 +1236,7 @@
       if (tbody) tbody.innerHTML = '';
       for (let i = 0; i < 10; i++) agregarLineaMedicion();
       const z = document.getElementById('medicion-zona'); if (z) z.value = '';
+      const ln = document.getElementById('medicion-linea'); if (ln) ln.value = '';
       const o = document.getElementById('medicion-operario'); if (o) o.value = '';
       const f = document.getElementById('medicion-fecha');
       if (f) f.value = new Date().toISOString().slice(0, 16);
@@ -1239,17 +1245,18 @@
     function guardarMedicion() {
       const fecha = document.getElementById('medicion-fecha').value;
       const zona = document.getElementById('medicion-zona').value;
+      const linea = document.getElementById('medicion-linea').value;
       const operario = document.getElementById('medicion-operario').value;
       const lineas = Array.from(document.querySelectorAll('#medicionLineasBody tr')).map((tr, i) => {
         const v = tr.querySelector('.medicion-cm').value;
-        return { linea: i + 1, medida: v === '' ? null : parseFloat(v) };
+        return { planta: i + 1, medida: v === '' ? null : parseFloat(v) };
       }).filter(l => l.medida !== null && !isNaN(l.medida));
       if (!zona) { mostrarAlerta('⚠️ Selecciona la zona', 'error'); return; }
       if (lineas.length === 0) { mostrarAlerta('⚠️ Ingresa al menos una medida', 'error'); return; }
       fetch('/api/mediciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fecha_hora: fecha, zona, operario, lineas })
+        body: JSON.stringify({ fecha_hora: fecha, zona, linea, operario, lineas })
       }).then(r => r.json()).then(data => {
         if (data.success) {
           mostrarAlerta(`✅ Informe guardado. Promedio: ${data.promedio.toFixed(2)} cm (${data.cantidad} plantas)`, 'success');
@@ -1265,7 +1272,7 @@
       const tbody = document.getElementById('tablaMedicionesBody');
       if (!tbody) return;
       if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--gray-600)">Sin informes guardados</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--gray-600)">Sin informes guardados</td></tr>';
         return;
       }
       tbody.innerHTML = data.map(m => {
@@ -1275,6 +1282,7 @@
         return `<tr>
           <td>${fecha}</td>
           <td><strong>${m.zona || '-'}</strong></td>
+          <td>${m.linea || '-'}</td>
           <td>${m.cantidad_plantas || 0}</td>
           <td style="font-weight:bold;color:var(--primary)">${(parseFloat(m.promedio) || 0).toFixed(2)} cm</td>
           <td>${m.operario || '-'}</td>
