@@ -592,17 +592,23 @@
       <h2 style="margin-bottom: 1.5rem;">Historial de Movimientos</h2>
       <div class="filtros-panel">
         <div class="filtro-grupo">
+          <label>🔍 Producto (código o nombre)</label>
+          <input type="text" id="filtroBuscarMovimiento" placeholder="Ej: Sulfato, 0691..." oninput="filtrarMovimientos()">
+        </div>
+        <div class="filtro-grupo">
           <label>📅 Desde</label>
-          <input type="date" id="filtroFechaDesde">
+          <input type="date" id="filtroFechaDesde" onchange="filtrarMovimientos()">
         </div>
         <div class="filtro-grupo">
           <label>📅 Hasta</label>
-          <input type="date" id="filtroFechaHasta">
+          <input type="date" id="filtroFechaHasta" onchange="filtrarMovimientos()">
         </div>
         <button class="btn btn-primary" onclick="filtrarMovimientos()">🔍 Filtrar</button>
+        <button class="btn btn-secondary" onclick="limpiarFiltrosMovimientos()">🔄 Limpiar</button>
         <button class="btn btn-primary" onclick="exportarMovimientos()">📥 Exportar Excel</button>
         <button id="btnEliminarSeleccionados" class="btn btn-danger" onclick="eliminarSeleccionados()" style="background: #ef4444;">🗑️ Eliminar Seleccionados</button>
       </div>
+      <div id="resumenMovimientos" style="display:none; margin-bottom:1rem; padding:0.75rem 1rem; background:var(--gray-50); border-radius:8px; font-size:1rem;"></div>
       <div style="margin-bottom: 1rem;">
         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600;">
           <input type="checkbox" id="selectTodosMovimientos" onchange="seleccionarTodosMovimientos()"> Seleccionar todos
@@ -1509,7 +1515,9 @@
         .then(r => r.json())
         .then(data => {
           movimientos = data;
-          renderizarMovimientos(data);
+          // Re-aplicar el filtro activo (por si el usuario está filtrando) para que
+          // el refresco automático no borre su búsqueda.
+          filtrarMovimientos();
         });
     }
     function renderizarMovimientos(data) {
@@ -1631,23 +1639,52 @@
       });
     }
     function filtrarMovimientos() {
-      if (!movimientos || movimientos.length === 0) {
-        cargarMovimientos();
-        return;
-      }
-      const desde = document.getElementById('filtroFechaDesde').value;
-      const hasta = document.getElementById('filtroFechaHasta').value;
-      let filtrados = movimientos;
-      if (desde || hasta) {
-        filtrados = movimientos.filter(m => {
-          const fechaMovimiento = m.created_at ? m.created_at.split('T')[0] : (m.fecha ? m.fecha.split('T')[0] : '');
-          if (desde && fechaMovimiento < desde) return false;
-          if (hasta && fechaMovimiento > hasta) return false;
-          return true;
-        });
-      }
+      const buscar = (document.getElementById('filtroBuscarMovimiento')?.value || '').toLowerCase().trim();
+      const desde = document.getElementById('filtroFechaDesde')?.value || '';
+      const hasta = document.getElementById('filtroFechaHasta')?.value || '';
+      const fechaLocalYMD = (raw) => {
+        if (!raw) return '';
+        const d = new Date(raw);
+        if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        return String(raw).split('T')[0].split(' ')[0];
+      };
+      const filtrados = (movimientos || []).filter(m => {
+        const fecha = fechaLocalYMD(m.fecha_movimiento || m.created_at || m.fecha);
+        if (desde && fecha < desde) return false;
+        if (hasta && fecha > hasta) return false;
+        if (buscar) {
+          const nom = String(m.nombre || '').toLowerCase();
+          const cod = String(m.codigo || '').toLowerCase();
+          const desc = String(m.descripcion || '').toLowerCase();
+          if (!nom.includes(buscar) && !cod.includes(buscar) && !desc.includes(buscar)) return false;
+        }
+        return true;
+      });
       renderizarMovimientos(filtrados);
-      console.log(`📊 Filtrados ${filtrados.length} movimientos`);
+      actualizarResumenMovimientos(filtrados, buscar, desde, hasta);
+    }
+    function actualizarResumenMovimientos(lista, buscar, desde, hasta) {
+      const box = document.getElementById('resumenMovimientos');
+      if (!box) return;
+      const hayFiltro = buscar || desde || hasta;
+      if (!hayFiltro || lista.length === 0) { box.style.display = 'none'; return; }
+      let totalEntrada = 0, totalSalida = 0, totalCosto = 0;
+      const unidades = new Set();
+      lista.forEach(m => {
+        if (m.tipo === 'entrada') totalEntrada += parseFloat(m.cantidad_presentacion) || 0;
+        if (m.tipo === 'salida') totalSalida += parseFloat(m.cantidad_salida) || 0;
+        totalCosto += parseFloat(m.costo_total) || 0;
+        if (m.unidad_salida) unidades.add(m.unidad_salida);
+      });
+      const u = unidades.size === 1 ? ' ' + [...unidades][0] : '';
+      box.style.display = 'block';
+      box.innerHTML = `<strong>${lista.length}</strong> movimiento(s) &nbsp;·&nbsp; <strong>Total ingresado:</strong> ${(+totalEntrada.toFixed(3))}${u} &nbsp;·&nbsp; <strong>Total sacado:</strong> ${(+totalSalida.toFixed(3))}${u} &nbsp;·&nbsp; <strong>Costo total:</strong> $${totalCosto.toFixed(2)}`;
+    }
+    function limpiarFiltrosMovimientos() {
+      const b = document.getElementById('filtroBuscarMovimiento'); if (b) b.value = '';
+      const d = document.getElementById('filtroFechaDesde'); if (d) d.value = '';
+      const h = document.getElementById('filtroFechaHasta'); if (h) h.value = '';
+      filtrarMovimientos();
     }
     function seleccionarTodosMovimientos() {
       const checks = document.querySelectorAll('.checkbox-movimiento');
