@@ -529,6 +529,7 @@
         <button class="btn btn-primary" onclick="descargarPlantilla()">📥 Descargar Plantilla</button>
         <button class="btn btn-primary" onclick="abrirUploadExcel()">📤 Subir Excel</button>
         <button class="btn btn-primary" onclick="exportarProductos()">💾 Exportar Todos</button>
+        <button id="btnRespaldarSheets" class="btn btn-secondary" onclick="respaldarASheets()" style="display:none;">☁️ Respaldar a Google Sheets</button>
       </div>
       <div class="filtros-panel">
         <div class="filtro-grupo">
@@ -1195,8 +1196,29 @@
       poblarZonasMedicion();
       limpiarMedicion();
       cargarMediciones();
+      configurarBotonRespaldo();
       iniciarPolling();
     });
+
+    // ====== RESPALDO A GOOGLE SHEETS ======
+    function configurarBotonRespaldo() {
+      fetch('/api/respaldo-config').then(r => r.json()).then(cfg => {
+        const btn = document.getElementById('btnRespaldarSheets');
+        if (btn) btn.style.display = cfg.configurado ? 'inline-block' : 'none';
+      }).catch(() => {});
+    }
+    function respaldarASheets() {
+      const btn = document.getElementById('btnRespaldarSheets');
+      if (btn) { btn.disabled = true; btn.textContent = '☁️ Respaldando...'; }
+      fetch('/api/respaldar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) mostrarAlerta('✅ Datos respaldados en Google Sheets', 'success');
+          else mostrarAlerta(d.error || 'No se pudo respaldar', 'error');
+        })
+        .catch(err => mostrarAlerta('Error: ' + err.message, 'error'))
+        .finally(() => { if (btn) { btn.disabled = false; btn.textContent = '☁️ Respaldar a Google Sheets'; } });
+    }
 
     // ====== MEDICIÓN DE PLANTAS ======
     function poblarZonasMedicion() {
