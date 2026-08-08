@@ -60,23 +60,29 @@
       font-size: 0.9rem;
       font-weight: 600;
     }
+    .logo {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      white-space: nowrap;
+      letter-spacing: -0.01em;
+    }
+    .logo span { color: var(--primary); }
     .nav-tabs {
       display: flex;
       gap: 0.25rem;
-      border-bottom: none;
-      background: #ffffff;
-      padding: 0.5rem;
-      margin: 1rem 2rem 0;
+      background: var(--gray-100);
+      padding: 0.35rem;
       border-radius: 30px;
-      box-shadow: var(--shadow-sm);
       overflow-x: auto;
+      max-width: 100%;
     }
     .nav-tabs button {
       background: none;
       border: none;
-      padding: 0.6rem 1.25rem;
+      padding: 0.55rem 1rem;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: var(--gray-600);
       border-radius: 30px;
       transition: all 0.2s ease;
@@ -85,12 +91,66 @@
     }
     .nav-tabs button:hover {
       color: var(--primary);
-      background: var(--primary-soft);
+      background: #ffffff;
     }
     .nav-tabs button.active {
       color: #ffffff;
       background: var(--primary);
       box-shadow: 0 4px 12px rgba(47, 158, 111, 0.35);
+    }
+    .welcome-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+    .welcome-title {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      letter-spacing: -0.02em;
+    }
+    .welcome-title span { color: var(--primary); }
+    .welcome-datetime {
+      background: #ffffff;
+      padding: 0.6rem 1.1rem;
+      border-radius: 30px;
+      box-shadow: var(--shadow-sm);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      white-space: nowrap;
+    }
+    .critica-tabs {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem 1rem 0;
+      flex-wrap: wrap;
+    }
+    .critica-tab {
+      background: var(--gray-100);
+      border: none;
+      padding: 0.5rem 1.1rem;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--gray-600);
+      transition: all 0.2s ease;
+    }
+    .critica-tab:hover { background: var(--primary-soft); color: var(--primary); }
+    .critica-tab.active { background: var(--primary); color: #ffffff; }
+    .critica-scroll {
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    #tablaCritica thead th {
+      position: sticky;
+      top: 0;
+      background: var(--gray-50);
+      z-index: 1;
     }
     .container {
       max-width: 1400px;
@@ -470,26 +530,27 @@
 </head>
 <body>
   <header>
-    <div>
-      <h1>🌱 HappyBudha SA Inventario</h1>
-    </div>
+    <div class="logo">HappyBudha <span>SA</span></div>
+    <nav class="nav-tabs">
+      <button class="nav-btn active" data-tab="dashboard" onclick="cambiarTab('dashboard')">Dashboard</button>
+      <button class="nav-btn" data-tab="salida" onclick="cambiarTab('salida')">Registrar Movimiento</button>
+      <button class="nav-btn" data-tab="cultivo" onclick="cambiarTab('cultivo')">Cultivo por Lote</button>
+      <button class="nav-btn" data-tab="medicion" onclick="cambiarTab('medicion')">Medición de Plantas</button>
+      <button class="nav-btn" data-tab="productos" onclick="cambiarTab('productos')">Productos</button>
+      <button class="nav-btn" data-tab="movimientos" onclick="cambiarTab('movimientos')">Historial</button>
+    </nav>
     <div class="user-info">
       <span id="userName">Admin</span>
     </div>
   </header>
-  <div class="nav-tabs">
-    <button class="nav-btn active" data-tab="dashboard" onclick="cambiarTab('dashboard')">📊 Dashboard</button>
-    <button class="nav-btn" data-tab="salida" onclick="cambiarTab('salida')">📝 Registrar Movimiento</button>
-    <button class="nav-btn" data-tab="cultivo" onclick="cambiarTab('cultivo')">🌱 Cultivo por Lote</button>
-    <button class="nav-btn" data-tab="medicion" onclick="cambiarTab('medicion')">📏 Medición de Plantas</button>
-    <button class="nav-btn" data-tab="productos" onclick="cambiarTab('productos')">📦 Productos</button>
-    <button class="nav-btn" data-tab="movimientos" onclick="cambiarTab('movimientos')">📤 Historial</button>
-  </div>
   <div class="container">
     <div id="alertContainer"></div>
     <!-- DASHBOARD -->
     <section class="dashboard active" data-tab="dashboard">
-      <h2 style="margin-bottom: 1.5rem;">Dashboard de Inventario</h2>
+      <div class="welcome-row">
+        <h2 class="welcome-title">Bienvenido a <span>HappyBudha S.A</span></h2>
+        <div class="welcome-datetime" id="welcomeDateTime"></div>
+      </div>
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-label">📦 Total Productos</div>
@@ -514,6 +575,12 @@
       </div>
       <h3 style="margin-bottom: 1rem; margin-top: 2rem;">Productos que Necesitan Atención</h3>
       <div class="tabla-container">
+        <div class="critica-tabs">
+          <button class="critica-tab active" data-estado="caducado" onclick="filtrarCriticos('caducado', this)">Caducado</button>
+          <button class="critica-tab" data-estado="sin-stock" onclick="filtrarCriticos('sin-stock', this)">Sin stock</button>
+          <button class="critica-tab" data-estado="bajo-stock" onclick="filtrarCriticos('bajo-stock', this)">Bajo stock</button>
+        </div>
+        <div class="critica-scroll">
         <table id="tablaCritica">
           <thead>
             <tr>
@@ -523,15 +590,15 @@
               <th>Mín</th>
               <th>Caducidad</th>
               <th>Proveedor</th>
-              <th>Estado</th>
             </tr>
           </thead>
           <tbody id="tablaCriticaBody">
             <tr>
-              <td colspan="7" style="text-align: center; color: var(--gray-600);">Cargando...</td>
+              <td colspan="6" style="text-align: center; color: var(--gray-600);">Cargando...</td>
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </section>
     <!-- PRODUCTOS -->
@@ -1210,6 +1277,8 @@
       limpiarMedicion();
       cargarMediciones();
       configurarBotonRespaldo();
+      actualizarFechaHora();
+      setInterval(actualizarFechaHora, 1000);
       iniciarPolling();
     });
 
@@ -1448,102 +1517,85 @@
         })
         .catch(err => console.error('Error cargando estadísticas:', err));
     }
-    function cargarProductosCriticos() {
+    // Parsea la fecha de caducidad en varios formatos (YYYY-MM-DD, MM-YY, mes-YY)
+    function parsearFechaCad(fechaStr) {
+      if (!fechaStr) return null;
+      if (fechaStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month] = fechaStr.split('-');
+        const fecha = new Date(parseInt(year), parseInt(month), 0);
+        return isNaN(fecha.getTime()) ? null : fecha;
+      }
+      if (fechaStr.match(/^\d{2}-\d{2,4}$/)) {
+        const [month, year] = fechaStr.split('-');
+        let fullYear = parseInt(year);
+        if (fullYear < 100) fullYear += 2000;
+        const fecha = new Date(fullYear, parseInt(month), 0);
+        return isNaN(fecha.getTime()) ? null : fecha;
+      }
+      const mesesAbrev = { 'ene': 1, 'feb': 2, 'mar': 3, 'abr': 4, 'may': 5, 'jun': 6, 'jul': 7, 'ago': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dic': 12 };
+      const partes = String(fechaStr).toLowerCase().split('-');
+      if (partes.length === 2) {
+        let mes = parseInt(partes[0]);
+        if (isNaN(mes)) mes = mesesAbrev[partes[0]];
+        let anio = parseInt(partes[1]);
+        if (anio < 100 && anio >= 0) anio += 2000;
+        if (mes > 0 && mes <= 12 && anio > 1900) {
+          const fecha = new Date(anio, mes, 0);
+          return isNaN(fecha.getTime()) ? null : fecha;
+        }
+      }
+      return null;
+    }
+
+    // Devuelve los productos que están en un estado (caducado / sin-stock / bajo-stock)
+    function productosPorEstado(estado) {
       const hoy = new Date();
-      const hace60Dias = new Date();
-      hace60Dias.setDate(hace60Dias.getDate() + 60);
-
-      // Función para parsear fecha en múltiples formatos
-      function parsearFecha(fechaStr) {
-        if (!fechaStr) return null;
-
-        // Formato YYYY-MM-DD (ejemplo: 2026-09-01)
-        if (fechaStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          const [year, month, day] = fechaStr.split('-');
-          const fecha = new Date(parseInt(year), parseInt(month), 0);
-          return isNaN(fecha.getTime()) ? null : fecha;
-        }
-
-        // Formato MM-YY o MM-YYYY (ejemplo: 09-26 o 09-2026)
-        if (fechaStr.match(/^\d{2}-\d{2,4}$/)) {
-          const [month, year] = fechaStr.split('-');
-          let fullYear = parseInt(year);
-          if (fullYear < 100) fullYear += 2000;
-          const fecha = new Date(fullYear, parseInt(month), 0);
-          return isNaN(fecha.getTime()) ? null : fecha;
-        }
-
-        // Formato mes-YY (ejemplo: ago-27, may-25)
-        const mesesAbrev = {
-          'ene': 1, 'feb': 2, 'mar': 3, 'abr': 4, 'may': 5, 'jun': 6,
-          'jul': 7, 'ago': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dic': 12
-        };
-
-        const partes = fechaStr.toLowerCase().split('-');
-        if (partes.length === 2) {
-          let mes = parseInt(partes[0]);
-          if (isNaN(mes)) mes = mesesAbrev[partes[0]];
-          let año = parseInt(partes[1]);
-          if (año < 100 && año >= 0) año += 2000;
-          if (mes > 0 && mes <= 12 && año > 1900) {
-            const fecha = new Date(año, mes, 0);
-            return isNaN(fecha.getTime()) ? null : fecha;
-          }
-        }
-        return null;
-      }
-
-      let productosCriticos = [];
-      productos.forEach(p => {
-        const tipo = [];
-        const estado = [];
-        const fechaCaducidad = parsearFecha(p.fecha_caducidad);
-
-        if (fechaCaducidad && fechaCaducidad < hoy) {
-          tipo.push(1);
-          estado.push('⚠️ Caducado');
-        }
-        else if (p.stock === 0) {
-          tipo.push(2);
-          estado.push('❌ Sin Stock');
-        }
-        else if (fechaCaducidad && fechaCaducidad <= hace60Dias) {
-          tipo.push(3);
-          estado.push('⏰ Vence en 60 días');
-        }
-        else if (p.stock > 0 && p.stock <= (p.stock_minimo || 0)) {
-          tipo.push(4);
-          estado.push(`📉 Stock bajo`);
-        }
-        if (tipo.length > 0) {
-          productosCriticos.push({
-            ...p,
-            prioridad: Math.min(...tipo),
-            estado: estado[0]
-          });
-        }
+      return productos.filter(p => {
+        const f = parsearFechaCad(p.fecha_caducidad);
+        const stock = parseFloat(p.stock) || 0;
+        if (estado === 'caducado') return f && f < hoy;
+        if (estado === 'sin-stock') return stock <= 0;
+        if (estado === 'bajo-stock') return stock > 0 && stock <= (parseFloat(p.stock_minimo) || 0);
+        return false;
       });
-      productosCriticos.sort((a, b) => a.prioridad - b.prioridad);
+    }
+
+    let criticoTabActivo = 'caducado';
+    function cargarProductosCriticos() {
+      filtrarCriticos(criticoTabActivo);
+    }
+    function filtrarCriticos(estado, btn) {
+      criticoTabActivo = estado;
+      document.querySelectorAll('.critica-tab').forEach(b => b.classList.remove('active'));
+      const activo = btn || document.querySelector('.critica-tab[data-estado="' + estado + '"]');
+      if (activo) activo.classList.add('active');
+
+      const lista = productosPorEstado(estado);
       const tbody = document.getElementById('tablaCriticaBody');
-      tbody.innerHTML = '';
-      if (productosCriticos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--gray-600);">✅ Todos los productos están en orden</td></tr>';
-      } else {
-        productosCriticos.forEach(p => {
-          const badgeClass = p.prioridad === 1 ? 'badge-danger' : p.prioridad === 2 ? 'badge-danger' : 'badge-warning';
-          tbody.innerHTML += `
-            <tr>
-              <td><strong>${p.codigo}</strong></td>
-              <td>${p.nombre}</td>
-              <td>${p.stock || 0}</td>
-              <td>${p.stock_minimo || 0}</td>
-              <td>${p.fecha_caducidad && String(p.fecha_caducidad).trim() !== '' ? String(p.fecha_caducidad).split('T')[0] : '-'}</td>
-              <td>${p.proveedor || '-'}</td>
-              <td><span class="badge ${badgeClass}">${p.estado}</span></td>
-            </tr>
-          `;
-        });
+      if (!tbody) return;
+      if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--gray-600);">✅ No hay productos en esta categoría</td></tr>';
+        return;
       }
+      tbody.innerHTML = lista.map(p => `
+        <tr>
+          <td><strong>${p.codigo || '-'}</strong></td>
+          <td>${p.nombre || '-'}</td>
+          <td>${p.stock || 0}</td>
+          <td>${p.stock_minimo || 0}</td>
+          <td>${p.fecha_caducidad && String(p.fecha_caducidad).trim() !== '' ? String(p.fecha_caducidad).split('T')[0] : '-'}</td>
+          <td>${p.proveedor || '-'}</td>
+        </tr>`).join('');
+    }
+
+    // Reloj de fecha y hora en la bienvenida
+    function actualizarFechaHora() {
+      const el = document.getElementById('welcomeDateTime');
+      if (!el) return;
+      const ahora = new Date();
+      const fecha = ahora.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const hora = ahora.toLocaleTimeString('es-ES');
+      el.textContent = '📅 ' + fecha.charAt(0).toUpperCase() + fecha.slice(1) + '  ·  ' + hora;
     }
     function cargarMovimientos() {
       fetch('/api/movimientos')
