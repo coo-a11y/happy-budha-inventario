@@ -484,6 +484,68 @@ async function executeModify(query, params = []) {
   }
 }
 
+// ============ RESPALDO A GOOGLE SHEETS ============
+// Envía todos los datos (productos, movimientos, mediciones) a un Web App de
+// Google Apps Script. Se queda inactivo si no está configurada la URL.
+const SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || '';
+let respaldoTimer = null;
+
+// Agenda un respaldo con "debounce": varios cambios seguidos se agrupan en un solo envío.
+function programarRespaldo() {
+  if (!SHEETS_WEBHOOK_URL) return;
+  if (respaldoTimer) clearTimeout(respaldoTimer);
+  respaldoTimer = setTimeout(() => {
+    enviarRespaldo().catch(e => console.warn('⚠️ Respaldo a Sheets falló:', e.message));
+  }, 8000);
+}
+
+async function construirRespaldo() {
+  const prodRes = await executeQuery('SELECT * FROM productos ORDER BY nombre ASC');
+  const movRes = await executeQuery('SELECT * FROM movimientos ORDER BY id DESC LIMIT 5000');
+  const medRes = await executeQuery('SELECT * FROM mediciones ORDER BY id DESC LIMIT 2000');
+
+  const prodMap = {};
+  (prodRes.rows || []).forEach(p => { prodMap[p.id] = p; });
+  const limpiarDesc = (d) => String(d || '').replace(/^Lote:\s*\d+\s*-\s*/, '').trim();
+
+  const productos = {
+    headers: ['Código', 'Nombre comercial', 'Nombre de referencia', 'Categoría', 'Presentación', 'Stock', 'Stock mínimo', 'Precio', 'Caducidad', 'Zona', 'Proveedor', 'Actualizado'],
+    rows: (prodRes.rows || []).map(p => [p.codigo || '', p.nombre || '', p.nombre_referencia || '', p.categoria || '', p.presentacion || '', p.stock ?? '', p.stock_minimo ?? '', p.precio ?? '', p.fecha_caducidad || '', p.zona || '', p.proveedor || '', p.updated_at || ''])
+  };
+
+  const movimientos = {
+    headers: ['ID', 'Fecha movimiento', 'Registrado', 'Tipo', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Zona', 'Caducidad', 'Operario', 'Costo', 'Observaciones', 'Agua (L)', 'pH', 'Mezcla'],
+    rows: (movRes.rows || []).map(m => {
+      const prod = prodMap[m.producto_id] || {};
+      const cantidad = m.tipo === 'salida' ? (m.cantidad_salida ?? '') : (m.cantidad_presentacion ?? '');
+      const zona = m.tipo === 'salida' ? (m.zona_origen || '') : (m.zona_destino || m.zona_origen || '');
+      return [m.id, m.fecha_movimiento || '', m.created_at || '', m.tipo || '', prod.codigo || '', prod.nombre || '', cantidad, m.unidad_salida || '', zona, m.fecha_caducidad || '', m.operario || '', m.costo_total ?? '', limpiarDesc(m.descripcion), m.litros_agua ?? '', m.ph_agua ?? '', m.mezcla_id || ''];
+    })
+  };
+
+  const mediciones = {
+    headers: ['ID', 'Fecha/hora', 'Zona', 'Línea', 'N° plantas', 'Promedio (cm)', 'Operario', 'Medidas (cm)'],
+    rows: (medRes.rows || []).map(m => {
+      let medidas = '';
+      try { medidas = (JSON.parse(m.lineas || '[]')).map(l => l.medida).join(', '); } catch (e) {}
+      return [m.id, m.fecha_hora || '', m.zona || '', m.linea || '', m.cantidad_plantas ?? '', m.promedio ?? '', m.operario || '', medidas];
+    })
+  };
+
+  return { productos, movimientos, mediciones };
+}
+
+async function enviarRespaldo() {
+  if (!SHEETS_WEBHOOK_URL) return { ok: false, error: 'No configurado' };
+  const data = await construirRespaldo();
+  const resp = await fetch(SHEETS_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  return { ok: resp.ok, status: resp.status };
+}
+
 // Inicializar BD
 const initializeDatabase = async () => {
   try {
@@ -979,6 +1041,7 @@ app.post('/api/productos', async (req, res) => {
       const setClause = cols.map(c => `${c}=?`).join(', ') + ', updated_at=CURRENT_TIMESTAMP';
       vals.push(req.body.id);
       await executeQuery(`UPDATE productos SET ${setClause} WHERE id=?`, vals);
+      programarRespaldo();
       res.json({ success: true, id: req.body.id });
     } else {
       // Crear
@@ -1017,6 +1080,7 @@ app.post('/api/productos', async (req, res) => {
       }
       
       if (!usePostgres) db.saveData();
+      programarRespaldo();
       res.json({ success: true, id: lastId });
     }
   } catch (err) {
@@ -1189,6 +1253,7 @@ app.post('/api/movimientos/entrada', async (req, res) => {
     );
 
     const movId = usePostgres ? movResult.rows[0].id : movResult.lastID;
+    programarRespaldo();
     res.json({ success: true, id: movId, loteId, nuevoStock, costoTotal: costoTotalEntrada });
   } catch (err) {
     console.error('Error en POST /api/movimientos/entrada:', err);
@@ -1268,6 +1333,7 @@ app.post('/api/movimientos/salida', async (req, res) => {
     );
 
     const movId = usePostgres ? movResult.rows[0]?.id : movResult.lastID;
+    programarRespaldo();
     res.json({ success: true, id: movId, nuevoStock, costoTotal, cantidadDescontada: cantidadSalida, convertido: conv.convertido });
   } catch (err) {
     console.error('Error en POST /api/movimientos/salida:', err);
@@ -1376,6 +1442,7 @@ app.delete('/api/movimientos/:id', async (req, res) => {
       console.log('📝 Registro de eliminación creado');
     }
 
+    programarRespaldo();
     res.json({ success: true, mensaje: 'Movimiento eliminado y stock revertido' });
   } catch (err) {
     console.error('Error en DELETE /api/movimientos/:id:', err);
@@ -1427,6 +1494,7 @@ app.delete('/api/productos/:id', async (req, res) => {
     // Tercero: Eliminar el producto
     await executeQuery('DELETE FROM productos WHERE id = ?', [productoId]);
 
+    programarRespaldo();
     res.json({ success: true, mensaje: 'Producto eliminado y registro creado en historial' });
   } catch (err) {
     console.error('Error en DELETE /api/productos/:id:', err);
@@ -1591,6 +1659,7 @@ app.post('/api/importar/excel', async (req, res) => {
       agregados++;
     }
 
+    programarRespaldo();
     res.json({ success: true, agregados });
   } catch (err) {
     console.error('Error en POST /api/importar/excel:', err);
@@ -1656,6 +1725,7 @@ app.post('/api/mediciones', async (req, res) => {
       : `INSERT INTO mediciones (fecha_hora, zona, linea, cantidad_plantas, promedio, lineas, operario, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
     const result = await executeQuery(query, [fecha_hora || new Date().toISOString(), zona || '', linea || '', cantidad, promedio, lineasJson, operario || '', new Date().toISOString()]);
     const id = usePostgres ? result.rows[0]?.id : result.lastID;
+    programarRespaldo();
     res.json({ success: true, id, promedio, cantidad });
   } catch (err) {
     console.error('Error en POST /api/mediciones:', err);
@@ -1686,11 +1756,32 @@ app.delete('/api/mediciones/:id', async (req, res) => {
       return res.status(403).json({ error: 'Solo admin puede eliminar informes' });
     }
     await executeQuery('DELETE FROM mediciones WHERE id = ?', [req.params.id]);
+    programarRespaldo();
     res.json({ success: true });
   } catch (err) {
     console.error('Error en DELETE /api/mediciones/:id:', err);
     res.status(500).json({ error: err.message });
   }
+});
+
+// ============ RESPALDO MANUAL A GOOGLE SHEETS ============
+app.post('/api/respaldar', async (req, res) => {
+  try {
+    if (!SHEETS_WEBHOOK_URL) {
+      return res.status(400).json({ error: 'Google Sheets no está configurado todavía (falta la variable GOOGLE_SHEETS_WEBHOOK_URL en Railway).' });
+    }
+    const r = await enviarRespaldo();
+    if (r.ok) res.json({ success: true, mensaje: 'Respaldo enviado a Google Sheets' });
+    else res.status(500).json({ error: 'El respaldo falló (código ' + r.status + ')' });
+  } catch (err) {
+    console.error('Error en POST /api/respaldar:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Estado de configuración del respaldo (para mostrar/ocultar el botón)
+app.get('/api/respaldo-config', (req, res) => {
+  res.json({ configurado: !!SHEETS_WEBHOOK_URL });
 });
 
 // ============ HEALTH CHECK ============
