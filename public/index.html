@@ -10,12 +10,13 @@
       box-sizing: border-box;
     }
     :root {
-      --primary: #10b981;
-      --primary-dark: #059669;
+      --primary: #2f9e6f;
+      --primary-dark: #24805a;
+      --primary-soft: #e8f5ef;
       --danger: #ef4444;
       --warning: #f59e0b;
       --info: #3b82f6;
-      --success: #10b981;
+      --success: #2f9e6f;
       --gray-50: #f9fafb;
       --gray-100: #f3f4f6;
       --gray-200: #e5e7eb;
@@ -23,18 +24,22 @@
       --gray-600: #4b5563;
       --gray-700: #374151;
       --gray-900: #111827;
+      --radius: 18px;
+      --radius-sm: 12px;
+      --shadow: 0 6px 24px rgba(17, 24, 39, 0.06);
+      --shadow-sm: 0 2px 10px rgba(17, 24, 39, 0.05);
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background-color: var(--gray-50);
+      background-color: #eef1f0;
       color: var(--gray-900);
       line-height: 1.6;
     }
     header {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      padding: 1rem 2rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      background: #ffffff;
+      color: var(--gray-900);
+      padding: 1.1rem 2rem;
+      box-shadow: var(--shadow-sm);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -42,44 +47,50 @@
       gap: 1rem;
     }
     header h1 {
-      font-size: 1.8rem;
-      font-weight: 700;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.02em;
     }
     .user-info {
-      background: rgba(255, 255, 255, 0.2);
+      background: var(--gray-100);
+      color: var(--gray-900);
       padding: 0.5rem 1rem;
-      border-radius: 20px;
+      border-radius: 30px;
       font-size: 0.9rem;
-      backdrop-filter: blur(10px);
+      font-weight: 600;
     }
     .nav-tabs {
       display: flex;
-      gap: 0;
-      border-bottom: 2px solid var(--gray-200);
-      background: white;
-      padding: 0 2rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      gap: 0.25rem;
+      border-bottom: none;
+      background: #ffffff;
+      padding: 0.5rem;
+      margin: 1rem 2rem 0;
+      border-radius: 30px;
+      box-shadow: var(--shadow-sm);
       overflow-x: auto;
     }
     .nav-tabs button {
       background: none;
       border: none;
-      padding: 1rem 1.5rem;
+      padding: 0.6rem 1.25rem;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       color: var(--gray-600);
-      border-bottom: 3px solid transparent;
-      transition: all 0.3s ease;
+      border-radius: 30px;
+      transition: all 0.2s ease;
       white-space: nowrap;
-      font-weight: 500;
+      font-weight: 600;
     }
     .nav-tabs button:hover {
       color: var(--primary);
-      background: var(--gray-50);
+      background: var(--primary-soft);
     }
     .nav-tabs button.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
+      color: #ffffff;
+      background: var(--primary);
+      box-shadow: 0 4px 12px rgba(47, 158, 111, 0.35);
     }
     .container {
       max-width: 1400px;
@@ -101,8 +112,8 @@
     .stat-card {
       background: white;
       padding: 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
       border-left: 4px solid var(--primary);
     }
     .stat-card.danger {
@@ -132,8 +143,8 @@
     .filtros-panel {
       background: white;
       padding: 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
       margin-bottom: 2rem;
       display: flex;
       gap: 1rem;
@@ -156,7 +167,7 @@
     .filtro-grupo select {
       padding: 0.75rem;
       border: 1px solid var(--gray-300);
-      border-radius: 6px;
+      border-radius: 10px;
       font-size: 0.95rem;
       font-family: inherit;
       width: 100%;
@@ -165,12 +176,12 @@
     .filtro-grupo select:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+      box-shadow: 0 0 0 3px rgba(47, 158, 111, 0.15);
     }
     .btn {
       padding: 0.75rem 1.5rem;
       border: none;
-      border-radius: 6px;
+      border-radius: 10px;
       cursor: pointer;
       font-size: 0.95rem;
       font-weight: 600;
@@ -186,7 +197,7 @@
     .btn-primary:hover {
       background: var(--primary-dark);
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 6px 16px rgba(47, 158, 111, 0.3);
     }
     .btn-secondary {
       background: var(--gray-200);
@@ -203,8 +214,8 @@
     .tabla-container {
       overflow-x: auto;
       background: white;
-      border-radius: 10px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
     }
     table {
       width: 100%;
@@ -213,13 +224,14 @@
     }
     th {
       background: var(--gray-50);
-      padding: 1rem;
+      padding: 0.9rem 1rem;
       text-align: left;
-      font-weight: 600;
-      color: var(--gray-700);
-      border-bottom: 2px solid var(--gray-200);
+      font-weight: 700;
+      color: var(--gray-600);
+      border-bottom: 1px solid var(--gray-200);
       text-transform: uppercase;
-      font-size: 0.8rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
     }
     td {
       padding: 1rem;
@@ -263,8 +275,8 @@
     .formulario-panel {
       background: white;
       padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
       display: none;
       margin-bottom: 2rem;
     }
@@ -291,7 +303,7 @@
     .form-grupo select {
       padding: 0.75rem;
       border: 1px solid var(--gray-300);
-      border-radius: 6px;
+      border-radius: 10px;
       font-size: 0.95rem;
       font-family: inherit;
     }
@@ -299,7 +311,7 @@
     .form-grupo select:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+      box-shadow: 0 0 0 3px rgba(47, 158, 111, 0.15);
     }
     .form-acciones {
       display: flex;
@@ -308,7 +320,7 @@
     }
     .alert {
       padding: 1rem;
-      border-radius: 6px;
+      border-radius: 10px;
       margin-bottom: 1rem;
       display: none;
     }
@@ -342,12 +354,13 @@
     }
     .modal-content {
       background: white;
-      border-radius: 10px;
+      border-radius: var(--radius);
       padding: 2rem;
       max-width: 600px;
       width: 90%;
       max-height: 90vh;
       overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(17, 24, 39, 0.25);
     }
     .modal-header {
       display: flex;
