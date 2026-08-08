@@ -543,7 +543,20 @@ async function enviarRespaldo() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
-  return { ok: resp.ok, status: resp.status };
+  // Leer la respuesta real del script (Apps Script puede responder HTTP 200 pero
+  // con {ok:false} si algo falló internamente).
+  let cuerpo = '';
+  try { cuerpo = await resp.text(); } catch (e) {}
+  let scriptOk = true;
+  let scriptError = '';
+  try {
+    const j = JSON.parse(cuerpo);
+    if (j && j.ok === false) { scriptOk = false; scriptError = j.error || 'Error en el script de Sheets'; }
+  } catch (e) {
+    // Respuesta no-JSON: si el status HTTP no es 2xx, es error (ej. login de Google)
+    if (!resp.ok) { scriptOk = false; scriptError = 'Respuesta inesperada (¿el Web App es público y termina en /exec?)'; }
+  }
+  return { ok: resp.ok && scriptOk, status: resp.status, error: scriptError };
 }
 
 // Inicializar BD
@@ -1772,7 +1785,7 @@ app.post('/api/respaldar', async (req, res) => {
     }
     const r = await enviarRespaldo();
     if (r.ok) res.json({ success: true, mensaje: 'Respaldo enviado a Google Sheets' });
-    else res.status(500).json({ error: 'El respaldo falló (código ' + r.status + ')' });
+    else res.status(500).json({ error: 'El respaldo falló' + (r.error ? ': ' + r.error : ' (código ' + r.status + ')') });
   } catch (err) {
     console.error('Error en POST /api/respaldar:', err);
     res.status(500).json({ error: err.message });
