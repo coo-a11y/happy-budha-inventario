@@ -532,6 +532,21 @@
         font-size: 1.1rem;
       }
     }
+    /* Calendario de cultivo (Gantt) */
+    .cal-leyenda { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1rem; }
+    .cal-leyenda .item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 600; color: var(--gray-700); background: #fff; padding: 0.35rem 0.75rem; border-radius: 20px; box-shadow: var(--shadow-sm); }
+    .cal-leyenda .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+    .gantt-header { display: flex; align-items: stretch; border-bottom: 2px solid var(--gray-200); }
+    .gantt-row { display: flex; align-items: stretch; border-bottom: 1px solid var(--gray-100); }
+    .gantt-row:hover { background: var(--gray-50); }
+    .gantt-lote { position: sticky; left: 0; z-index: 2; background: #fff; min-width: 150px; max-width: 150px; display: flex; flex-direction: column; gap: 3px; justify-content: center; padding: 6px 10px; border-right: 1px solid var(--gray-200); }
+    .gantt-row:hover .gantt-lote { background: var(--gray-50); }
+    .gantt-lote strong { font-size: 0.85rem; color: var(--gray-900); }
+    .gantt-lote input { border: 1px solid var(--gray-300); border-radius: 8px; padding: 3px 6px; font-size: 0.72rem; width: 100%; }
+    .gantt-track { position: relative; height: 46px; flex: 0 0 auto; }
+    .gantt-seg { position: absolute; top: 10px; height: 26px; border-radius: 6px; }
+    .gantt-hoy { position: absolute; top: 0; bottom: 0; width: 2px; background: #ef4444; z-index: 3; }
+    .gantt-tick { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--gray-200); font-size: 0.62rem; color: var(--gray-600); padding-left: 3px; padding-top: 4px; white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -539,6 +554,7 @@
     <div class="logo">HappyBudha <span>SA</span></div>
     <nav class="nav-tabs">
       <button class="nav-btn active" data-tab="dashboard" onclick="cambiarTab('dashboard')">Dashboard</button>
+      <button class="nav-btn" data-tab="calendario" onclick="cambiarTab('calendario')">Calendario de Cultivo</button>
       <button class="nav-btn" data-tab="salida" onclick="cambiarTab('salida')">Registrar Movimiento</button>
       <button class="nav-btn" data-tab="cultivo" onclick="cambiarTab('cultivo')">Cultivo por Lote</button>
       <button class="nav-btn" data-tab="medicion" onclick="cambiarTab('medicion')">Medición de Plantas</button>
@@ -606,6 +622,17 @@
           </tbody>
         </table>
         </div>
+      </div>
+    </section>
+    <!-- CALENDARIO DE CULTIVO -->
+    <section class="dashboard" data-tab="calendario">
+      <div class="welcome-row">
+        <h2 class="welcome-title">Calendario de <span>Cultivo</span></h2>
+        <div class="welcome-datetime" id="calendarioHoy"></div>
+      </div>
+      <div id="calendarioLeyenda" class="cal-leyenda"></div>
+      <div class="tabla-container" style="padding: 0.5rem;">
+        <div id="calendarioGantt" style="overflow-x: auto;"></div>
       </div>
     </section>
     <!-- PRODUCTOS -->
@@ -1286,8 +1313,97 @@
       configurarBotonRespaldo();
       actualizarFechaHora();
       setInterval(actualizarFechaHora, 1000);
+      cargarCalendario();
       iniciarPolling();
     });
+
+    // ====== CALENDARIO DE CULTIVO (GANTT) ======
+    const CAL_ETAPAS = [
+      { nombre: 'Germinación', offset: 0,   dur: 3,  color: '#86efac' },
+      { nombre: 'Nursery',     offset: 3,   dur: 19, color: '#34d399' },
+      { nombre: 'Vegetativo',  offset: 22,  dur: 29, color: '#059669' },
+      { nombre: 'Transición',  offset: 51,  dur: 6,  color: '#fbbf24' },
+      { nombre: 'Floración',   offset: 57,  dur: 53, color: '#ec4899' },
+      { nombre: 'Cosecha',     offset: 110, dur: 18, color: '#f97316' }
+    ];
+    const CAL_CICLO = 128;
+    const CAL_DAYW = 11;
+    let calendarioData = {};
+
+    function cargarCalendario() {
+      fetch('/api/calendario').then(r => r.json()).then(rows => {
+        calendarioData = {};
+        (rows || []).forEach(r => { if (r.fecha_inicio) calendarioData[r.lote] = String(r.fecha_inicio).split('T')[0]; });
+        renderCalendario();
+      }).catch(() => {});
+    }
+    function guardarFechaLote(lote, fecha) {
+      fetch('/api/calendario', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lote, fecha_inicio: fecha }) })
+        .then(r => r.json())
+        .then(() => { if (fecha) calendarioData[lote] = fecha; else delete calendarioData[lote]; renderCalendario(); })
+        .catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
+    }
+    function calParseFecha(s) { const p = String(s).split('-'); return new Date(+p[0], (+p[1]) - 1, +p[2]); }
+    function calFmtDMY(d) { return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); }
+
+    function renderCalendario() {
+      const cont = document.getElementById('calendarioGantt');
+      if (!cont) return;
+      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+
+      const ley = document.getElementById('calendarioLeyenda');
+      if (ley) ley.innerHTML = CAL_ETAPAS.map(e => `<span class="item"><span class="swatch" style="background:${e.color}"></span>${e.nombre} (día ${e.offset + 1}–${e.offset + e.dur})</span>`).join('') + '<span class="item"><span class="swatch" style="background:#ef4444"></span>Hoy</span>';
+      const relojEl = document.getElementById('calendarioHoy');
+      if (relojEl) relojEl.textContent = 'Hoy: ' + hoy.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      const lotes = []; for (let i = 1; i <= 42; i++) lotes.push('C' + i);
+      const fechas = Object.values(calendarioData).filter(Boolean).map(calParseFecha);
+      let minD, maxD;
+      if (fechas.length) {
+        minD = new Date(Math.min.apply(null, fechas.map(d => d.getTime())));
+        maxD = new Date(Math.max.apply(null, fechas.map(d => d.getTime())) + CAL_CICLO * 86400000);
+      } else {
+        minD = new Date(hoy); maxD = new Date(hoy.getTime() + CAL_CICLO * 86400000);
+      }
+      if (hoy < minD) minD = new Date(hoy);
+      if (hoy.getTime() > maxD.getTime()) maxD = new Date(hoy);
+      minD = new Date(minD.getTime() - 5 * 86400000);
+      maxD = new Date(maxD.getTime() + 5 * 86400000);
+      const totalDias = Math.round((maxD - minD) / 86400000);
+      const ancho = totalDias * CAL_DAYW;
+      const diasDesde = (d) => Math.round((d - minD) / 86400000);
+      const hoyLeft = diasDesde(hoy) * CAL_DAYW;
+
+      let ticks = '';
+      for (let i = 0; i <= totalDias; i += 7) {
+        const d = new Date(minD.getTime() + i * 86400000);
+        ticks += `<div class="gantt-tick" style="left:${i * CAL_DAYW}px">${calFmtDMY(d)}</div>`;
+      }
+
+      let html = '';
+      html += `<div class="gantt-header"><div class="gantt-lote"><strong>Lote</strong></div><div class="gantt-track" style="width:${ancho}px;height:24px">${ticks}</div></div>`;
+      lotes.forEach(lote => {
+        const fecha = calendarioData[lote];
+        let segs = '';
+        if (fecha) {
+          const ini = diasDesde(calParseFecha(fecha));
+          segs = CAL_ETAPAS.map(e => {
+            const left = (ini + e.offset) * CAL_DAYW;
+            const w = e.dur * CAL_DAYW;
+            return `<div class="gantt-seg" style="left:${left}px;width:${w}px;background:${e.color}" title="${e.nombre}: día ${e.offset + 1} a ${e.offset + e.dur}"></div>`;
+          }).join('');
+        }
+        segs += `<div class="gantt-hoy" style="left:${hoyLeft}px"></div>`;
+        html += `<div class="gantt-row">
+          <div class="gantt-lote">
+            <strong>${lote}</strong>
+            <input type="date" value="${fecha || ''}" onchange="guardarFechaLote('${lote}', this.value)">
+          </div>
+          <div class="gantt-track" style="width:${ancho}px">${segs}</div>
+        </div>`;
+      });
+      cont.innerHTML = html;
+    }
 
     // ====== RESPALDO A GOOGLE SHEETS ======
     function configurarBotonRespaldo() {
@@ -1437,6 +1553,7 @@
       const section = document.querySelector(`.dashboard[data-tab="${tabName}"]`);
       if (navBtn) navBtn.classList.add('active');
       if (section) section.classList.add('active');
+      if (tabName === 'calendario' && typeof renderCalendario === 'function') renderCalendario();
     }
     function cargarProductos() {
       console.log('🔄 Cargando productos...');
