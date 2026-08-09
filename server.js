@@ -779,6 +779,24 @@ const initializeDatabase = async () => {
     }
     console.log('✅ Tabla mediciones lista');
 
+    // 6. Crear tabla cultivo_calendario (fecha de inicio de germinación por lote)
+    if (usePostgres) {
+      await pool.query(`CREATE TABLE IF NOT EXISTS cultivo_calendario (
+        id SERIAL PRIMARY KEY,
+        lote TEXT UNIQUE,
+        fecha_inicio TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+    } else {
+      await executeQuery(`CREATE TABLE IF NOT EXISTS cultivo_calendario (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lote TEXT UNIQUE,
+        fecha_inicio TEXT,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+    }
+    console.log('✅ Tabla cultivo_calendario lista');
+
     // Agregar columnas faltantes si es PostgreSQL
     if (usePostgres) {
       try {
@@ -1795,6 +1813,37 @@ app.post('/api/respaldar', async (req, res) => {
 // Estado de configuración del respaldo (para mostrar/ocultar el botón)
 app.get('/api/respaldo-config', (req, res) => {
   res.json({ configurado: !!SHEETS_WEBHOOK_URL });
+});
+
+// ============ CALENDARIO DE CULTIVO ============
+// Listar las fechas de inicio por lote
+app.get('/api/calendario', async (req, res) => {
+  try {
+    const result = await executeQuery('SELECT lote, fecha_inicio FROM cultivo_calendario');
+    res.json(result.rows || []);
+  } catch (err) {
+    console.error('Error en GET /api/calendario:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Guardar/actualizar la fecha de inicio de un lote (upsert manual, sirve en Postgres y LocalDB)
+app.post('/api/calendario', async (req, res) => {
+  try {
+    const { lote, fecha_inicio } = req.body;
+    if (!lote) return res.status(400).json({ error: 'Falta el lote' });
+    const fecha = (fecha_inicio && String(fecha_inicio).trim() !== '') ? fecha_inicio : null;
+    const ex = await executeQuery('SELECT id FROM cultivo_calendario WHERE lote = ?', [lote]);
+    if (ex.rows && ex.rows.length) {
+      await executeQuery('UPDATE cultivo_calendario SET fecha_inicio = ? WHERE lote = ?', [fecha, lote]);
+    } else {
+      await executeQuery('INSERT INTO cultivo_calendario (lote, fecha_inicio) VALUES (?, ?)', [lote, fecha]);
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error en POST /api/calendario:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ============ HEALTH CHECK ============
