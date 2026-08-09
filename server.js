@@ -785,6 +785,9 @@ const initializeDatabase = async () => {
         id SERIAL PRIMARY KEY,
         lote TEXT UNIQUE,
         fecha_inicio TEXT,
+        duraciones TEXT,
+        nota TEXT,
+        registrado_por TEXT,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`);
     } else {
@@ -792,6 +795,9 @@ const initializeDatabase = async () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         lote TEXT UNIQUE,
         fecha_inicio TEXT,
+        duraciones TEXT,
+        nota TEXT,
+        registrado_por TEXT,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`);
     }
@@ -849,6 +855,9 @@ const initializeDatabase = async () => {
       } catch (err) {
         // Columna ya existe, ignorar
       }
+      try { await pool.query('ALTER TABLE cultivo_calendario ADD COLUMN duraciones TEXT'); } catch (err) {}
+      try { await pool.query('ALTER TABLE cultivo_calendario ADD COLUMN nota TEXT'); } catch (err) {}
+      try { await pool.query('ALTER TABLE cultivo_calendario ADD COLUMN registrado_por TEXT'); } catch (err) {}
     }
 
     // Migrar datos de data.json a PostgreSQL si está vacía
@@ -1816,28 +1825,37 @@ app.get('/api/respaldo-config', (req, res) => {
 });
 
 // ============ CALENDARIO DE CULTIVO ============
-// Listar las fechas de inicio por lote
+// Listar los registros de cultivo por lote
 app.get('/api/calendario', async (req, res) => {
   try {
-    const result = await executeQuery('SELECT lote, fecha_inicio FROM cultivo_calendario');
-    res.json(result.rows || []);
+    const result = await executeQuery('SELECT lote, fecha_inicio, duraciones, nota, registrado_por FROM cultivo_calendario');
+    const rows = (result.rows || []).map(r => {
+      let duraciones = null;
+      try { duraciones = r.duraciones ? JSON.parse(r.duraciones) : null; } catch (e) { duraciones = null; }
+      return { ...r, duraciones };
+    });
+    res.json(rows);
   } catch (err) {
     console.error('Error en GET /api/calendario:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Guardar/actualizar la fecha de inicio de un lote (upsert manual, sirve en Postgres y LocalDB)
+// Guardar/actualizar el registro de un lote (fecha, duraciones de etapas, nota, responsable)
 app.post('/api/calendario', async (req, res) => {
   try {
-    const { lote, fecha_inicio } = req.body;
+    const { lote, fecha_inicio, duraciones, nota, registrado_por } = req.body;
     if (!lote) return res.status(400).json({ error: 'Falta el lote' });
     const fecha = (fecha_inicio && String(fecha_inicio).trim() !== '') ? fecha_inicio : null;
+    const dur = Array.isArray(duraciones) ? JSON.stringify(duraciones) : null;
+    const notaTxt = (nota && String(nota).trim() !== '') ? String(nota) : null;
+    const quien = (registrado_por && String(registrado_por).trim() !== '') ? String(registrado_por) : null;
+
     const ex = await executeQuery('SELECT id FROM cultivo_calendario WHERE lote = ?', [lote]);
     if (ex.rows && ex.rows.length) {
-      await executeQuery('UPDATE cultivo_calendario SET fecha_inicio = ? WHERE lote = ?', [fecha, lote]);
+      await executeQuery('UPDATE cultivo_calendario SET fecha_inicio = ?, duraciones = ?, nota = ?, registrado_por = ? WHERE lote = ?', [fecha, dur, notaTxt, quien, lote]);
     } else {
-      await executeQuery('INSERT INTO cultivo_calendario (lote, fecha_inicio) VALUES (?, ?)', [lote, fecha]);
+      await executeQuery('INSERT INTO cultivo_calendario (lote, fecha_inicio, duraciones, nota, registrado_por) VALUES (?, ?, ?, ?, ?)', [lote, fecha, dur, notaTxt, quien]);
     }
     res.json({ success: true });
   } catch (err) {

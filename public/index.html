@@ -1275,6 +1275,39 @@
       </div>
     </div>
   </div>
+  <!-- MODAL CALENDARIO / REGISTRO DE CULTIVO -->
+  <div id="modalCalendario" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="calModalTitulo">Registro de cultivo</span>
+        <span onclick="cerrarModalCalendario()" style="cursor:pointer; float:right;">✕</span>
+      </div>
+      <div class="form-grupo">
+        <label>Fecha de inicio (germinación)</label>
+        <input type="date" id="calModalFecha" oninput="calRecomputarModal()">
+      </div>
+      <h4 style="margin: 1.2rem 0 0.5rem;">Duración de cada etapa (en días)</h4>
+      <small style="color: var(--gray-600);">Ajusta los días si una etapa tomó más o menos tiempo; las fechas se recalculan solas.</small>
+      <div class="tabla-container" style="box-shadow:none; border:1px solid var(--gray-200); margin-top:0.5rem;">
+        <table>
+          <thead><tr><th>Etapa</th><th>Días</th><th>Desde</th><th>Hasta</th></tr></thead>
+          <tbody id="calModalEtapas"></tbody>
+        </table>
+      </div>
+      <div class="form-grupo" style="margin-top:1rem;">
+        <label>📝 Nota (motivo del cambio)</label>
+        <input type="text" id="calModalNota" placeholder="Ej: Vegetativo se extendió por el clima">
+      </div>
+      <div class="form-grupo">
+        <label>Registrado por</label>
+        <input type="text" id="calModalQuien" placeholder="Nombre de quien registra">
+      </div>
+      <div class="form-acciones" style="margin-top:1.5rem;">
+        <button class="btn btn-primary" onclick="guardarModalCalendario()">💾 Guardar</button>
+        <button class="btn btn-secondary" onclick="cerrarModalCalendario()">Cancelar</button>
+      </div>
+    </div>
+  </div>
   <!-- Visor de foto ampliada -->
   <div id="fotoOverlay" onclick="cerrarFotoOverlay()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:2000; align-items:center; justify-content:center; cursor:zoom-out;">
     <img id="fotoOverlayImg" style="max-width:92%; max-height:92%; border-radius:8px;">
@@ -1319,32 +1352,41 @@
 
     // ====== CALENDARIO DE CULTIVO (GANTT) ======
     const CAL_ETAPAS = [
-      { nombre: 'Germinación', offset: 0,   dur: 3,  color: '#86efac' },
-      { nombre: 'Nursery',     offset: 3,   dur: 19, color: '#34d399' },
-      { nombre: 'Vegetativo',  offset: 22,  dur: 29, color: '#059669' },
-      { nombre: 'Transición',  offset: 51,  dur: 6,  color: '#fbbf24' },
-      { nombre: 'Floración',   offset: 57,  dur: 53, color: '#ec4899' },
-      { nombre: 'Cosecha',     offset: 110, dur: 18, color: '#f97316' }
+      { nombre: 'Germinación', color: '#86efac' },
+      { nombre: 'Nursery',     color: '#34d399' },
+      { nombre: 'Vegetativo',  color: '#059669' },
+      { nombre: 'Transición',  color: '#fbbf24' },
+      { nombre: 'Floración',   color: '#ec4899' },
+      { nombre: 'Cosecha',     color: '#f97316' }
     ];
-    const CAL_CICLO = 128;
+    const CAL_DUR_DEFAULT = [3, 19, 29, 6, 53, 18];
     const CAL_DAYW = 11;
     let calendarioData = {};
 
     function cargarCalendario() {
       fetch('/api/calendario').then(r => r.json()).then(rows => {
         calendarioData = {};
-        (rows || []).forEach(r => { if (r.fecha_inicio) calendarioData[r.lote] = String(r.fecha_inicio).split('T')[0]; });
+        (rows || []).forEach(r => {
+          calendarioData[r.lote] = {
+            fecha_inicio: r.fecha_inicio ? String(r.fecha_inicio).split('T')[0] : null,
+            duraciones: (r.duraciones && r.duraciones.length === 6) ? r.duraciones : null,
+            nota: r.nota || null,
+            registrado_por: r.registrado_por || null
+          };
+        });
         renderCalendario();
       }).catch(() => {});
     }
     function guardarFechaLote(lote, fecha) {
-      fetch('/api/calendario', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lote, fecha_inicio: fecha }) })
+      const prev = calendarioData[lote] || {};
+      fetch('/api/calendario', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lote, fecha_inicio: fecha, duraciones: prev.duraciones || null, nota: prev.nota || null, registrado_por: prev.registrado_por || null }) })
         .then(r => r.json())
-        .then(() => { if (fecha) calendarioData[lote] = fecha; else delete calendarioData[lote]; renderCalendario(); })
+        .then(() => { calendarioData[lote] = Object.assign({}, prev, { fecha_inicio: fecha || null }); renderCalendario(); })
         .catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
     }
     function calParseFecha(s) { const p = String(s).split('-'); return new Date(+p[0], (+p[1]) - 1, +p[2]); }
     function calFmtDMY(d) { return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); }
+    function calDurDe(d) { return (d && d.duraciones && d.duraciones.length === 6) ? d.duraciones : CAL_DUR_DEFAULT; }
 
     function renderCalendario() {
       const cont = document.getElementById('calendarioGantt');
@@ -1352,19 +1394,27 @@
       const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
 
       const ley = document.getElementById('calendarioLeyenda');
-      if (ley) ley.innerHTML = CAL_ETAPAS.map(e => `<span class="item"><span class="swatch" style="background:${e.color}"></span>${e.nombre} (día ${e.offset + 1}–${e.offset + e.dur})</span>`).join('') + '<span class="item"><span class="swatch" style="background:#ef4444"></span>Hoy</span>';
+      if (ley) {
+        let acc = 0;
+        ley.innerHTML = CAL_ETAPAS.map((e, i) => { const d1 = acc + 1; const d2 = acc + CAL_DUR_DEFAULT[i]; acc = d2; return `<span class="item"><span class="swatch" style="background:${e.color}"></span>${e.nombre} (día ${d1}–${d2})</span>`; }).join('') + '<span class="item"><span class="swatch" style="background:#ef4444"></span>Hoy</span>';
+      }
       const relojEl = document.getElementById('calendarioHoy');
       if (relojEl) relojEl.textContent = 'Hoy: ' + hoy.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 
       const lotes = []; for (let i = 1; i <= 42; i++) lotes.push('C' + i);
-      const fechas = Object.values(calendarioData).filter(Boolean).map(calParseFecha);
+      const totalDur = (durs) => durs.reduce((a, b) => a + b, 0);
+      let starts = [], ends = [];
+      lotes.forEach(l => {
+        const d = calendarioData[l];
+        if (d && d.fecha_inicio) {
+          const s = calParseFecha(d.fecha_inicio);
+          starts.push(s.getTime());
+          ends.push(s.getTime() + totalDur(calDurDe(d)) * 86400000);
+        }
+      });
       let minD, maxD;
-      if (fechas.length) {
-        minD = new Date(Math.min.apply(null, fechas.map(d => d.getTime())));
-        maxD = new Date(Math.max.apply(null, fechas.map(d => d.getTime())) + CAL_CICLO * 86400000);
-      } else {
-        minD = new Date(hoy); maxD = new Date(hoy.getTime() + CAL_CICLO * 86400000);
-      }
+      if (starts.length) { minD = new Date(Math.min.apply(null, starts)); maxD = new Date(Math.max.apply(null, ends)); }
+      else { minD = new Date(hoy); maxD = new Date(hoy.getTime() + 128 * 86400000); }
       if (hoy < minD) minD = new Date(hoy);
       if (hoy.getTime() > maxD.getTime()) maxD = new Date(hoy);
       minD = new Date(minD.getTime() - 5 * 86400000);
@@ -1383,26 +1433,79 @@
       let html = '';
       html += `<div class="gantt-header"><div class="gantt-lote"><strong>Lote</strong></div><div class="gantt-track" style="width:${ancho}px;height:24px">${ticks}</div></div>`;
       lotes.forEach(lote => {
-        const fecha = calendarioData[lote];
+        const d = calendarioData[lote] || {};
+        const fecha = d.fecha_inicio;
         let segs = '';
         if (fecha) {
-          const ini = diasDesde(calParseFecha(fecha));
-          segs = CAL_ETAPAS.map(e => {
-            const left = (ini + e.offset) * CAL_DAYW;
-            const w = e.dur * CAL_DAYW;
-            return `<div class="gantt-seg" style="left:${left}px;width:${w}px;background:${e.color}" title="${e.nombre}: día ${e.offset + 1} a ${e.offset + e.dur}"></div>`;
-          }).join('');
+          const durs = calDurDe(d);
+          let acc = diasDesde(calParseFecha(fecha));
+          segs = CAL_ETAPAS.map((e, i) => { const left = acc * CAL_DAYW; const w = durs[i] * CAL_DAYW; acc += durs[i]; return `<div class="gantt-seg" style="left:${left}px;width:${w}px;background:${e.color}" title="${e.nombre}: ${durs[i]} días"></div>`; }).join('');
         }
         segs += `<div class="gantt-hoy" style="left:${hoyLeft}px"></div>`;
+        const nota = (d.nota || d.registrado_por) ? ` <span title="${String(d.nota || '').replace(/"/g, '&quot;')}${d.registrado_por ? (' — por ' + d.registrado_por) : ''}" style="cursor:help;">📝</span>` : '';
         html += `<div class="gantt-row">
           <div class="gantt-lote">
-            <strong>${lote}</strong>
-            <input type="date" value="${fecha || ''}" onchange="guardarFechaLote('${lote}', this.value)">
+            <strong>${lote}${nota}</strong>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <input type="date" value="${fecha || ''}" onchange="guardarFechaLote('${lote}', this.value)">
+              <button class="btn btn-sm btn-secondary" style="padding:3px 7px;" onclick="abrirModalCalendario('${lote}')" title="Editar etapas / nota">✏️</button>
+            </div>
           </div>
           <div class="gantt-track" style="width:${ancho}px">${segs}</div>
         </div>`;
       });
       cont.innerHTML = html;
+    }
+
+    // Modal de edición de etapas por lote
+    let calLoteEditando = null;
+    function abrirModalCalendario(lote) {
+      calLoteEditando = lote;
+      const d = calendarioData[lote] || {};
+      document.getElementById('calModalTitulo').textContent = 'Registro de cultivo — ' + lote;
+      document.getElementById('calModalFecha').value = d.fecha_inicio || '';
+      document.getElementById('calModalNota').value = d.nota || '';
+      document.getElementById('calModalQuien').value = d.registrado_por || '';
+      const durs = (d.duraciones && d.duraciones.length === 6) ? d.duraciones.slice() : CAL_DUR_DEFAULT.slice();
+      document.getElementById('calModalEtapas').innerHTML = CAL_ETAPAS.map((e, i) => `
+        <tr>
+          <td><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${e.color};margin-right:6px;"></span>${e.nombre}</td>
+          <td><input type="number" min="0" class="cal-dur" value="${durs[i]}" style="width:70px;" oninput="calRecomputarModal()"></td>
+          <td class="cal-desde">—</td>
+          <td class="cal-hasta">—</td>
+        </tr>`).join('');
+      document.getElementById('modalCalendario').classList.add('active');
+      calRecomputarModal();
+    }
+    function cerrarModalCalendario() { document.getElementById('modalCalendario').classList.remove('active'); calLoteEditando = null; }
+    function calRecomputarModal() {
+      const fechaStr = document.getElementById('calModalFecha').value;
+      const durs = Array.from(document.querySelectorAll('#calModalEtapas .cal-dur')).map(inp => parseInt(inp.value) || 0);
+      const rows = document.querySelectorAll('#calModalEtapas tr');
+      if (!fechaStr) { rows.forEach(r => { r.querySelector('.cal-desde').textContent = '—'; r.querySelector('.cal-hasta').textContent = '—'; }); return; }
+      let acc = calParseFecha(fechaStr);
+      rows.forEach((r, i) => {
+        const ini = new Date(acc.getTime());
+        const fin = new Date(acc.getTime() + durs[i] * 86400000);
+        r.querySelector('.cal-desde').textContent = calFmtDMY(ini) + '/' + ini.getFullYear();
+        r.querySelector('.cal-hasta').textContent = calFmtDMY(fin) + '/' + fin.getFullYear();
+        acc = fin;
+      });
+    }
+    function guardarModalCalendario() {
+      const fecha = document.getElementById('calModalFecha').value;
+      const durs = Array.from(document.querySelectorAll('#calModalEtapas .cal-dur')).map(inp => parseInt(inp.value) || 0);
+      const nota = document.getElementById('calModalNota').value;
+      const registrado_por = document.getElementById('calModalQuien').value;
+      fetch('/api/calendario', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lote: calLoteEditando, fecha_inicio: fecha, duraciones: durs, nota, registrado_por }) })
+        .then(r => r.json())
+        .then(() => {
+          calendarioData[calLoteEditando] = { fecha_inicio: fecha || null, duraciones: durs, nota: nota || null, registrado_por: registrado_por || null };
+          mostrarAlerta('✅ Registro de cultivo guardado', 'success');
+          cerrarModalCalendario();
+          renderCalendario();
+        })
+        .catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
     }
 
     // ====== RESPALDO A GOOGLE SHEETS ======
