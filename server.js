@@ -803,6 +803,50 @@ const initializeDatabase = async () => {
     }
     console.log('✅ Tabla cultivo_calendario lista');
 
+    // 7. Crear tabla produccion (germinación, transplante, cosecha)
+    if (usePostgres) {
+      await pool.query(`CREATE TABLE IF NOT EXISTS produccion (
+        id SERIAL PRIMARY KEY,
+        tipo TEXT,
+        lote TEXT,
+        fecha TEXT,
+        personas REAL,
+        semillas REAL,
+        plantulas REAL,
+        transplantadas REAL,
+        hectareas REAL,
+        kg_verde_biomasa REAL,
+        kg_flor_verde REAL,
+        kg_seco_biomasa REAL,
+        kg_seco_flor REAL,
+        tipo_empaque TEXT,
+        nota TEXT,
+        registrado_por TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`);
+    } else {
+      await executeQuery(`CREATE TABLE IF NOT EXISTS produccion (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tipo TEXT,
+        lote TEXT,
+        fecha TEXT,
+        personas REAL,
+        semillas REAL,
+        plantulas REAL,
+        transplantadas REAL,
+        hectareas REAL,
+        kg_verde_biomasa REAL,
+        kg_flor_verde REAL,
+        kg_seco_biomasa REAL,
+        kg_seco_flor REAL,
+        tipo_empaque TEXT,
+        nota TEXT,
+        registrado_por TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+    }
+    console.log('✅ Tabla produccion lista');
+
     // Agregar columnas faltantes si es PostgreSQL
     if (usePostgres) {
       try {
@@ -1860,6 +1904,53 @@ app.post('/api/calendario', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Error en POST /api/calendario:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============ PRODUCCIÓN ============
+app.get('/api/produccion', async (req, res) => {
+  try {
+    const result = await executeQuery('SELECT * FROM produccion ORDER BY id DESC LIMIT 5000');
+    res.json(result.rows || []);
+  } catch (err) {
+    console.error('Error en GET /api/produccion:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/produccion', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const num = (v) => (v !== undefined && v !== null && String(v).trim() !== '' && !isNaN(parseFloat(v))) ? parseFloat(v) : null;
+    const txt = (v) => (v !== undefined && v !== null && String(v).trim() !== '') ? String(v) : null;
+    if (!b.tipo) return res.status(400).json({ error: 'Falta el tipo de registro' });
+
+    const query = usePostgres
+      ? `INSERT INTO produccion (tipo, lote, fecha, personas, semillas, plantulas, transplantadas, hectareas, kg_verde_biomasa, kg_flor_verde, kg_seco_biomasa, kg_seco_flor, tipo_empaque, nota, registrado_por, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO produccion (tipo, lote, fecha, personas, semillas, plantulas, transplantadas, hectareas, kg_verde_biomasa, kg_flor_verde, kg_seco_biomasa, kg_seco_flor, tipo_empaque, nota, registrado_por, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const params = [
+      txt(b.tipo), txt(b.lote), txt(b.fecha) || new Date().toISOString(), num(b.personas),
+      num(b.semillas), num(b.plantulas), num(b.transplantadas),
+      num(b.hectareas), num(b.kg_verde_biomasa), num(b.kg_flor_verde), num(b.kg_seco_biomasa), num(b.kg_seco_flor),
+      txt(b.tipo_empaque), txt(b.nota), txt(b.registrado_por), new Date().toISOString()
+    ];
+    const result = await executeQuery(query, params);
+    const id = usePostgres ? result.rows[0]?.id : result.lastID;
+    res.json({ success: true, id });
+  } catch (err) {
+    console.error('Error en POST /api/produccion:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/produccion/:id', async (req, res) => {
+  try {
+    if (usuarioActual.rol !== 'admin') return res.status(403).json({ error: 'Solo admin puede eliminar' });
+    await executeQuery('DELETE FROM produccion WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error en DELETE /api/produccion/:id:', err);
     res.status(500).json({ error: err.message });
   }
 });
