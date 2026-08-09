@@ -1435,12 +1435,13 @@
     const CAL_ETAPAS = [
       { nombre: 'Germinación', color: '#86efac' },
       { nombre: 'Nursery',     color: '#34d399' },
+      { nombre: 'Transplante', color: '#38bdf8' },
       { nombre: 'Vegetativo',  color: '#059669' },
       { nombre: 'Transición',  color: '#fbbf24' },
       { nombre: 'Floración',   color: '#ec4899' },
       { nombre: 'Cosecha',     color: '#f97316' }
     ];
-    const CAL_DUR_DEFAULT = [3, 19, 29, 6, 53, 18];
+    const CAL_DUR_DEFAULT = [3, 18, 2, 29, 6, 53, 18];
     const CAL_DAYW = 11;
     let calendarioData = {};
 
@@ -1450,7 +1451,7 @@
         (rows || []).forEach(r => {
           calendarioData[r.lote] = {
             fecha_inicio: r.fecha_inicio ? String(r.fecha_inicio).split('T')[0] : null,
-            duraciones: (r.duraciones && r.duraciones.length === 6) ? r.duraciones : null,
+            duraciones: (r.duraciones && r.duraciones.length === 7) ? r.duraciones : null,
             nota: r.nota || null,
             registrado_por: r.registrado_por || null
           };
@@ -1467,7 +1468,7 @@
     }
     function calParseFecha(s) { const p = String(s).split('-'); return new Date(+p[0], (+p[1]) - 1, +p[2]); }
     function calFmtDMY(d) { return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); }
-    function calDurDe(d) { return (d && d.duraciones && d.duraciones.length === 6) ? d.duraciones : CAL_DUR_DEFAULT; }
+    function calDurDe(d) { return (d && d.duraciones && d.duraciones.length === 7) ? d.duraciones : CAL_DUR_DEFAULT; }
 
     function renderCalendario() {
       const cont = document.getElementById('calendarioGantt');
@@ -1547,7 +1548,7 @@
       document.getElementById('calModalFecha').value = d.fecha_inicio || '';
       document.getElementById('calModalNota').value = d.nota || '';
       document.getElementById('calModalQuien').value = d.registrado_por || '';
-      const durs = (d.duraciones && d.duraciones.length === 6) ? d.duraciones.slice() : CAL_DUR_DEFAULT.slice();
+      const durs = (d.duraciones && d.duraciones.length === 7) ? d.duraciones.slice() : CAL_DUR_DEFAULT.slice();
       document.getElementById('calModalEtapas').innerHTML = CAL_ETAPAS.map((e, i) => `
         <tr>
           <td><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${e.color};margin-right:6px;"></span>${e.nombre}</td>
