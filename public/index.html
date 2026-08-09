@@ -558,6 +558,7 @@
       <button class="nav-btn" data-tab="salida" onclick="cambiarTab('salida')">Registrar Movimiento</button>
       <button class="nav-btn" data-tab="cultivo" onclick="cambiarTab('cultivo')">Cultivo por Lote</button>
       <button class="nav-btn" data-tab="medicion" onclick="cambiarTab('medicion')">Medición de Plantas</button>
+      <button class="nav-btn" data-tab="produccion" onclick="cambiarTab('produccion')">Producción</button>
       <button class="nav-btn" data-tab="productos" onclick="cambiarTab('productos')">Productos</button>
       <button class="nav-btn" data-tab="movimientos" onclick="cambiarTab('movimientos')">Historial</button>
     </nav>
@@ -633,6 +634,84 @@
       <div id="calendarioLeyenda" class="cal-leyenda"></div>
       <div class="tabla-container" style="padding: 0.5rem;">
         <div id="calendarioGantt" style="overflow-x: auto;"></div>
+      </div>
+    </section>
+    <!-- PRODUCCIÓN -->
+    <section class="dashboard" data-tab="produccion">
+      <div class="welcome-row">
+        <h2 class="welcome-title">Registro de <span>Producción</span></h2>
+      </div>
+      <div class="critica-tabs" style="margin-bottom: 1rem;">
+        <button class="critica-tab active" data-prodfase="germinacion" onclick="cambiarFaseProduccion('germinacion', this)">Germinación</button>
+        <button class="critica-tab" data-prodfase="transplante" onclick="cambiarFaseProduccion('transplante', this)">Transplante</button>
+        <button class="critica-tab" data-prodfase="cosecha" onclick="cambiarFaseProduccion('cosecha', this)">Cosecha</button>
+      </div>
+
+      <div class="formulario-panel active" id="formGerminacion">
+        <div class="formulario-grid">
+          <div class="form-grupo"><label>📅 Fecha</label><input type="date" id="germ-fecha"></div>
+          <div class="form-grupo"><label>Semillas colocadas en bandejas</label><input type="number" id="germ-semillas" placeholder="Ej: 10000"></div>
+          <div class="form-grupo"><label>Plántulas obtenidas</label><input type="number" id="germ-plantulas" placeholder="Ej: 9200"></div>
+          <div class="form-grupo"><label>Personas</label><input type="number" id="germ-personas"></div>
+          <div class="form-grupo"><label>Registrado por</label><input type="text" id="germ-quien" placeholder="Nombre"></div>
+          <div class="form-grupo"><label>Nota</label><input type="text" id="germ-nota" placeholder="Observaciones..."></div>
+        </div>
+        <div class="form-acciones"><button class="btn btn-primary" onclick="guardarGerminacion()">💾 Guardar germinación</button></div>
+      </div>
+
+      <div class="formulario-panel" id="formTransplante" style="display:none;">
+        <div class="formulario-grid">
+          <div class="form-grupo"><label>📍 Lote</label><select id="trans-lote"></select></div>
+          <div class="form-grupo"><label>📅 Fecha</label><input type="date" id="trans-fecha"></div>
+          <div class="form-grupo"><label>Plántulas transplantadas</label><input type="number" id="trans-cantidad"></div>
+          <div class="form-grupo"><label>Personas</label><input type="number" id="trans-personas"></div>
+          <div class="form-grupo"><label>Registrado por</label><input type="text" id="trans-quien" placeholder="Nombre"></div>
+          <div class="form-grupo"><label>Nota</label><input type="text" id="trans-nota" placeholder="Observaciones..."></div>
+        </div>
+        <div class="form-acciones"><button class="btn btn-primary" onclick="guardarTransplante()">💾 Guardar transplante</button></div>
+      </div>
+
+      <div class="formulario-panel" id="formCosecha" style="display:none;">
+        <div class="formulario-grid">
+          <div class="form-grupo"><label>📍 Lote</label><select id="cos-lote"></select></div>
+          <div class="form-grupo"><label>📅 Fecha</label><input type="date" id="cos-fecha"></div>
+          <div class="form-grupo"><label>Hectáreas / área cosechada</label><input type="number" step="0.01" id="cos-hectareas" oninput="calcCosechaKgHa()" placeholder="Ej: 0.5"></div>
+          <div class="form-grupo"><label>Kg verde de biomasa</label><input type="number" step="0.01" id="cos-verde-bio" oninput="calcCosechaKgHa()"></div>
+          <div class="form-grupo"><label>Kg/hectárea (verde biomasa)</label><input type="text" id="cos-kgha" readonly style="background:var(--gray-100);font-weight:bold;color:var(--primary);"></div>
+          <div class="form-grupo"><label>Kg para Flor (verde)</label><input type="number" step="0.01" id="cos-flor-verde"></div>
+          <div class="form-grupo"><label>Personas</label><input type="number" id="cos-personas"></div>
+          <div class="form-grupo"><label>Registrado por</label><input type="text" id="cos-quien" placeholder="Nombre"></div>
+          <div class="form-grupo"><label>Nota</label><input type="text" id="cos-nota" placeholder="Observaciones..."></div>
+        </div>
+
+        <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--gray-200);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+            <label style="font-weight:600;">🌾 Productos secos obtenidos (entran al inventario)</label>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="agregarSalidaCosecha()">➕ Agregar producto</button>
+          </div>
+          <p style="color:var(--gray-600);font-size:0.8rem;margin:0 0 0.75rem;">Cada línea crea/actualiza un producto de inventario por lote y subtipo (ej. "Flor Seca C5 - Premium").</p>
+          <div id="cos-salidas"></div>
+        </div>
+
+        <div class="form-acciones" style="margin-top:1rem;"><button class="btn btn-primary" onclick="guardarCosecha()">💾 Guardar cosecha</button></div>
+      </div>
+
+      <h3 style="margin-top: 2rem; margin-bottom: 0.75rem;">📋 Registros de producción</h3>
+      <div class="tabla-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Fase</th>
+              <th>Lote</th>
+              <th>Detalle</th>
+              <th>Personas</th>
+              <th>Registrado por</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaProduccionBody"></tbody>
+        </table>
       </div>
     </section>
     <!-- PRODUCTOS -->
@@ -1347,6 +1426,8 @@
       actualizarFechaHora();
       setInterval(actualizarFechaHora, 1000);
       cargarCalendario();
+      poblarLotesProduccion();
+      cargarProduccion();
       iniciarPolling();
     });
 
@@ -1508,6 +1589,136 @@
         .catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
     }
 
+    // ====== PRODUCCIÓN ======
+    function poblarLotesProduccion() {
+      const opts = '<option value="">Seleccionar lote</option>' + Array.from({ length: 42 }, (_, i) => `<option value="C${i + 1}">C${i + 1}</option>`).join('');
+      ['trans-lote', 'cos-lote'].forEach(id => { const s = document.getElementById(id); if (s) s.innerHTML = opts; });
+      const hoy = new Date().toISOString().slice(0, 10);
+      ['germ-fecha', 'trans-fecha', 'cos-fecha'].forEach(id => { const el = document.getElementById(id); if (el && !el.value) el.value = hoy; });
+    }
+    function cambiarFaseProduccion(fase, btn) {
+      document.querySelectorAll('#formGerminacion,#formTransplante,#formCosecha').forEach(f => f.style.display = 'none');
+      document.querySelectorAll('[data-prodfase]').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const map = { germinacion: 'formGerminacion', transplante: 'formTransplante', cosecha: 'formCosecha' };
+      const el = document.getElementById(map[fase]);
+      if (el) el.style.display = 'block';
+      if (fase === 'cosecha' && document.querySelectorAll('#cos-salidas .cos-salida-row').length === 0) agregarSalidaCosecha();
+    }
+    function calcCosechaKgHa() {
+      const ha = parseFloat(document.getElementById('cos-hectareas').value) || 0;
+      const verde = parseFloat(document.getElementById('cos-verde-bio').value) || 0;
+      document.getElementById('cos-kgha').value = ha > 0 ? (verde / ha).toFixed(2) + ' kg/ha' : '';
+    }
+    function guardarProduccion(datos, limpiar) {
+      fetch('/api/produccion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) })
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) { mostrarAlerta('✅ Registro de producción guardado', 'success'); if (limpiar) limpiar(); cargarProduccion(); }
+          else mostrarAlerta(d.error || 'Error al guardar', 'error');
+        })
+        .catch(err => mostrarAlerta('Error: ' + err.message, 'error'));
+    }
+    function guardarGerminacion() {
+      const v = id => document.getElementById(id).value;
+      if (!v('germ-semillas')) { mostrarAlerta('⚠️ Ingresa la cantidad de semillas', 'error'); return; }
+      guardarProduccion({ tipo: 'germinacion', fecha: v('germ-fecha'), semillas: v('germ-semillas'), plantulas: v('germ-plantulas'), personas: v('germ-personas'), registrado_por: v('germ-quien'), nota: v('germ-nota') },
+        () => { ['germ-semillas', 'germ-plantulas', 'germ-personas', 'germ-nota'].forEach(id => document.getElementById(id).value = ''); });
+    }
+    function guardarTransplante() {
+      const v = id => document.getElementById(id).value;
+      if (!v('trans-lote')) { mostrarAlerta('⚠️ Selecciona el lote', 'error'); return; }
+      guardarProduccion({ tipo: 'transplante', lote: v('trans-lote'), fecha: v('trans-fecha'), transplantadas: v('trans-cantidad'), personas: v('trans-personas'), registrado_por: v('trans-quien'), nota: v('trans-nota') },
+        () => { ['trans-cantidad', 'trans-personas', 'trans-nota'].forEach(id => document.getElementById(id).value = ''); });
+    }
+    // Subtipos y categorías de producto seco de cosecha (lista fija + "Otro")
+    const COS_CATEGORIAS = ['Flor Seca', 'Biomasa Seca'];
+    const COS_SUBTIPOS = ['Premium', 'Estándar', 'A', 'B', 'C'];
+    const COS_EMPAQUES = ['Saco', 'Big bag', 'Bolsa de aluminio multicapa'];
+    let cosSalidaSeq = 0;
+    function agregarSalidaCosecha() {
+      const cont = document.getElementById('cos-salidas');
+      const i = ++cosSalidaSeq;
+      const opt = (arr, extra) => ['<option value="">Seleccionar</option>'].concat(arr.map(x => `<option>${x}</option>`)).concat(extra ? [`<option value="__otro__">Otro…</option>`] : []).join('');
+      const row = document.createElement('div');
+      row.className = 'cos-salida-row';
+      row.dataset.i = i;
+      row.style.cssText = 'display:grid;grid-template-columns:1.2fr 1.2fr 0.8fr 1.4fr auto;gap:0.5rem;align-items:end;margin-bottom:0.6rem;';
+      row.innerHTML = `
+        <div class="form-grupo" style="margin:0;"><label>Categoría</label><select class="cs-cat">${opt(COS_CATEGORIAS, true)}</select><input class="cs-cat-otro" type="text" placeholder="Categoría" style="display:none;margin-top:4px;"></div>
+        <div class="form-grupo" style="margin:0;"><label>Subtipo</label><select class="cs-sub">${opt(COS_SUBTIPOS, true)}</select><input class="cs-sub-otro" type="text" placeholder="Subtipo" style="display:none;margin-top:4px;"></div>
+        <div class="form-grupo" style="margin:0;"><label>Kg</label><input class="cs-kg" type="number" step="0.01" placeholder="0"></div>
+        <div class="form-grupo" style="margin:0;"><label>Empaque</label><select class="cs-emp">${opt(COS_EMPAQUES, false)}</select></div>
+        <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.cos-salida-row').remove()" title="Quitar">✕</button>`;
+      cont.appendChild(row);
+      const toggle = (sel, inp) => { const s = row.querySelector(sel), t = row.querySelector(inp); s.addEventListener('change', () => { t.style.display = s.value === '__otro__' ? 'block' : 'none'; }); };
+      toggle('.cs-cat', '.cs-cat-otro');
+      toggle('.cs-sub', '.cs-sub-otro');
+    }
+    function recogerSalidasCosecha() {
+      const rows = document.querySelectorAll('#cos-salidas .cos-salida-row');
+      const out = [];
+      rows.forEach(r => {
+        const catSel = r.querySelector('.cs-cat').value;
+        const cat = catSel === '__otro__' ? r.querySelector('.cs-cat-otro').value.trim() : catSel;
+        const subSel = r.querySelector('.cs-sub').value;
+        const sub = subSel === '__otro__' ? r.querySelector('.cs-sub-otro').value.trim() : (subSel === '' ? '' : subSel);
+        const kg = parseFloat(r.querySelector('.cs-kg').value);
+        const emp = r.querySelector('.cs-emp').value;
+        if (kg > 0 && cat) out.push({ categoria: cat, subtipo: sub, kg, empaque: emp });
+      });
+      return out;
+    }
+    function guardarCosecha() {
+      const v = id => document.getElementById(id).value;
+      if (!v('cos-lote')) { mostrarAlerta('⚠️ Selecciona el lote', 'error'); return; }
+      const salidas = recogerSalidasCosecha();
+      guardarProduccion({ tipo: 'cosecha', lote: v('cos-lote'), fecha: v('cos-fecha'), hectareas: v('cos-hectareas'), kg_verde_biomasa: v('cos-verde-bio'), kg_flor_verde: v('cos-flor-verde'), personas: v('cos-personas'), registrado_por: v('cos-quien'), nota: v('cos-nota'), salidas },
+        () => { ['cos-hectareas', 'cos-verde-bio', 'cos-kgha', 'cos-flor-verde', 'cos-personas', 'cos-nota'].forEach(id => document.getElementById(id).value = ''); document.getElementById('cos-salidas').innerHTML = ''; if (typeof cargarProductos === 'function') cargarProductos(); });
+    }
+    function cargarProduccion() {
+      fetch('/api/produccion').then(r => r.json()).then(data => renderProduccion(data)).catch(() => {});
+    }
+    function renderProduccion(data) {
+      const tbody = document.getElementById('tablaProduccionBody');
+      if (!tbody) return;
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--gray-600)">Sin registros de producción</td></tr>';
+        return;
+      }
+      const nombreFase = { germinacion: 'Germinación', transplante: 'Transplante', cosecha: 'Cosecha' };
+      tbody.innerHTML = data.map(r => {
+        const fecha = r.fecha ? String(r.fecha).split('T')[0] : '-';
+        let detalle = '';
+        if (r.tipo === 'germinacion') detalle = `Semillas: ${r.semillas ?? '-'} → Plántulas: ${r.plantulas ?? '-'}`;
+        else if (r.tipo === 'transplante') detalle = `Transplantadas: ${r.transplantadas ?? '-'}`;
+        else if (r.tipo === 'cosecha') {
+          const kgha = (r.hectareas > 0 && r.kg_verde_biomasa != null) ? (r.kg_verde_biomasa / r.hectareas).toFixed(1) + ' kg/ha' : '';
+          detalle = `Verde bio: ${r.kg_verde_biomasa ?? '-'} kg${kgha ? ' (' + kgha + ')' : ''} · Flor verde: ${r.kg_flor_verde ?? '-'} kg`;
+          let sal = [];
+          try { sal = r.salidas_json ? JSON.parse(r.salidas_json) : []; } catch (e) {}
+          if (sal.length) detalle += ' — Inventario: ' + sal.map(s => `${s.categoria}${s.subtipo ? ' ' + s.subtipo : ''}: ${s.kg} kg${s.empaque ? ' (' + s.empaque + ')' : ''}`).join(', ');
+        }
+        if (r.nota) detalle += ` — ${r.nota}`;
+        return `<tr>
+          <td>${fecha}</td>
+          <td><strong>${nombreFase[r.tipo] || r.tipo}</strong></td>
+          <td>${r.lote || '-'}</td>
+          <td>${detalle}</td>
+          <td>${r.personas ?? '-'}</td>
+          <td>${r.registrado_por || '-'}</td>
+          <td>${usuarioRol === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="eliminarProduccion(${r.id})">🗑️</button>` : '-'}</td>
+        </tr>`;
+      }).join('');
+    }
+    function eliminarProduccion(id) {
+      if (!confirm('¿Eliminar este registro de producción?')) return;
+      fetch('/api/produccion/' + id, { method: 'DELETE' }).then(r => r.json()).then(d => {
+        if (d.success) { mostrarAlerta('✅ Registro eliminado', 'success'); cargarProduccion(); }
+        else mostrarAlerta(d.error || 'Error', 'error');
+      });
+    }
+
     // ====== RESPALDO A GOOGLE SHEETS ======
     function configurarBotonRespaldo() {
       fetch('/api/respaldo-config').then(r => r.json()).then(cfg => {
@@ -1657,6 +1868,7 @@
       if (navBtn) navBtn.classList.add('active');
       if (section) section.classList.add('active');
       if (tabName === 'calendario' && typeof renderCalendario === 'function') renderCalendario();
+      if (tabName === 'produccion' && typeof cargarProduccion === 'function') cargarProduccion();
     }
     function cargarProductos() {
       console.log('🔄 Cargando productos...');

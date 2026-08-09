@@ -822,6 +822,7 @@ const initializeDatabase = async () => {
         tipo_empaque TEXT,
         nota TEXT,
         registrado_por TEXT,
+        salidas_json TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`);
     } else {
@@ -842,8 +843,12 @@ const initializeDatabase = async () => {
         tipo_empaque TEXT,
         nota TEXT,
         registrado_por TEXT,
+        salidas_json TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`);
+    }
+    if (usePostgres) {
+      try { await pool.query('ALTER TABLE produccion ADD COLUMN salidas_json TEXT'); } catch (err) {}
     }
     console.log('✅ Tabla produccion lista');
 
@@ -1926,18 +1931,70 @@ app.post('/api/produccion', async (req, res) => {
     const txt = (v) => (v !== undefined && v !== null && String(v).trim() !== '') ? String(v) : null;
     if (!b.tipo) return res.status(400).json({ error: 'Falta el tipo de registro' });
 
+    // Salidas de cosecha (producto por lote + subtipo): [{categoria, subtipo, kg, empaque}]
+    // Cada una entra al inventario como producto (unidad kg) y suma stock.
+    const salidas = Array.isArray(b.salidas) ? b.salidas.filter(s => s && num(s.kg) > 0) : [];
+    const salidasResumen = [];
+
     const query = usePostgres
-      ? `INSERT INTO produccion (tipo, lote, fecha, personas, semillas, plantulas, transplantadas, hectareas, kg_verde_biomasa, kg_flor_verde, kg_seco_biomasa, kg_seco_flor, tipo_empaque, nota, registrado_por, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
-      : `INSERT INTO produccion (tipo, lote, fecha, personas, semillas, plantulas, transplantadas, hectareas, kg_verde_biomasa, kg_flor_verde, kg_seco_biomasa, kg_seco_flor, tipo_empaque, nota, registrado_por, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      ? `INSERT INTO produccion (tipo, lote, fecha, personas, semillas, plantulas, transplantadas, hectareas, kg_verde_biomasa, kg_flor_verde, kg_seco_biomasa, kg_seco_flor, tipo_empaque, nota, registrado_por, salidas_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO produccion (tipo, lote, fecha, personas, semillas, plantulas, transplantadas, hectareas, kg_verde_biomasa, kg_flor_verde, kg_seco_biomasa, kg_seco_flor, tipo_empaque, nota, registrado_por, salidas_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     const params = [
       txt(b.tipo), txt(b.lote), txt(b.fecha) || new Date().toISOString(), num(b.personas),
       num(b.semillas), num(b.plantulas), num(b.transplantadas),
       num(b.hectareas), num(b.kg_verde_biomasa), num(b.kg_flor_verde), num(b.kg_seco_biomasa), num(b.kg_seco_flor),
-      txt(b.tipo_empaque), txt(b.nota), txt(b.registrado_por), new Date().toISOString()
+      txt(b.tipo_empaque), txt(b.nota), txt(b.registrado_por), null, new Date().toISOString()
     ];
     const result = await executeQuery(query, params);
     const id = usePostgres ? result.rows[0]?.id : result.lastID;
-    res.json({ success: true, id });
+
+    // Registrar inventario para cada salida de cosecha
+    if (b.tipo === 'cosecha' && salidas.length > 0) {
+      const hoy = new Date().toISOString().split('T')[0];
+      const fechaMov = txt(b.fecha) || hoy;
+      const lote = txt(b.lote) || 'SL';
+      const norm = (s) => String(s || '').trim().toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '');
+      for (const s of salidas) {
+        const categoria = txt(s.categoria) || 'Producto Seco';
+        const subtipo = txt(s.subtipo) || '';
+        const kg = num(s.kg);
+        const empaque = txt(s.empaque) || txt(b.tipo_empaque);
+        const nombre = `${categoria} ${lote}${subtipo ? ' - ' + subtipo : ''}`;
+        const codigo = `COS-${lote}-${norm(categoria)}${subtipo ? '-' + norm(subtipo) : ''}`;
+        // Buscar producto existente por código
+        const ex = await executeQuery('SELECT * FROM productos WHERE codigo = ?', [codigo]);
+        let prod = ex.rows[0];
+        if (!prod) {
+          const insP = usePostgres
+            ? `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, zona, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+            : `INSERT INTO productos (codigo, nombre, categoria, presentacion, stock, stock_minimo, precio, zona, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+          const rP = await executeQuery(insP, [codigo, nombre, 'Cosecha', '1 kg', kg, 0, 0, lote, new Date().toISOString()]);
+          const pid = usePostgres ? rP.rows[0].id : rP.lastID;
+          prod = { id: pid, stock: kg };
+        } else {
+          const nuevoStock = (parseFloat(prod.stock) || 0) + kg;
+          await executeQuery('UPDATE productos SET stock = ? WHERE id = ?', [nuevoStock, prod.id]);
+          prod.stock = nuevoStock;
+        }
+        // Lote de inventario + movimiento de entrada (kg en unidad base)
+        const insL = usePostgres
+          ? `INSERT INTO lotes (producto_id, cantidad, fecha_caducidad, fecha_ingreso, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`
+          : `INSERT INTO lotes (producto_id, cantidad, fecha_caducidad, fecha_ingreso, operario, descripcion, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        const descLote = `Cosecha lote ${lote}${subtipo ? ' (' + subtipo + ')' : ''}${empaque ? ' - ' + empaque : ''}`;
+        const rL = await executeQuery(insL, [prod.id, kg, hoy, hoy, txt(b.registrado_por) || 'Producción', descLote, new Date().toISOString()]);
+        const loteInvId = usePostgres ? rL.rows[0].id : rL.lastID;
+        const insM = usePostgres
+          ? `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, fecha_movimiento, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+          : `INSERT INTO movimientos (producto_id, tipo, cantidad_presentacion, unidad_salida, zona_destino, operario, descripcion, fecha_movimiento, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        await executeQuery(insM, [prod.id, 'entrada', kg, 'kg', lote, txt(b.registrado_por) || 'Producción', `Cosecha #${id} - Lote inv: ${loteInvId}${empaque ? ' - ' + empaque : ''}`, fechaMov, new Date().toISOString()]);
+        salidasResumen.push({ codigo, nombre, kg, subtipo, categoria, empaque });
+      }
+      // Guardar resumen de salidas en el registro de producción
+      await executeQuery('UPDATE produccion SET salidas_json = ? WHERE id = ?', [JSON.stringify(salidasResumen), id]);
+    }
+
+    programarRespaldo();
+    res.json({ success: true, id, salidas: salidasResumen });
   } catch (err) {
     console.error('Error en POST /api/produccion:', err);
     res.status(500).json({ error: err.message });
