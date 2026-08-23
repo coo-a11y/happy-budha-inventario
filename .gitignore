@@ -6,3 +6,7 @@ node_modules/
 dist/
 build/
 
+
+# Secretos / entornos locales (no versionar)
+.enves
+.env.*
