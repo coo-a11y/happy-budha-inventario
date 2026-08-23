@@ -29,6 +29,16 @@ jerarquía puede tener la profundidad que se necesite.
   bodega, infraestructura…). Jerárquica (`parent_zone_id`). Guarda su polígono en
   `polygon_geojson` (JSONB). `zone_type` es **TEXT** (sin ENUM rígido) para conservar
   flexibilidad. `UNIQUE(farm_site_id, code)` evita códigos duplicados dentro de una misma finca.
+  Reglas de integridad en el esquema:
+  - `name` y `zone_type` son **NOT NULL** (toda zona tiene nombre y tipo).
+  - **Jerarquía en la misma finca:** la zona padre debe pertenecer al mismo `farm_site` que la
+    hija. Se garantiza con una **FK compuesta** `(parent_zone_id, farm_site_id) → (id,
+    farm_site_id)` apoyada en la única compuesta `UNIQUE(id, farm_site_id)`. Con `MATCH SIMPLE`
+    (por defecto), una zona raíz (`parent_zone_id IS NULL`) no evalúa la FK; una zona con padre
+    exige que el padre exista **con el mismo farm_site_id**. Sin triggers, PostgreSQL estándar.
+  - **CHECK de GeoJSON:** `polygon_geojson` es nullable (una zona puede no estar mapeada aún);
+    si tiene contenido debe ser un objeto JSONB con `type` = `Polygon` o `MultiPolygon`. No se
+    validan coordenadas todavía ni se usa PostGIS.
 - **`geo_zone_aliases`** — puentes entre los **textos históricos** (C1..C42, etc.) y una zona,
   **sin** modificar esos textos en las tablas actuales. Campos: `id, geo_zone_id, alias,
   source_context?, active, created_at`.

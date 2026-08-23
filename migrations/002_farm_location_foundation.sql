@@ -32,15 +32,34 @@ CREATE TABLE IF NOT EXISTS geo_zones (
   id              SERIAL PRIMARY KEY,
   farm_site_id    INTEGER NOT NULL REFERENCES farm_sites(id),
   code            TEXT NOT NULL,
-  name            TEXT,
-  zone_type       TEXT,
-  parent_zone_id  INTEGER REFERENCES geo_zones(id),
+  name            TEXT NOT NULL,
+  zone_type       TEXT NOT NULL,
+  parent_zone_id  INTEGER,
   polygon_geojson JSONB,
   active          BOOLEAN NOT NULL DEFAULT TRUE,
   notes           TEXT,
   created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT geo_zones_site_code_uniq UNIQUE (farm_site_id, code)
+  -- Códigos únicos por finca
+  CONSTRAINT geo_zones_site_code_uniq UNIQUE (farm_site_id, code),
+  -- Clave única compuesta que sirve de destino a la FK compuesta de jerarquía
+  CONSTRAINT geo_zones_id_site_uniq UNIQUE (id, farm_site_id),
+  -- Jerarquía dentro de la MISMA finca: la zona padre debe pertenecer al mismo
+  -- farm_site que la hija. Con MATCH SIMPLE (por defecto), si parent_zone_id es NULL
+  -- (zona raíz) la FK no se evalúa; si tiene valor, exige que exista una zona con
+  -- ese id Y el mismo farm_site_id. Así se garantiza en el esquema (sin triggers).
+  CONSTRAINT geo_zones_parent_same_site_fk
+    FOREIGN KEY (parent_zone_id, farm_site_id)
+    REFERENCES geo_zones (id, farm_site_id),
+  -- GeoJSON opcional; si tiene contenido, debe ser un objeto JSONB cuyo 'type' sea
+  -- Polygon o MultiPolygon. No se validan aún las coordenadas (WGS84/EPSG:4326,
+  -- [longitude, latitude]) ni se usa PostGIS.
+  CONSTRAINT geo_zones_geojson_type_chk CHECK (
+    polygon_geojson IS NULL OR (
+      jsonb_typeof(polygon_geojson) = 'object'
+      AND polygon_geojson->>'type' IN ('Polygon', 'MultiPolygon')
+    )
+  )
 );
 
 -- ------------------------------------------------------------------
@@ -96,3 +115,8 @@ CREATE INDEX IF NOT EXISTS idx_geo_zone_aliases_alias ON geo_zone_aliases (alias
 CREATE INDEX IF NOT EXISTS idx_geo_zone_aliases_zone  ON geo_zone_aliases (geo_zone_id);
 CREATE INDEX IF NOT EXISTS idx_workers_active         ON workers (active);
 CREATE INDEX IF NOT EXISTS idx_worker_devices_worker  ON worker_devices (worker_id);
+
+-- Índice ÚNICO PARCIAL: impide employee_code duplicado solo cuando tiene valor
+-- (los NULL no compiten entre sí).
+CREATE UNIQUE INDEX IF NOT EXISTS uq_workers_employee_code
+  ON workers (employee_code) WHERE employee_code IS NOT NULL;
