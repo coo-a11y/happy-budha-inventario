@@ -20,14 +20,16 @@
 const { spawn } = require('child_process');
 const path = require('path');
 
+// Cada endpoint declara la forma esperada de su respuesta, para que un 200 con un
+// cuerpo incorrecto NO cuente como éxito. 'json' = objeto JSON; 'array' = arreglo JSON.
 const GET_ENDPOINTS = [
-  '/health',
-  '/api/productos',
-  '/api/movimientos',
-  '/api/produccion',
-  '/api/mediciones',
-  '/api/calendario',
-  '/api/estadisticas',
+  { path: '/health',          expect: 'json'  },
+  { path: '/api/productos',   expect: 'array' },
+  { path: '/api/movimientos', expect: 'array' },
+  { path: '/api/produccion',  expect: 'array' },
+  { path: '/api/mediciones',  expect: 'array' },
+  { path: '/api/calendario',  expect: 'array' },
+  { path: '/api/estadisticas', expect: 'json' },
 ];
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -45,12 +47,31 @@ async function runChecks(base) {
   let pass = 0, fail = 0;
   for (const ep of GET_ENDPOINTS) {
     try {
-      const r = await fetch(base + ep);
-      const ok = r.status >= 200 && r.status < 400;
-      console.log(`  ${ok ? '✅' : '❌'} GET ${ep} → ${r.status}`);
+      const r = await fetch(base + ep.path);
+      const statusOk = r.status >= 200 && r.status < 400;
+      const ctype = r.headers.get('content-type') || '';
+      const isJsonCt = ctype.includes('application/json');
+
+      let shapeOk = false, detalle = '';
+      if (!statusOk) {
+        detalle = 'status fuera de rango';
+      } else if (!isJsonCt) {
+        detalle = `content-type inesperado (${ctype || 'sin content-type'})`;
+      } else {
+        // Validar que el cuerpo parsea y tiene la forma esperada.
+        let body;
+        try { body = await r.json(); } catch (e) { body = undefined; detalle = 'cuerpo no es JSON válido'; }
+        if (body !== undefined) {
+          if (ep.expect === 'array') { shapeOk = Array.isArray(body); if (!shapeOk) detalle = 'se esperaba un arreglo JSON'; }
+          else { shapeOk = body !== null && typeof body === 'object' && !Array.isArray(body); if (!shapeOk) detalle = 'se esperaba un objeto JSON'; }
+        }
+      }
+
+      const ok = statusOk && isJsonCt && shapeOk;
+      console.log(`  ${ok ? '✅' : '❌'} GET ${ep.path} → ${r.status} ${ctype ? '(' + ctype.split(';')[0] + ')' : ''} [${ep.expect}]${ok ? '' : ' — ' + detalle}`);
       ok ? pass++ : fail++;
     } catch (err) {
-      console.log(`  ❌ GET ${ep} → error: ${err.message}`);
+      console.log(`  ❌ GET ${ep.path} → error: ${err.message}`);
       fail++;
     }
   }

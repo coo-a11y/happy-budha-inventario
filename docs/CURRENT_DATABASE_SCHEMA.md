@@ -223,3 +223,57 @@ Todos los `DELETE` están acotados por `id` o por `producto_id` de un borrado ex
   (decisión de diseño para no perder ajustes por Excel/edición manual).
 - **Calendario:** independiente; se relaciona con lotes por texto (C1–C42).
 - **Mediciones:** independiente; se relaciona con zonas/lotes por texto.
+
+---
+
+## Hallazgos abiertos (revisión 1B)
+
+### H1 — `lotes.producto_id`: `NOT NULL` vs. FK `ON DELETE SET NULL` (inconsistencia latente)
+
+**A. Qué dice exactamente `server.js`** (`server.js:621–631`, rama PostgreSQL):
+
+```sql
+CREATE TABLE IF NOT EXISTS lotes (
+  id SERIAL PRIMARY KEY,
+  producto_id INTEGER NOT NULL,            -- ← NOT NULL
+  ...
+  FOREIGN KEY(producto_id) REFERENCES productos(id) ON DELETE SET NULL  -- ← intenta poner NULL
+)
+```
+
+En la rama local/SQLite (`server.js:633–643`) la columna es `producto_id INTEGER` (**nullable**).
+
+**B. ¿Existe después un `DROP NOT NULL`?** **No para `lotes`.** Se buscó en todo `server.js` y
+no hay ningún `ALTER TABLE lotes ...`. (Sí existe uno para **`movimientos`** en `server.js:701`:
+`ALTER TABLE movimientos ALTER COLUMN producto_id DROP NOT NULL`, pero eso es otra tabla.)
+
+**C. Comportamiento esperado y riesgo.** Hay una contradicción: si se borra un producto que
+tiene lotes asociados, la FK intentará `SET NULL` sobre `lotes.producto_id`, pero la restricción
+`NOT NULL` lo impediría → el `DELETE` del producto **fallaría** en PostgreSQL. Nota: el endpoint
+de borrar producto elimina `movimientos` pero **no** elimina `lotes`, así que este caso puede
+darse. Lo esperado/coherente sería que `lotes.producto_id` sea **nullable** (igual que en
+`movimientos`), de modo que `ON DELETE SET NULL` funcione y el histórico de lotes se conserve.
+
+**No se cambia nada ahora.** Solo queda documentado. La corrección (un `ALTER COLUMN ... DROP
+NOT NULL`) es una operación de esquema que, además, la barrera de migraciones bloquea por
+defecto (`ALTER COLUMN`), por lo que requerirá autorización explícita en su momento.
+
+**Consulta read-only para confirmar la restricción REAL en producción** (ejecutar luego, no
+modifica nada):
+
+```sql
+-- ¿Es NOT NULL la columna en la base real?
+SELECT column_name, is_nullable, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'lotes' AND column_name = 'producto_id';
+
+-- Regla exacta de la FK (acción ON DELETE)
+SELECT tc.constraint_name, rc.delete_rule
+FROM information_schema.table_constraints tc
+JOIN information_schema.referential_constraints rc ON rc.constraint_name = tc.constraint_name
+WHERE tc.table_schema = 'public' AND tc.table_name = 'lotes' AND tc.constraint_type = 'FOREIGN KEY';
+
+-- ¿Hay lotes que quedarían bloqueados ante un borrado de producto? (informativo)
+SELECT COUNT(*) AS lotes_con_producto
+FROM lotes WHERE producto_id IS NOT NULL;
+```

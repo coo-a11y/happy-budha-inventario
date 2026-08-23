@@ -9,8 +9,12 @@ en `server.js`). **No lo reemplaza todavía** — en esta fase es aditivo y segu
 
 - **Incrementales:** cada archivo es un paso numerado, se aplican en orden.
 - **Idempotentes cuando es razonable:** usar `IF NOT EXISTS` / `ADD COLUMN` tolerante.
-- **Nunca destructivas por defecto:** prohibido `DROP TABLE`, `TRUNCATE`, borrados masivos,
-  renombrados que rompan compatibilidad.
+- **Solo aditivas (barrera activa):** el runner **bloquea** por defecto cualquier migración
+  que contenga `DROP`, `TRUNCATE`, `DELETE FROM`, `UPDATE`, `ALTER TABLE ... DROP`,
+  `ALTER TABLE ... RENAME`, `ALTER COLUMN` o `SET DATA TYPE`. Una migración normal solo puede
+  **agregar** (CREATE TABLE IF NOT EXISTS, ADD COLUMN, CREATE INDEX IF NOT EXISTS).
+- **Backfill / transformación de datos:** si en el futuro se necesita, deberá usar un
+  mecanismo **separado** con autorización explícita. **No** está implementado todavía.
 - **Compatibles hacia atrás:** no rompen la información ni el código actual en producción.
 
 ## Formato
