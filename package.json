@@ -10,7 +10,9 @@
     "migrate": "node scripts/migrate.js",
     "migrate:dry": "node scripts/migrate.js --dry-run",
     "integrity": "node scripts/database-integrity-check.js",
-    "smoke": "node scripts/smoke-test.js"
+    "smoke": "node scripts/smoke-test.js",
+    "map:preview": "node scripts/import-kml-map.js --dry-run",
+    "test:kml": "node tests/kml-import.test.js"
   },
   "keywords": [
     "inventario",

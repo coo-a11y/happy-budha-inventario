@@ -1,0 +1,81 @@
+{
+  "_comment": "Reglas de clasificación KML → geo_zones para HappyBuddha Farm OS (PARTE 2B). Separadas del parser a propósito. 'source_name' = nombre exacto del Placemark en el KML. parent_code null = raíz o padre a inferir por contención geométrica. review=true marca REQUIERE_REVISION. Zonas no listadas caen por defecto en OTHER + REQUIERE_REVISION.",
+  "_zone_types_validos": [
+    "PRODUCTIVE_FIELD", "NURSERY", "POSTHARVEST_PLANT", "WAREHOUSE",
+    "WATER_INFRASTRUCTURE", "WORKSHOP_MAINTENANCE", "OFFICE", "COMMON_AREA",
+    "INTERNAL_ROAD", "CONSTRUCTION_INFRASTRUCTURE", "NON_OPERATIONAL", "OTHER"
+  ],
+
+  "farm_site": {
+    "source_name": "HB-FINCA-01 — Perímetro total HappyBuddha",
+    "code": "HB-FINCA-01",
+    "name": "HappyBuddha"
+  },
+
+  "infer_parent_by_containment_into": "HB-PLANTA",
+
+  "zones": {
+    "Area de cultivo":              { "code": "HB-CAMPO",              "zone_type": "PRODUCTIVE_FIELD",  "parent_code": null },
+    "Area productiva de C1 - C4":   { "code": "HB-CAMPO-C1-C4",        "zone_type": "PRODUCTIVE_FIELD",  "parent_code": "HB-CAMPO", "review": true, "review_reason": "Zona de agrupación que se solapa con C1–C4; confirmar si debe existir como zona propia o solo como referencia." },
+    "ZONA EXPERIMENTAL":            { "code": "HB-ZONA-EXPERIMENTAL",  "zone_type": "PRODUCTIVE_FIELD",  "parent_code": null, "review": true, "review_reason": "Zona experimental: confirmar tipo y si depende del campo." },
+
+    "C1":  { "code": "HB-C1",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C2":  { "code": "HB-C2",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C3":  { "code": "HB-C3",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C4":  { "code": "HB-C4",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C5":  { "code": "HB-C5",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C6":  { "code": "HB-C6",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C7":  { "code": "HB-C7",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C8":  { "code": "HB-C8",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C9":  { "code": "HB-C9",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C10": { "code": "HB-C10", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C11": { "code": "HB-C11", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C12": { "code": "HB-C12", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C13": { "code": "HB-C13", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C14": { "code": "HB-C14", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C15": { "code": "HB-C15", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C16": { "code": "HB-C16", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C17": { "code": "HB-C17", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C18": { "code": "HB-C18", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C19": { "code": "HB-C19", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C20": { "code": "HB-C20", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C21": { "code": "HB-C21", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C22": { "code": "HB-C22", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C23": { "code": "HB-C23", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C24": { "code": "HB-C24", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C25": { "code": "HB-C25", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C26": { "code": "HB-C26", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C27": { "code": "HB-C27", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C28": { "code": "HB-C28", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C29": { "code": "HB-C29", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C30": { "code": "HB-C30", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C31": { "code": "HB-C31", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C32": { "code": "HB-C32", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C33": { "code": "HB-C33", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C34": { "code": "HB-C34", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C35": { "code": "HB-C35", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C36": { "code": "HB-C36", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C37": { "code": "HB-C37", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C38": { "code": "HB-C38", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+
+    "Nursery":     { "code": "HB-NURSERY",     "zone_type": "NURSERY", "parent_code": null },
+    "Invernadero": { "code": "HB-INVERNADERO", "zone_type": "PRODUCTIVE_FIELD", "parent_code": null, "review": true, "review_reason": "Invernadero: no hay tipo exacto (¿NURSERY o PRODUCTIVE_FIELD?). Confirmar." },
+
+    "Planta": { "code": "HB-PLANTA", "zone_type": "POSTHARVEST_PLANT", "parent_code": null },
+
+    "Cuarto de congelación":                 { "code": "HB-CUARTO-CONGELACION", "zone_type": "POSTHARVEST_PLANT", "parent_code": null },
+    "Recepción de cbd y racks de utileria":  { "code": "HB-RECEPCION-CBD",      "zone_type": "POSTHARVEST_PLANT", "parent_code": null },
+    "Trimming":                              { "code": "HB-TRIMMING",           "zone_type": "POSTHARVEST_PLANT", "parent_code": null },
+    "Cuartos de secado":                     { "code": "HB-CUARTOS-SECADO",     "zone_type": "POSTHARVEST_PLANT", "parent_code": null },
+    "Bodega de biomasa":                     { "code": "HB-BODEGA-BIOMASA",     "zone_type": "WAREHOUSE",         "parent_code": null },
+    "Cuarto de inventario":                  { "code": "HB-CUARTO-INVENTARIO",  "zone_type": "WAREHOUSE",         "parent_code": null },
+    "Bodega de biofertilizantes":            { "code": "HB-BODEGA-BIOFERT",     "zone_type": "WAREHOUSE",         "parent_code": null },
+    "Bodega H1":                             { "code": "HB-BODEGA-H1",          "zone_type": "WAREHOUSE",         "parent_code": null },
+    "Cuarto de los trabajadores":            { "code": "HB-CUARTO-TRABAJADORES","zone_type": "COMMON_AREA",       "parent_code": null },
+    "Baños de los trabajadores":             { "code": "HB-BANOS",              "zone_type": "COMMON_AREA",       "parent_code": null },
+    "Oficina principal":                     { "code": "HB-OFICINA",            "zone_type": "OFFICE",            "parent_code": null },
+    "Cuarto de bombas":                      { "code": "HB-CUARTO-BOMBAS",      "zone_type": "WATER_INFRASTRUCTURE", "parent_code": null },
+    "Reservorio principal":                  { "code": "HB-RESERVORIO-1",       "zone_type": "WATER_INFRASTRUCTURE", "parent_code": null },
+    "Reservorio 2":                          { "code": "HB-RESERVORIO-2",       "zone_type": "WATER_INFRASTRUCTURE", "parent_code": null }
+  }
+}

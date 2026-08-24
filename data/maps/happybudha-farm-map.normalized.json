@@ -1,0 +1,2774 @@
+{
+  "source": "KML_MAP_V1",
+  "generated_at": "2026-08-24T00:36:17.976Z",
+  "crs": "WGS84 / EPSG:4326",
+  "coordinate_order": "[longitude, latitude]",
+  "note": "Propuesta de importación. NO se ha escrito nada en PostgreSQL. IDs de BD se asignarán al importar en una fase futura autorizada.",
+  "farm_site": {
+    "source_name": "HB-FINCA-01 — Perímetro total HappyBuddha",
+    "code": "HB-FINCA-01",
+    "name": "HappyBuddha",
+    "polygon_geojson": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -80.678709463338,
+            -2.032626366683918
+          ],
+          [
+            -80.67784786571742,
+            -2.030317746229482
+          ],
+          [
+            -80.67988700857475,
+            -2.029749576522945
+          ],
+          [
+            -80.68013269473093,
+            -2.030754837790263
+          ],
+          [
+            -80.68418524256968,
+            -2.030215734696256
+          ],
+          [
+            -80.6841090195219,
+            -2.029665652181178
+          ],
+          [
+            -80.68601042831328,
+            -2.029566932451365
+          ],
+          [
+            -80.68687412120201,
+            -2.034360757016664
+          ],
+          [
+            -80.68691275010322,
+            -2.034628095515739
+          ],
+          [
+            -80.68683046500918,
+            -2.034814718382439
+          ],
+          [
+            -80.68676462262492,
+            -2.035919076622362
+          ],
+          [
+            -80.68677004785172,
+            -2.036124837699038
+          ],
+          [
+            -80.68668585399676,
+            -2.036410448443263
+          ],
+          [
+            -80.68658767680527,
+            -2.036631416989152
+          ],
+          [
+            -80.68646109173017,
+            -2.03682899038174
+          ],
+          [
+            -80.68489274054885,
+            -2.037188003812591
+          ],
+          [
+            -80.6846944781105,
+            -2.034967585973941
+          ],
+          [
+            -80.6814504379489,
+            -2.035338436310962
+          ],
+          [
+            -80.68063842593632,
+            -2.032609195406726
+          ],
+          [
+            -80.678709463338,
+            -2.032626366683918
+          ]
+        ]
+      ]
+    },
+    "source": "KML_MAP_V1"
+  },
+  "zones": [
+    {
+      "source_name": "Area productiva de C1 - C4",
+      "proposed_code": "HB-CAMPO-C1-C4",
+      "proposed_name": "Area productiva de C1 - C4",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.67897386617423,
+              -2.032543957526893
+            ],
+            [
+              -80.67885764968494,
+              -2.032549075142447
+            ],
+            [
+              -80.67869917903462,
+              -2.032552179614758
+            ],
+            [
+              -80.67866104940661,
+              -2.03243722384454
+            ],
+            [
+              -80.67854245284542,
+              -2.032169969890582
+            ],
+            [
+              -80.6778757027812,
+              -2.030352821114228
+            ],
+            [
+              -80.67987184335855,
+              -2.029782895861411
+            ],
+            [
+              -80.68011060559529,
+              -2.030784997992232
+            ],
+            [
+              -80.68008486655621,
+              -2.030905620351508
+            ],
+            [
+              -80.68010544957694,
+              -2.031164599349972
+            ],
+            [
+              -80.6802624231259,
+              -2.031162826265462
+            ],
+            [
+              -80.68059040210156,
+              -2.032369586196061
+            ],
+            [
+              -80.68050605737098,
+              -2.032488161135046
+            ],
+            [
+              -80.68028565455687,
+              -2.032531508714412
+            ],
+            [
+              -80.68004171896602,
+              -2.032525634245216
+            ],
+            [
+              -80.67957762857465,
+              -2.032537720431085
+            ],
+            [
+              -80.67921561938694,
+              -2.03254273747636
+            ],
+            [
+              -80.67897386617423,
+              -2.032543957526893
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": true,
+      "review_reason": "Zona de agrupación que se solapa con C1–C4; confirmar si debe existir como zona propia o solo como referencia.",
+      "approx_area_m2": 62280
+    },
+    {
+      "source_name": "Area de cultivo",
+      "proposed_code": "HB-CAMPO",
+      "proposed_name": "Area de cultivo",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": null,
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68053660427935,
+              -2.031791047314201
+            ],
+            [
+              -80.68094732531432,
+              -2.031726314859498
+            ],
+            [
+              -80.68092051567137,
+              -2.031588187045171
+            ],
+            [
+              -80.6823725674649,
+              -2.031410015499401
+            ],
+            [
+              -80.68228121978642,
+              -2.030943787941185
+            ],
+            [
+              -80.68103744174573,
+              -2.031103284994739
+            ],
+            [
+              -80.68099154771285,
+              -2.030700015444314
+            ],
+            [
+              -80.68418602303525,
+              -2.030245070445709
+            ],
+            [
+              -80.68415159405433,
+              -2.029713241868911
+            ],
+            [
+              -80.68587074961617,
+              -2.02962459191148
+            ],
+            [
+              -80.68594981006007,
+              -2.029825202375751
+            ],
+            [
+              -80.6862290811449,
+              -2.031208345305026
+            ],
+            [
+              -80.6868542444385,
+              -2.034436741775132
+            ],
+            [
+              -80.68687062119287,
+              -2.034620599088755
+            ],
+            [
+              -80.68680635579237,
+              -2.034806019184507
+            ],
+            [
+              -80.68677093603301,
+              -2.035219736185866
+            ],
+            [
+              -80.6867117027331,
+              -2.035924925767653
+            ],
+            [
+              -80.68626244238304,
+              -2.035936887683126
+            ],
+            [
+              -80.6863443567306,
+              -2.036450748679107
+            ],
+            [
+              -80.68643698313646,
+              -2.036588476185335
+            ],
+            [
+              -80.68640616150519,
+              -2.036748321101514
+            ],
+            [
+              -80.68598688822833,
+              -2.036860853518731
+            ],
+            [
+              -80.68493696519991,
+              -2.037112270566396
+            ],
+            [
+              -80.68490425338697,
+              -2.036011852601134
+            ],
+            [
+              -80.68475571398167,
+              -2.034832035612676
+            ],
+            [
+              -80.68150530888956,
+              -2.035236979978731
+            ],
+            [
+              -80.68098021146653,
+              -2.033524442770721
+            ],
+            [
+              -80.68070122736772,
+              -2.032592426824158
+            ],
+            [
+              -80.68053660427935,
+              -2.031791047314201
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 363120
+    },
+    {
+      "source_name": "Nursery",
+      "proposed_code": "HB-NURSERY",
+      "proposed_name": "Nursery",
+      "proposed_zone_type": "NURSERY",
+      "proposed_parent_code": null,
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68077471170105,
+              -2.031465869565201
+            ],
+            [
+              -80.68074958352985,
+              -2.031299103562406
+            ],
+            [
+              -80.68085527638085,
+              -2.031283802559682
+            ],
+            [
+              -80.68084359987436,
+              -2.031191120027585
+            ],
+            [
+              -80.68103614375346,
+              -2.031169051081105
+            ],
+            [
+              -80.68108196402143,
+              -2.031524125104046
+            ],
+            [
+              -80.68090922591877,
+              -2.031544173615778
+            ],
+            [
+              -80.68089053023381,
+              -2.031459021604857
+            ],
+            [
+              -80.68086749735666,
+              -2.031454777312602
+            ],
+            [
+              -80.68077471170105,
+              -2.031465869565201
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 1064
+    },
+    {
+      "source_name": "Invernadero",
+      "proposed_code": "HB-INVERNADERO",
+      "proposed_name": "Invernadero",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": null,
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68109244445121,
+              -2.031517985563485
+            ],
+            [
+              -80.6810411253942,
+              -2.031161449291911
+            ],
+            [
+              -80.68169068946277,
+              -2.031055283762405
+            ],
+            [
+              -80.68214619718991,
+              -2.031021639501444
+            ],
+            [
+              -80.68220662776643,
+              -2.031370104218387
+            ],
+            [
+              -80.68162546896085,
+              -2.031428129923861
+            ],
+            [
+              -80.68109244445121,
+              -2.031517985563485
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": true,
+      "review_reason": "Invernadero: no hay tipo exacto (¿NURSERY o PRODUCTIVE_FIELD?). Confirmar.",
+      "approx_area_m2": 4976
+    },
+    {
+      "source_name": "Bodega H1",
+      "proposed_code": "HB-BODEGA-H1",
+      "proposed_name": "Bodega H1",
+      "proposed_zone_type": "WAREHOUSE",
+      "proposed_parent_code": "HB-PLANTA",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68058538986718,
+              -2.031563174595476
+            ],
+            [
+              -80.68044729499681,
+              -2.031580448816346
+            ],
+            [
+              -80.6804214591761,
+              -2.031368592617687
+            ],
+            [
+              -80.68053843145388,
+              -2.031361465350657
+            ],
+            [
+              -80.68057437434774,
+              -2.031382494000195
+            ],
+            [
+              -80.68058538986718,
+              -2.031563174595476
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 371
+    },
+    {
+      "source_name": "Cuarto de inventario",
+      "proposed_code": "HB-CUARTO-INVENTARIO",
+      "proposed_name": "Cuarto de inventario",
+      "proposed_zone_type": "WAREHOUSE",
+      "proposed_parent_code": "HB-PLANTA",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68042560100935,
+              -2.03136494729905
+            ],
+            [
+              -80.68041540278809,
+              -2.031265892188211
+            ],
+            [
+              -80.68059549161784,
+              -2.031246400132785
+            ],
+            [
+              -80.68060901160844,
+              -2.031331302448271
+            ],
+            [
+              -80.680561252869,
+              -2.031337435435389
+            ],
+            [
+              -80.68057739567341,
+              -2.031381820937187
+            ],
+            [
+              -80.68053750364082,
+              -2.031360657484651
+            ],
+            [
+              -80.68042560100935,
+              -2.03136494729905
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 232
+    },
+    {
+      "source_name": "Cuarto de los trabajadores",
+      "proposed_code": "HB-CUARTO-TRABAJADORES",
+      "proposed_name": "Cuarto de los trabajadores",
+      "proposed_zone_type": "COMMON_AREA",
+      "proposed_parent_code": "HB-PLANTA",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68066428270569,
+              -2.031313874066419
+            ],
+            [
+              -80.68065425237204,
+              -2.031243065419019
+            ],
+            [
+              -80.68080742454944,
+              -2.031216055486685
+            ],
+            [
+              -80.6808147286533,
+              -2.031287762128244
+            ],
+            [
+              -80.68066428270569,
+              -2.031313874066419
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 137
+    },
+    {
+      "source_name": "Bodega de biofertilizantes",
+      "proposed_code": "HB-BODEGA-BIOFERT",
+      "proposed_name": "Bodega de biofertilizantes",
+      "proposed_zone_type": "WAREHOUSE",
+      "proposed_parent_code": "HB-PLANTA",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68085504665174,
+              -2.031284358074448
+            ],
+            [
+              -80.68081558742718,
+              -2.031289498567527
+            ],
+            [
+              -80.68080569290636,
+              -2.031213421432702
+            ],
+            [
+              -80.6808466112241,
+              -2.031209911906898
+            ],
+            [
+              -80.68085504665174,
+              -2.031284358074448
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 38
+    },
+    {
+      "source_name": "Baños de los trabajadores",
+      "proposed_code": "HB-BANOS",
+      "proposed_name": "Baños de los trabajadores",
+      "proposed_zone_type": "COMMON_AREA",
+      "proposed_parent_code": "HB-PLANTA",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68059787924919,
+              -2.031247990336964
+            ],
+            [
+              -80.68065072158953,
+              -2.031244900038895
+            ],
+            [
+              -80.68066240461592,
+              -2.031314896889877
+            ],
+            [
+              -80.68060763534714,
+              -2.031329103085094
+            ],
+            [
+              -80.68059787924919,
+              -2.031247990336964
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 51
+    },
+    {
+      "source_name": "Reservorio principal",
+      "proposed_code": "HB-RESERVORIO-1",
+      "proposed_name": "Reservorio principal",
+      "proposed_zone_type": "WATER_INFRASTRUCTURE",
+      "proposed_parent_code": null,
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68060154077321,
+              -2.030994682473707
+            ],
+            [
+              -80.68017006908401,
+              -2.031052199535423
+            ],
+            [
+              -80.68013989225213,
+              -2.030809463816595
+            ],
+            [
+              -80.68058125310834,
+              -2.030768203187063
+            ],
+            [
+              -80.68060154077321,
+              -2.030994682473707
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 1283
+    },
+    {
+      "source_name": "Cuarto de bombas",
+      "proposed_code": "HB-CUARTO-BOMBAS",
+      "proposed_name": "Cuarto de bombas",
+      "proposed_zone_type": "WATER_INFRASTRUCTURE",
+      "proposed_parent_code": null,
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68025354963632,
+              -2.031067890386079
+            ],
+            [
+              -80.68026648975528,
+              -2.031142570310845
+            ],
+            [
+              -80.68014612821594,
+              -2.031151287347203
+            ],
+            [
+              -80.68013496468251,
+              -2.03113199338689
+            ],
+            [
+              -80.68013198841429,
+              -2.031076525675713
+            ],
+            [
+              -80.68025354963632,
+              -2.031067890386079
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 117
+    },
+    {
+      "source_name": "Oficina principal",
+      "proposed_code": "HB-OFICINA",
+      "proposed_name": "Oficina principal",
+      "proposed_zone_type": "OFFICE",
+      "proposed_parent_code": "HB-PLANTA",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68088576095244,
+              -2.031462775627539
+            ],
+            [
+              -80.68089362340544,
+              -2.031532690504182
+            ],
+            [
+              -80.68084636440045,
+              -2.03153679491658
+            ],
+            [
+              -80.68083576590263,
+              -2.031458304607024
+            ],
+            [
+              -80.68086728381493,
+              -2.031454871879538
+            ],
+            [
+              -80.68088576095244,
+              -2.031462775627539
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 47
+    },
+    {
+      "source_name": "Cuarto de congelación",
+      "proposed_code": "HB-CUARTO-CONGELACION",
+      "proposed_name": "Cuarto de congelación",
+      "proposed_zone_type": "POSTHARVEST_PLANT",
+      "proposed_parent_code": "HB-PLANTA",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68084354658139,
+              -2.031531983329772
+            ],
+            [
+              -80.68079474789435,
+              -2.031537800183103
+            ],
+            [
+              -80.68078724154242,
+              -2.031524030391231
+            ],
+            [
+              -80.68077790631054,
+              -2.031466877109922
+            ],
+            [
+              -80.68083531979617,
+              -2.031459352049653
+            ],
+            [
+              -80.68084354658139,
+              -2.031531983329772
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 50
+    },
+    {
+      "source_name": "Recepción de cbd y racks de utileria",
+      "proposed_code": "HB-RECEPCION-CBD",
+      "proposed_name": "Recepción de cbd y racks de utileria",
+      "proposed_zone_type": "POSTHARVEST_PLANT",
+      "proposed_parent_code": "HB-PLANTA",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.6808311720976,
+              -2.031151908999684
+            ],
+            [
+              -80.68084566633614,
+              -2.031210444715196
+            ],
+            [
+              -80.68068964112226,
+              -2.031235886952863
+            ],
+            [
+              -80.68067821972373,
+              -2.031174265309315
+            ],
+            [
+              -80.6808311720976,
+              -2.031151908999684
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 119
+    },
+    {
+      "source_name": "Trimming",
+      "proposed_code": "HB-TRIMMING",
+      "proposed_name": "Trimming",
+      "proposed_zone_type": "POSTHARVEST_PLANT",
+      "proposed_parent_code": "HB-PLANTA",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68041266359978,
+              -2.031264110863948
+            ],
+            [
+              -80.68040821540913,
+              -2.031208378279779
+            ],
+            [
+              -80.68066013069858,
+              -2.031178657020842
+            ],
+            [
+              -80.68067052672626,
+              -2.031239057830465
+            ],
+            [
+              -80.68041266359978,
+              -2.031264110863948
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 186
+    },
+    {
+      "source_name": "Cuartos de secado",
+      "proposed_code": "HB-CUARTOS-SECADO",
+      "proposed_name": "Cuartos de secado",
+      "proposed_zone_type": "POSTHARVEST_PLANT",
+      "proposed_parent_code": "HB-PLANTA",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68061928063767,
+              -2.031183881552917
+            ],
+            [
+              -80.68061077351032,
+              -2.031065231882843
+            ],
+            [
+              -80.68081250596653,
+              -2.031036255560042
+            ],
+            [
+              -80.68083029947147,
+              -2.031151252293093
+            ],
+            [
+              -80.68061928063767,
+              -2.031183881552917
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 304
+    },
+    {
+      "source_name": "Bodega de biomasa",
+      "proposed_code": "HB-BODEGA-BIOMASA",
+      "proposed_name": "Bodega de biomasa",
+      "proposed_zone_type": "WAREHOUSE",
+      "proposed_parent_code": "HB-PLANTA",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68040798443332,
+              -2.031210029175758
+            ],
+            [
+              -80.6803957338521,
+              -2.031072276156266
+            ],
+            [
+              -80.68061143488761,
+              -2.031064020997968
+            ],
+            [
+              -80.68062021901677,
+              -2.031184969569499
+            ],
+            [
+              -80.68040798443332,
+              -2.031210029175758
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 345
+    },
+    {
+      "source_name": "Reservorio 2",
+      "proposed_code": "HB-RESERVORIO-2",
+      "proposed_name": "Reservorio 2",
+      "proposed_zone_type": "WATER_INFRASTRUCTURE",
+      "proposed_parent_code": null,
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68069589866307,
+              -2.031013702412486
+            ],
+            [
+              -80.68069332354293,
+              -2.030721445270275
+            ],
+            [
+              -80.68096118965484,
+              -2.030689516397386
+            ],
+            [
+              -80.68099780880192,
+              -2.030984488204397
+            ],
+            [
+              -80.68069589866307,
+              -2.031013702412486
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 1043
+    },
+    {
+      "source_name": "C2",
+      "proposed_code": "HB-C2",
+      "proposed_name": "C2",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68028761922115,
+              -2.031288632360215
+            ],
+            [
+              -80.6792884773438,
+              -2.031362981324436
+            ],
+            [
+              -80.6789113310602,
+              -2.030057824217489
+            ],
+            [
+              -80.67984998813296,
+              -2.029793785302092
+            ],
+            [
+              -80.68009977337051,
+              -2.030787534091516
+            ],
+            [
+              -80.68007452062868,
+              -2.030930635093128
+            ],
+            [
+              -80.68009917198347,
+              -2.03117599267298
+            ],
+            [
+              -80.68028761922115,
+              -2.031288632360215
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 16758
+    },
+    {
+      "source_name": "C1",
+      "proposed_code": "HB-C1",
+      "proposed_name": "C1",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.67929832946211,
+              -2.03135921789385
+            ],
+            [
+              -80.67833441122875,
+              -2.031528849615673
+            ],
+            [
+              -80.67789452027209,
+              -2.030370035736151
+            ],
+            [
+              -80.67891252690117,
+              -2.030064415922957
+            ],
+            [
+              -80.67929832946211,
+              -2.03135921789385
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 16271
+    },
+    {
+      "source_name": "C4",
+      "proposed_code": "HB-C4",
+      "proposed_name": "C4",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.6802971280446,
+              -2.031291611774758
+            ],
+            [
+              -80.68059228457507,
+              -2.032364085089962
+            ],
+            [
+              -80.68052055825723,
+              -2.032484158998567
+            ],
+            [
+              -80.68031518980693,
+              -2.032528172168012
+            ],
+            [
+              -80.67965430430179,
+              -2.032541807786341
+            ],
+            [
+              -80.67929857324812,
+              -2.031367170017252
+            ],
+            [
+              -80.6802971280446,
+              -2.031291611774758
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 14764
+    },
+    {
+      "source_name": "C3",
+      "proposed_code": "HB-C3",
+      "proposed_name": "C3",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.67965600749028,
+              -2.032538168278342
+            ],
+            [
+              -80.67870203428409,
+              -2.032552750080983
+            ],
+            [
+              -80.67833890288247,
+              -2.031526915663876
+            ],
+            [
+              -80.67929090207615,
+              -2.031361956824753
+            ],
+            [
+              -80.67965600749028,
+              -2.032538168278342
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 13399
+    },
+    {
+      "source_name": "C5",
+      "proposed_code": "HB-C5",
+      "proposed_name": "C5",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.6805399484566,
+              -2.031780291807809
+            ],
+            [
+              -80.68238209087987,
+              -2.03151196000267
+            ],
+            [
+              -80.68246445512355,
+              -2.031876185068993
+            ],
+            [
+              -80.68061704917776,
+              -2.032179113353839
+            ],
+            [
+              -80.6805399484566,
+              -2.031780291807809
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 8998
+    },
+    {
+      "source_name": "C6",
+      "proposed_code": "HB-C6",
+      "proposed_name": "C6",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68246463863595,
+              -2.031884823066406
+            ],
+            [
+              -80.6825523175603,
+              -2.0323345109511
+            ],
+            [
+              -80.68071834934959,
+              -2.032589931979825
+            ],
+            [
+              -80.68061977219553,
+              -2.032178967454598
+            ],
+            [
+              -80.68246463863595,
+              -2.031884823066406
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 10120
+    },
+    {
+      "source_name": "C7",
+      "proposed_code": "HB-C7",
+      "proposed_name": "C7",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68255163050239,
+              -2.03233978800714
+            ],
+            [
+              -80.68263954309626,
+              -2.032784981421809
+            ],
+            [
+              -80.68083783261147,
+              -2.033034690055125
+            ],
+            [
+              -80.6807111457332,
+              -2.032587056452773
+            ],
+            [
+              -80.68255163050239,
+              -2.03233978800714
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 10398
+    },
+    {
+      "source_name": "C8",
+      "proposed_code": "HB-C8",
+      "proposed_name": "C8",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68264060352018,
+              -2.032787296265389
+            ],
+            [
+              -80.6827279926612,
+              -2.033216060161007
+            ],
+            [
+              -80.68097586256339,
+              -2.03348352157151
+            ],
+            [
+              -80.68083126863522,
+              -2.033039819061353
+            ],
+            [
+              -80.68264060352018,
+              -2.032787296265389
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 9994
+    },
+    {
+      "source_name": "C9",
+      "proposed_code": "HB-C9",
+      "proposed_name": "C9",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68272674035302,
+              -2.033225862173346
+            ],
+            [
+              -80.68281341037417,
+              -2.033685417307919
+            ],
+            [
+              -80.68111655272787,
+              -2.033929040403039
+            ],
+            [
+              -80.6809766956878,
+              -2.033484879793879
+            ],
+            [
+              -80.68272674035302,
+              -2.033225862173346
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 9997
+    },
+    {
+      "source_name": "C10",
+      "proposed_code": "HB-C10",
+      "proposed_name": "C10",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.6828145552443,
+              -2.033686308503776
+            ],
+            [
+              -80.6829239187478,
+              -2.034147585731753
+            ],
+            [
+              -80.68122066997938,
+              -2.034361561247461
+            ],
+            [
+              -80.6811108669226,
+              -2.033936406226299
+            ],
+            [
+              -80.6828145552443,
+              -2.033686308503776
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 9665
+    },
+    {
+      "source_name": "C11",
+      "proposed_code": "HB-C11",
+      "proposed_name": "C11",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68291619730229,
+              -2.034147568318718
+            ],
+            [
+              -80.6830302327452,
+              -2.034620895629674
+            ],
+            [
+              -80.68138600447033,
+              -2.034804428417246
+            ],
+            [
+              -80.68123282686834,
+              -2.034361849665229
+            ],
+            [
+              -80.68291619730229,
+              -2.034147568318718
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 9765
+    },
+    {
+      "source_name": "C12",
+      "proposed_code": "HB-C12",
+      "proposed_name": "C12",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.6830264267972,
+              -2.034632537556439
+            ],
+            [
+              -80.68312568990538,
+              -2.035029128595528
+            ],
+            [
+              -80.68151453479429,
+              -2.035223471040224
+            ],
+            [
+              -80.68139162180668,
+              -2.034809931635145
+            ],
+            [
+              -80.6830264267972,
+              -2.034632537556439
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 8397
+    },
+    {
+      "source_name": "C13",
+      "proposed_code": "HB-C13",
+      "proposed_name": "C13",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68314436843748,
+              -2.035040707632028
+            ],
+            [
+              -80.68304413314365,
+              -2.034613787025873
+            ],
+            [
+              -80.684631806518,
+              -2.034360633966242
+            ],
+            [
+              -80.68465321513213,
+              -2.034823009308977
+            ],
+            [
+              -80.68314436843748,
+              -2.035040707632028
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 8703
+    },
+    {
+      "source_name": "C14",
+      "proposed_code": "HB-C14",
+      "proposed_name": "C14",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68303785208153,
+              -2.034618901575503
+            ],
+            [
+              -80.68290891701704,
+              -2.034144419083315
+            ],
+            [
+              -80.68458688578798,
+              -2.03392982644156
+            ],
+            [
+              -80.68462933825073,
+              -2.034357310769511
+            ],
+            [
+              -80.68303785208153,
+              -2.034618901575503
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 9383
+    },
+    {
+      "source_name": "C15",
+      "proposed_code": "HB-C15",
+      "proposed_name": "C15",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68292725673908,
+              -2.034138584679932
+            ],
+            [
+              -80.68282795565268,
+              -2.033682984461718
+            ],
+            [
+              -80.68454778304381,
+              -2.033455478879191
+            ],
+            [
+              -80.68458603026075,
+              -2.03392079580864
+            ],
+            [
+              -80.68292725673908,
+              -2.034138584679932
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 9823
+    },
+    {
+      "source_name": "C16",
+      "proposed_code": "HB-C16",
+      "proposed_name": "C16",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68281888519343,
+              -2.033687167155906
+            ],
+            [
+              -80.68274391272699,
+              -2.033205750718908
+            ],
+            [
+              -80.68447563750011,
+              -2.032992797884748
+            ],
+            [
+              -80.68455232008904,
+              -2.033457576649296
+            ],
+            [
+              -80.68281888519343,
+              -2.033687167155906
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 10359
+    },
+    {
+      "source_name": "C17",
+      "proposed_code": "HB-C17",
+      "proposed_name": "C17",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68273677605555,
+              -2.033209310725384
+            ],
+            [
+              -80.68265029805941,
+              -2.032770159071734
+            ],
+            [
+              -80.6844216255028,
+              -2.032508876360017
+            ],
+            [
+              -80.68447770906812,
+              -2.032987198812742
+            ],
+            [
+              -80.68273677605555,
+              -2.033209310725384
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 10190
+    },
+    {
+      "source_name": "C18",
+      "proposed_code": "HB-C18",
+      "proposed_name": "C18",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68265106423614,
+              -2.032769933208732
+            ],
+            [
+              -80.682570391362,
+              -2.032309545623969
+            ],
+            [
+              -80.68437315165095,
+              -2.032023348294995
+            ],
+            [
+              -80.684420397372,
+              -2.032512298795878
+            ],
+            [
+              -80.68265106423614,
+              -2.032769933208732
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 10714
+    },
+    {
+      "source_name": "C19",
+      "proposed_code": "HB-C19",
+      "proposed_name": "C19",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.6824718768259,
+              -2.031892378325777
+            ],
+            [
+              -80.68433464980575,
+              -2.031569363373035
+            ],
+            [
+              -80.68437385874178,
+              -2.032027212566319
+            ],
+            [
+              -80.68255789981721,
+              -2.03232491236274
+            ],
+            [
+              -80.6824718768259,
+              -2.031892378325777
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 10382
+    },
+    {
+      "source_name": "C20",
+      "proposed_code": "HB-C20",
+      "proposed_name": "C20",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68240192990488,
+              -2.031511113191228
+            ],
+            [
+              -80.68428645377817,
+              -2.031149925207111
+            ],
+            [
+              -80.68432422772027,
+              -2.031562644537028
+            ],
+            [
+              -80.68249151070293,
+              -2.031885799813206
+            ],
+            [
+              -80.68240192990488,
+              -2.031511113191228
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 9332
+    },
+    {
+      "source_name": "C21",
+      "proposed_code": "HB-C21",
+      "proposed_name": "C21",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68239060833795,
+              -2.031522024271355
+            ],
+            [
+              -80.68233668181432,
+              -2.03106180245119
+            ],
+            [
+              -80.68420892073891,
+              -2.030751840871646
+            ],
+            [
+              -80.68426961378432,
+              -2.031144064256533
+            ],
+            [
+              -80.68239060833795,
+              -2.031522024271355
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 10144
+    },
+    {
+      "source_name": "C22",
+      "proposed_code": "HB-C22",
+      "proposed_name": "C22",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68233080226513,
+              -2.031067299197958
+            ],
+            [
+              -80.68229111424496,
+              -2.030927174453055
+            ],
+            [
+              -80.68235343776973,
+              -2.030515067503449
+            ],
+            [
+              -80.68414948078072,
+              -2.030250763005298
+            ],
+            [
+              -80.68421017608884,
+              -2.030759773215969
+            ],
+            [
+              -80.68233080226513,
+              -2.031067299197958
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 12299
+    },
+    {
+      "source_name": "C23",
+      "proposed_code": "HB-C23",
+      "proposed_name": "C23",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68586539052048,
+              -2.029637356476228
+            ],
+            [
+              -80.68600112745416,
+              -2.030052547966659
+            ],
+            [
+              -80.68421504688692,
+              -2.030167549608756
+            ],
+            [
+              -80.68417463607958,
+              -2.02972815716508
+            ],
+            [
+              -80.68586539052048,
+              -2.029637356476228
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 9311
+    },
+    {
+      "source_name": "C24",
+      "proposed_code": "HB-C24",
+      "proposed_name": "C24",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68599178861892,
+              -2.030049311160774
+            ],
+            [
+              -80.68608066126946,
+              -2.030489142926819
+            ],
+            [
+              -80.68426887291308,
+              -2.030614401035523
+            ],
+            [
+              -80.68420986327494,
+              -2.030172985454241
+            ],
+            [
+              -80.68599178861892,
+              -2.030049311160774
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 9919
+    },
+    {
+      "source_name": "C25",
+      "proposed_code": "HB-C25",
+      "proposed_name": "C25",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68425457522515,
+              -2.030626846923328
+            ],
+            [
+              -80.68607766148178,
+              -2.030492614685691
+            ],
+            [
+              -80.68617203058898,
+              -2.030965906330593
+            ],
+            [
+              -80.68430727885436,
+              -2.031092633332804
+            ],
+            [
+              -80.68425457522515,
+              -2.030626846923328
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 10841
+    },
+    {
+      "source_name": "C26",
+      "proposed_code": "HB-C26",
+      "proposed_name": "C26",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68616844289656,
+              -2.03096792412864
+            ],
+            [
+              -80.6862602898062,
+              -2.03138157235668
+            ],
+            [
+              -80.68438196744192,
+              -2.03155953857306
+            ],
+            [
+              -80.68431316453103,
+              -2.031096314129977
+            ],
+            [
+              -80.68616844289656,
+              -2.03096792412864
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 10289
+    },
+    {
+      "source_name": "C27",
+      "proposed_code": "HB-C27",
+      "proposed_name": "C27",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68624984371625,
+              -2.031379997742759
+            ],
+            [
+              -80.6863270476956,
+              -2.031807077798853
+            ],
+            [
+              -80.68440170915993,
+              -2.032004210536545
+            ],
+            [
+              -80.68435339544129,
+              -2.03154814626598
+            ],
+            [
+              -80.68624984371625,
+              -2.031379997742759
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 10592
+    },
+    {
+      "source_name": "C28",
+      "proposed_code": "HB-C28",
+      "proposed_name": "C28",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68633636126067,
+              -2.031810605469692
+            ],
+            [
+              -80.68644137186956,
+              -2.032297000551028
+            ],
+            [
+              -80.68448144952478,
+              -2.032479531547764
+            ],
+            [
+              -80.68440549093361,
+              -2.032007111043549
+            ],
+            [
+              -80.68633636126067,
+              -2.031810605469692
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 11762
+    },
+    {
+      "source_name": "C29",
+      "proposed_code": "HB-C29",
+      "proposed_name": "C29",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68644282526915,
+              -2.03230838836093
+            ],
+            [
+              -80.6865248931275,
+              -2.03275099891778
+            ],
+            [
+              -80.68453178804297,
+              -2.032950377878159
+            ],
+            [
+              -80.68445988838485,
+              -2.032483298024599
+            ],
+            [
+              -80.68644282526915,
+              -2.03230838836093
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 11377
+    },
+    {
+      "source_name": "C30",
+      "proposed_code": "HB-C30",
+      "proposed_name": "C30",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68651712705012,
+              -2.032753219423941
+            ],
+            [
+              -80.68661608309509,
+              -2.033233338223812
+            ],
+            [
+              -80.6846123431171,
+              -2.03345109511769
+            ],
+            [
+              -80.68454762813684,
+              -2.032951333819417
+            ],
+            [
+              -80.68651712705012,
+              -2.032753219423941
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 12265
+    },
+    {
+      "source_name": "C31",
+      "proposed_code": "HB-C31",
+      "proposed_name": "C31",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68661949674268,
+              -2.033228286734742
+            ],
+            [
+              -80.68671403861278,
+              -2.033720133951638
+            ],
+            [
+              -80.68464180026187,
+              -2.033846357685498
+            ],
+            [
+              -80.68460703397886,
+              -2.033452327180151
+            ],
+            [
+              -80.68661949674268,
+              -2.033228286734742
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 11343
+    },
+    {
+      "source_name": "C32",
+      "proposed_code": "HB-C32",
+      "proposed_name": "C32",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68671298731707,
+              -2.033719729582964
+            ],
+            [
+              -80.68679627928832,
+              -2.034105974955622
+            ],
+            [
+              -80.68470786216268,
+              -2.034240287275974
+            ],
+            [
+              -80.68463818784666,
+              -2.033846881600769
+            ],
+            [
+              -80.68671298731707,
+              -2.033719729582964
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 10173
+    },
+    {
+      "source_name": "C33",
+      "proposed_code": "HB-C33",
+      "proposed_name": "C33",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68678883873496,
+              -2.034112391681707
+            ],
+            [
+              -80.68686315367023,
+              -2.034645797407466
+            ],
+            [
+              -80.68476622644111,
+              -2.034721577535615
+            ],
+            [
+              -80.68470125853943,
+              -2.034244876474522
+            ],
+            [
+              -80.68678883873496,
+              -2.034112391681707
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 13176
+    },
+    {
+      "source_name": "C34",
+      "proposed_code": "HB-C34",
+      "proposed_name": "C34",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68685456131357,
+              -2.034646845700686
+            ],
+            [
+              -80.68679887145022,
+              -2.034802767540912
+            ],
+            [
+              -80.68677847250414,
+              -2.035130440322942
+            ],
+            [
+              -80.68484569138164,
+              -2.035143717466931
+            ],
+            [
+              -80.6847795349233,
+              -2.034727554452324
+            ],
+            [
+              -80.68685456131357,
+              -2.034646845700686
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 11068
+    },
+    {
+      "source_name": "C35",
+      "proposed_code": "HB-C35",
+      "proposed_name": "C35",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68677053972588,
+              -2.035143524115972
+            ],
+            [
+              -80.68672836934867,
+              -2.035582957390979
+            ],
+            [
+              -80.6848778249442,
+              -2.035615294152277
+            ],
+            [
+              -80.68484086752623,
+              -2.035147675832481
+            ],
+            [
+              -80.68677053972588,
+              -2.035143524115972
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 10615
+    },
+    {
+      "source_name": "C36",
+      "proposed_code": "HB-C36",
+      "proposed_name": "C36",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68672754552236,
+              -2.035583950275769
+            ],
+            [
+              -80.68670103094806,
+              -2.035921124003027
+            ],
+            [
+              -80.68626714693775,
+              -2.035956951593102
+            ],
+            [
+              -80.68494611410165,
+              -2.036010032492162
+            ],
+            [
+              -80.68488619896087,
+              -2.035619323506806
+            ],
+            [
+              -80.68672754552236,
+              -2.035583950275769
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 8268
+    },
+    {
+      "source_name": "C37",
+      "proposed_code": "HB-C37",
+      "proposed_name": "C37",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68626602746974,
+              -2.03595797157039
+            ],
+            [
+              -80.68633867667708,
+              -2.036418134118618
+            ],
+            [
+              -80.68492973827912,
+              -2.036529383919555
+            ],
+            [
+              -80.68495227682997,
+              -2.036016588607991
+            ],
+            [
+              -80.68626602746974,
+              -2.03595797157039
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 8228
+    },
+    {
+      "source_name": "C38",
+      "proposed_code": "HB-C38",
+      "proposed_name": "C38",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": "HB-CAMPO",
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68633504236736,
+              -2.036426193261107
+            ],
+            [
+              -80.68643095642066,
+              -2.03658814000873
+            ],
+            [
+              -80.68640494934994,
+              -2.036748842480142
+            ],
+            [
+              -80.68493610429827,
+              -2.03711582098047
+            ],
+            [
+              -80.68491713168078,
+              -2.036534500582082
+            ],
+            [
+              -80.68633504236736,
+              -2.036426193261107
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 8332
+    },
+    {
+      "source_name": "ZONA EXPERIMENTAL",
+      "proposed_code": "HB-ZONA-EXPERIMENTAL",
+      "proposed_name": "ZONA EXPERIMENTAL",
+      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_parent_code": null,
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68104196293909,
+              -2.031107423987513
+            ],
+            [
+              -80.68100279336744,
+              -2.030698147044866
+            ],
+            [
+              -80.68231371252516,
+              -2.030522018050466
+            ],
+            [
+              -80.68227559069115,
+              -2.030942078542248
+            ],
+            [
+              -80.68104196293909,
+              -2.031107423987513
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": true,
+      "review_reason": "Zona experimental: confirmar tipo y si depende del campo.",
+      "approx_area_m2": 6535
+    },
+    {
+      "source_name": "Planta",
+      "proposed_code": "HB-PLANTA",
+      "proposed_name": "Planta",
+      "proposed_zone_type": "POSTHARVEST_PLANT",
+      "proposed_parent_code": null,
+      "polygon_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -80.68059114921778,
+              -2.031571105223271
+            ],
+            [
+              -80.68043511031635,
+              -2.031587921529352
+            ],
+            [
+              -80.68038574952128,
+              -2.031065573243202
+            ],
+            [
+              -80.68061894636001,
+              -2.031056947680869
+            ],
+            [
+              -80.68082474989806,
+              -2.031029166418674
+            ],
+            [
+              -80.68086019623028,
+              -2.031291830248111
+            ],
+            [
+              -80.68090822454454,
+              -2.031541449221299
+            ],
+            [
+              -80.68078822213502,
+              -2.031547262562359
+            ],
+            [
+              -80.68074754319701,
+              -2.031304216792023
+            ],
+            [
+              -80.68066956518582,
+              -2.031312519381633
+            ],
+            [
+              -80.68061584232457,
+              -2.031333901169412
+            ],
+            [
+              -80.68056799210339,
+              -2.031342490044637
+            ],
+            [
+              -80.68058652638585,
+              -2.031385034042513
+            ],
+            [
+              -80.68059114921778,
+              -2.031571105223271
+            ]
+          ]
+        ]
+      },
+      "source": "KML_MAP_V1",
+      "review": false,
+      "review_reason": null,
+      "approx_area_m2": 2341
+    }
+  ],
+  "alias_proposals": [
+    {
+      "alias": "C1",
+      "proposed_geo_zone_code": "HB-C1",
+      "source_context": "general"
+    },
+    {
+      "alias": "C2",
+      "proposed_geo_zone_code": "HB-C2",
+      "source_context": "general"
+    },
+    {
+      "alias": "C3",
+      "proposed_geo_zone_code": "HB-C3",
+      "source_context": "general"
+    },
+    {
+      "alias": "C4",
+      "proposed_geo_zone_code": "HB-C4",
+      "source_context": "general"
+    },
+    {
+      "alias": "C5",
+      "proposed_geo_zone_code": "HB-C5",
+      "source_context": "general"
+    },
+    {
+      "alias": "C6",
+      "proposed_geo_zone_code": "HB-C6",
+      "source_context": "general"
+    },
+    {
+      "alias": "C7",
+      "proposed_geo_zone_code": "HB-C7",
+      "source_context": "general"
+    },
+    {
+      "alias": "C8",
+      "proposed_geo_zone_code": "HB-C8",
+      "source_context": "general"
+    },
+    {
+      "alias": "C9",
+      "proposed_geo_zone_code": "HB-C9",
+      "source_context": "general"
+    },
+    {
+      "alias": "C10",
+      "proposed_geo_zone_code": "HB-C10",
+      "source_context": "general"
+    },
+    {
+      "alias": "C11",
+      "proposed_geo_zone_code": "HB-C11",
+      "source_context": "general"
+    },
+    {
+      "alias": "C12",
+      "proposed_geo_zone_code": "HB-C12",
+      "source_context": "general"
+    },
+    {
+      "alias": "C13",
+      "proposed_geo_zone_code": "HB-C13",
+      "source_context": "general"
+    },
+    {
+      "alias": "C14",
+      "proposed_geo_zone_code": "HB-C14",
+      "source_context": "general"
+    },
+    {
+      "alias": "C15",
+      "proposed_geo_zone_code": "HB-C15",
+      "source_context": "general"
+    },
+    {
+      "alias": "C16",
+      "proposed_geo_zone_code": "HB-C16",
+      "source_context": "general"
+    },
+    {
+      "alias": "C17",
+      "proposed_geo_zone_code": "HB-C17",
+      "source_context": "general"
+    },
+    {
+      "alias": "C18",
+      "proposed_geo_zone_code": "HB-C18",
+      "source_context": "general"
+    },
+    {
+      "alias": "C19",
+      "proposed_geo_zone_code": "HB-C19",
+      "source_context": "general"
+    },
+    {
+      "alias": "C20",
+      "proposed_geo_zone_code": "HB-C20",
+      "source_context": "general"
+    },
+    {
+      "alias": "C21",
+      "proposed_geo_zone_code": "HB-C21",
+      "source_context": "general"
+    },
+    {
+      "alias": "C22",
+      "proposed_geo_zone_code": "HB-C22",
+      "source_context": "general"
+    },
+    {
+      "alias": "C23",
+      "proposed_geo_zone_code": "HB-C23",
+      "source_context": "general"
+    },
+    {
+      "alias": "C24",
+      "proposed_geo_zone_code": "HB-C24",
+      "source_context": "general"
+    },
+    {
+      "alias": "C25",
+      "proposed_geo_zone_code": "HB-C25",
+      "source_context": "general"
+    },
+    {
+      "alias": "C26",
+      "proposed_geo_zone_code": "HB-C26",
+      "source_context": "general"
+    },
+    {
+      "alias": "C27",
+      "proposed_geo_zone_code": "HB-C27",
+      "source_context": "general"
+    },
+    {
+      "alias": "C28",
+      "proposed_geo_zone_code": "HB-C28",
+      "source_context": "general"
+    },
+    {
+      "alias": "C29",
+      "proposed_geo_zone_code": "HB-C29",
+      "source_context": "general"
+    },
+    {
+      "alias": "C30",
+      "proposed_geo_zone_code": "HB-C30",
+      "source_context": "general"
+    },
+    {
+      "alias": "C31",
+      "proposed_geo_zone_code": "HB-C31",
+      "source_context": "general"
+    },
+    {
+      "alias": "C32",
+      "proposed_geo_zone_code": "HB-C32",
+      "source_context": "general"
+    },
+    {
+      "alias": "C33",
+      "proposed_geo_zone_code": "HB-C33",
+      "source_context": "general"
+    },
+    {
+      "alias": "C34",
+      "proposed_geo_zone_code": "HB-C34",
+      "source_context": "general"
+    },
+    {
+      "alias": "C35",
+      "proposed_geo_zone_code": "HB-C35",
+      "source_context": "general"
+    },
+    {
+      "alias": "C36",
+      "proposed_geo_zone_code": "HB-C36",
+      "source_context": "general"
+    },
+    {
+      "alias": "C37",
+      "proposed_geo_zone_code": "HB-C37",
+      "source_context": "general"
+    },
+    {
+      "alias": "C38",
+      "proposed_geo_zone_code": "HB-C38",
+      "source_context": "general"
+    }
+  ]
+}

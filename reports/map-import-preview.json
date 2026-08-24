@@ -1,0 +1,523 @@
+{
+  "generated_at": "2026-08-24T00:36:17.976Z",
+  "kml_file": "data/maps/happybudha-farm-map.kml",
+  "totals": {
+    "placemarks": 59,
+    "polygons": 59,
+    "farm_site": 1,
+    "zones": 58,
+    "alias_proposals": 38,
+    "c_fields_detected": 38,
+    "c_fields_range": "C1..C38"
+  },
+  "c39_c42_absent": true,
+  "zone_types_summary": {
+    "PRODUCTIVE_FIELD": 42,
+    "NURSERY": 1,
+    "WAREHOUSE": 4,
+    "COMMON_AREA": 2,
+    "WATER_INFRASTRUCTURE": 3,
+    "OFFICE": 1,
+    "POSTHARVEST_PLANT": 5
+  },
+  "hierarchy_parents": {
+    "HB-CAMPO": [
+      "HB-CAMPO-C1-C4",
+      "HB-C2",
+      "HB-C1",
+      "HB-C4",
+      "HB-C3",
+      "HB-C5",
+      "HB-C6",
+      "HB-C7",
+      "HB-C8",
+      "HB-C9",
+      "HB-C10",
+      "HB-C11",
+      "HB-C12",
+      "HB-C13",
+      "HB-C14",
+      "HB-C15",
+      "HB-C16",
+      "HB-C17",
+      "HB-C18",
+      "HB-C19",
+      "HB-C20",
+      "HB-C21",
+      "HB-C22",
+      "HB-C23",
+      "HB-C24",
+      "HB-C25",
+      "HB-C26",
+      "HB-C27",
+      "HB-C28",
+      "HB-C29",
+      "HB-C30",
+      "HB-C31",
+      "HB-C32",
+      "HB-C33",
+      "HB-C34",
+      "HB-C35",
+      "HB-C36",
+      "HB-C37",
+      "HB-C38"
+    ],
+    "(raíz)": [
+      "HB-CAMPO",
+      "HB-NURSERY",
+      "HB-INVERNADERO",
+      "HB-RESERVORIO-1",
+      "HB-CUARTO-BOMBAS",
+      "HB-RESERVORIO-2",
+      "HB-ZONA-EXPERIMENTAL",
+      "HB-PLANTA"
+    ],
+    "HB-PLANTA": [
+      "HB-BODEGA-H1",
+      "HB-CUARTO-INVENTARIO",
+      "HB-CUARTO-TRABAJADORES",
+      "HB-BODEGA-BIOFERT",
+      "HB-BANOS",
+      "HB-OFICINA",
+      "HB-CUARTO-CONGELACION",
+      "HB-RECEPCION-CBD",
+      "HB-TRIMMING",
+      "HB-CUARTOS-SECADO",
+      "HB-BODEGA-BIOMASA"
+    ]
+  },
+  "containment_inferred_parents": [
+    {
+      "zone": "HB-BODEGA-H1",
+      "contained_in": "HB-PLANTA",
+      "vertex_fraction": 1
+    },
+    {
+      "zone": "HB-CUARTO-INVENTARIO",
+      "contained_in": "HB-PLANTA",
+      "vertex_fraction": 1
+    },
+    {
+      "zone": "HB-CUARTO-TRABAJADORES",
+      "contained_in": "HB-PLANTA",
+      "vertex_fraction": 1
+    },
+    {
+      "zone": "HB-BODEGA-BIOFERT",
+      "contained_in": "HB-PLANTA",
+      "vertex_fraction": 1
+    },
+    {
+      "zone": "HB-BANOS",
+      "contained_in": "HB-PLANTA",
+      "vertex_fraction": 1
+    },
+    {
+      "zone": "HB-OFICINA",
+      "contained_in": "HB-PLANTA",
+      "vertex_fraction": 1
+    },
+    {
+      "zone": "HB-CUARTO-CONGELACION",
+      "contained_in": "HB-PLANTA",
+      "vertex_fraction": 1
+    },
+    {
+      "zone": "HB-RECEPCION-CBD",
+      "contained_in": "HB-PLANTA",
+      "vertex_fraction": 1
+    },
+    {
+      "zone": "HB-TRIMMING",
+      "contained_in": "HB-PLANTA",
+      "vertex_fraction": 1
+    },
+    {
+      "zone": "HB-CUARTOS-SECADO",
+      "contained_in": "HB-PLANTA",
+      "vertex_fraction": 1
+    },
+    {
+      "zone": "HB-BODEGA-BIOMASA",
+      "contained_in": "HB-PLANTA",
+      "vertex_fraction": 1
+    }
+  ],
+  "zones_contained_in_others": [
+    {
+      "inner": "HB-BODEGA-H1",
+      "outer": "HB-PLANTA"
+    },
+    {
+      "inner": "HB-CUARTO-INVENTARIO",
+      "outer": "HB-PLANTA"
+    },
+    {
+      "inner": "HB-CUARTO-TRABAJADORES",
+      "outer": "HB-PLANTA"
+    },
+    {
+      "inner": "HB-BODEGA-BIOFERT",
+      "outer": "HB-PLANTA"
+    },
+    {
+      "inner": "HB-BANOS",
+      "outer": "HB-PLANTA"
+    },
+    {
+      "inner": "HB-OFICINA",
+      "outer": "HB-PLANTA"
+    },
+    {
+      "inner": "HB-CUARTO-CONGELACION",
+      "outer": "HB-PLANTA"
+    },
+    {
+      "inner": "HB-RECEPCION-CBD",
+      "outer": "HB-PLANTA"
+    },
+    {
+      "inner": "HB-TRIMMING",
+      "outer": "HB-PLANTA"
+    },
+    {
+      "inner": "HB-CUARTOS-SECADO",
+      "outer": "HB-PLANTA"
+    },
+    {
+      "inner": "HB-BODEGA-BIOMASA",
+      "outer": "HB-PLANTA"
+    },
+    {
+      "inner": "HB-C2",
+      "outer": "HB-CAMPO-C1-C4"
+    },
+    {
+      "inner": "HB-C1",
+      "outer": "HB-CAMPO-C1-C4"
+    },
+    {
+      "inner": "HB-C5",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C6",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C7",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C8",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C9",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C10",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C11",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C12",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C13",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C14",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C15",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C16",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C17",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C18",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C19",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C20",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C21",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C22",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C23",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C24",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C25",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C26",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C27",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C28",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C29",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C30",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C31",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C32",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C33",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C34",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C35",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C36",
+      "outer": "HB-CAMPO"
+    },
+    {
+      "inner": "HB-C37",
+      "outer": "HB-CAMPO"
+    }
+  ],
+  "overlaps_same_level": [
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-CAMPO-C1-C4",
+      "b": "HB-C2"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-CAMPO-C1-C4",
+      "b": "HB-C1"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-CAMPO-C1-C4",
+      "b": "HB-C4"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-CAMPO-C1-C4",
+      "b": "HB-C3"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C2",
+      "b": "HB-C1"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C2",
+      "b": "HB-C3"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C1",
+      "b": "HB-C3"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C4",
+      "b": "HB-C3"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C6",
+      "b": "HB-C7"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C10",
+      "b": "HB-C11"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C10",
+      "b": "HB-C14"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C11",
+      "b": "HB-C14"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C13",
+      "b": "HB-C14"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C15",
+      "b": "HB-C16"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C16",
+      "b": "HB-C17"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C17",
+      "b": "HB-C18"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C18",
+      "b": "HB-C19"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C20",
+      "b": "HB-C21"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C21",
+      "b": "HB-C22"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C23",
+      "b": "HB-C24"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C26",
+      "b": "HB-C27"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C30",
+      "b": "HB-C31"
+    },
+    {
+      "level_parent": "HB-CAMPO",
+      "a": "HB-C31",
+      "b": "HB-C32"
+    },
+    {
+      "level_parent": null,
+      "a": "HB-CAMPO",
+      "b": "HB-ZONA-EXPERIMENTAL"
+    },
+    {
+      "level_parent": null,
+      "a": "HB-NURSERY",
+      "b": "HB-PLANTA"
+    },
+    {
+      "level_parent": "HB-PLANTA",
+      "a": "HB-CUARTO-INVENTARIO",
+      "b": "HB-BANOS"
+    },
+    {
+      "level_parent": "HB-PLANTA",
+      "a": "HB-CUARTO-TRABAJADORES",
+      "b": "HB-BODEGA-BIOFERT"
+    },
+    {
+      "level_parent": "HB-PLANTA",
+      "a": "HB-CUARTO-TRABAJADORES",
+      "b": "HB-RECEPCION-CBD"
+    },
+    {
+      "level_parent": "HB-PLANTA",
+      "a": "HB-BODEGA-BIOFERT",
+      "b": "HB-RECEPCION-CBD"
+    },
+    {
+      "level_parent": "HB-PLANTA",
+      "a": "HB-RECEPCION-CBD",
+      "b": "HB-CUARTOS-SECADO"
+    },
+    {
+      "level_parent": "HB-PLANTA",
+      "a": "HB-TRIMMING",
+      "b": "HB-CUARTOS-SECADO"
+    },
+    {
+      "level_parent": "HB-PLANTA",
+      "a": "HB-TRIMMING",
+      "b": "HB-BODEGA-BIOMASA"
+    },
+    {
+      "level_parent": "HB-PLANTA",
+      "a": "HB-CUARTOS-SECADO",
+      "b": "HB-BODEGA-BIOMASA"
+    }
+  ],
+  "requiere_revision": [
+    {
+      "zone": "HB-CAMPO-C1-C4",
+      "source_name": "Area productiva de C1 - C4",
+      "reason": "Zona de agrupación que se solapa con C1–C4; confirmar si debe existir como zona propia o solo como referencia."
+    },
+    {
+      "zone": "HB-INVERNADERO",
+      "source_name": "Invernadero",
+      "reason": "Invernadero: no hay tipo exacto (¿NURSERY o PRODUCTIVE_FIELD?). Confirmar."
+    },
+    {
+      "zone": "HB-ZONA-EXPERIMENTAL",
+      "source_name": "ZONA EXPERIMENTAL",
+      "reason": "Zona experimental: confirmar tipo y si depende del campo."
+    }
+  ],
+  "warnings": [
+    {
+      "level": "WARN",
+      "zone": null,
+      "msg": "Se detectaron 33 superposición(es) entre zonas del mismo nivel (ver detalle). No se corrigen automáticamente."
+    }
+  ]
+}
