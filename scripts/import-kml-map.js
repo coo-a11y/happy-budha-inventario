@@ -250,7 +250,9 @@ function main() {
         source_name: pm.name,
         code: farmSiteCfg.code,
         name: farmSiteCfg.name,
-        polygon_geojson,
+        // El perímetro de la finca se persiste como boundary_geojson (límite de sede),
+        // NO como polygon_geojson (que es para zonas interiores en geo_zones).
+        boundary_geojson: polygon_geojson,
         source: SOURCE_TAG,
       };
       geomByCode[farmSiteCfg.code] = ring;

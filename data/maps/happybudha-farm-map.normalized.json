@@ -1,6 +1,6 @@
 {
   "source": "KML_MAP_V1",
-  "generated_at": "2026-08-24T11:50:13.311Z",
+  "generated_at": "2026-08-24T11:55:59.892Z",
   "crs": "WGS84 / EPSG:4326",
   "coordinate_order": "[longitude, latitude]",
   "note": "Propuesta de importación. NO se ha escrito nada en PostgreSQL. IDs de BD se asignarán al importar en una fase futura autorizada.",
@@ -8,7 +8,7 @@
     "source_name": "HB-FINCA-01 — Perímetro total HappyBuddha",
     "code": "HB-FINCA-01",
     "name": "HappyBuddha",
-    "polygon_geojson": {
+    "boundary_geojson": {
       "type": "Polygon",
       "coordinates": [
         [

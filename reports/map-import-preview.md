@@ -1,6 +1,6 @@
 # Preview de importación del mapa maestro (KML → Farm OS)
 
-> Generado: 2026-08-24T11:50:13.311Z. Modo **dry-run**: no se escribió nada en PostgreSQL.
+> Generado: 2026-08-24T11:55:59.892Z. Modo **dry-run**: no se escribió nada en PostgreSQL.
 > CRS: WGS84 / EPSG:4326 · orden [longitude, latitude] · source: `KML_MAP_V1`
 
 ## Totales

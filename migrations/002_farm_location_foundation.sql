@@ -19,9 +19,21 @@ CREATE TABLE IF NOT EXISTS farm_sites (
   code        TEXT NOT NULL UNIQUE,
   name        TEXT NOT NULL,
   description TEXT,
+  -- Perímetro exterior de la finca/sede (GeoJSON, sin PostGIS). Nullable: una sede puede
+  -- existir aún sin límite mapeado. WGS84/EPSG:4326, orden [longitude, latitude].
+  -- Uso futuro: geocerca general, detección de entrada/salida de finca y validación de que
+  -- las zonas pertenecen razonablemente al sitio.
+  boundary_geojson JSONB,
   active      BOOLEAN NOT NULL DEFAULT TRUE,
   created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  -- Si boundary_geojson tiene contenido, debe ser objeto JSONB con type Polygon/MultiPolygon.
+  CONSTRAINT farm_sites_boundary_type_chk CHECK (
+    boundary_geojson IS NULL OR (
+      jsonb_typeof(boundary_geojson) = 'object'
+      AND boundary_geojson->>'type' IN ('Polygon', 'MultiPolygon')
+    )
+  )
 );
 
 -- ------------------------------------------------------------------

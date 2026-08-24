@@ -177,5 +177,42 @@ test('Reporte de superposiciones distingue severidad', () => {
   kinds.forEach(k => assert.ok(['MEANINGFUL_OVERLAP', 'TOUCH_OR_MINOR_OVERLAP'].includes(k), `severidad inválida: ${k}`));
 });
 
+// ---- Migración 002: farm_sites.boundary_geojson ----
+const SQL_002 = fs.readFileSync(path.join(__dirname, '..', 'migrations', '002_farm_location_foundation.sql'), 'utf8');
+const SQL_002_NOCOMMENTS = SQL_002.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/--[^\n]*/g, ' ');
+
+test('002: farm_sites tiene boundary_geojson JSONB (nullable)', () => {
+  assert.ok(/\bboundary_geojson\s+JSONB\b/i.test(SQL_002_NOCOMMENTS), 'falta boundary_geojson JSONB');
+  // nullable = NO declara NOT NULL en esa columna
+  assert.ok(!/boundary_geojson\s+JSONB[^,]*\bNOT\s+NULL\b/i.test(SQL_002_NOCOMMENTS), 'boundary_geojson no debe ser NOT NULL');
+});
+
+test('002: CHECK de boundary_geojson (Polygon/MultiPolygon)', () => {
+  assert.ok(/farm_sites_boundary_type_chk/i.test(SQL_002_NOCOMMENTS), 'falta el CHECK con nombre');
+  assert.ok(/boundary_geojson->>'type'\s+IN\s*\(\s*'Polygon'\s*,\s*'MultiPolygon'\s*\)/i.test(SQL_002_NOCOMMENTS), 'CHECK no valida Polygon/MultiPolygon');
+  assert.ok(/jsonb_typeof\(boundary_geojson\)\s*=\s*'object'/i.test(SQL_002_NOCOMMENTS), 'CHECK no exige object JSONB');
+});
+
+test('002: geo_zones.polygon_geojson sigue intacto', () => {
+  assert.ok(/\bpolygon_geojson\s+JSONB\b/i.test(SQL_002_NOCOMMENTS), 'geo_zones.polygon_geojson debe seguir existiendo');
+  assert.ok(/geo_zones_geojson_type_chk/i.test(SQL_002_NOCOMMENTS), 'CHECK de geo_zones debe seguir existiendo');
+});
+
+test('002: sigue pasando la barrera aditiva (sin DROP/TRUNCATE/DELETE/UPDATE/ALTER…)', () => {
+  const bad = [/\bDROP\b/i, /\bTRUNCATE\b/i, /\bDELETE\s+FROM\b/i, /\bUPDATE\s+\w/i,
+    /\bALTER\s+TABLE\b[\s\S]*\bDROP\b/i, /\bALTER\s+TABLE\b[\s\S]*\bRENAME\b/i, /\bALTER\s+COLUMN\b/i, /\bSET\s+DATA\s+TYPE\b/i];
+  const hit = bad.find(r => r.test(SQL_002_NOCOMMENTS));
+  assert.ok(!hit, `token prohibido detectado: ${hit && hit.source}`);
+});
+
+test('normalized: farm_site usa boundary_geojson (no polygon_geojson); zones usan polygon_geojson', () => {
+  const { norm } = loadNorm();
+  assert.ok(norm.farm_site.boundary_geojson && norm.farm_site.boundary_geojson.type === 'Polygon', 'farm_site.boundary_geojson inválido');
+  assert.ok(!('polygon_geojson' in norm.farm_site), 'farm_site no debe tener polygon_geojson');
+  assert.strictEqual(norm.zones.length, 58, 'deben seguir siendo 58 zonas');
+  assert.ok(norm.zones.every(z => 'polygon_geojson' in z), 'todas las zonas usan polygon_geojson');
+  assert.ok(!norm.zones.some(z => 'boundary_geojson' in z), 'ninguna zona debe usar boundary_geojson');
+});
+
 console.log(`\nResultado: ${pass} OK, ${fail} fallos.\n`);
 process.exit(fail ? 1 : 0);

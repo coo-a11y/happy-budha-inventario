@@ -24,7 +24,13 @@ jerarquía puede tener la profundidad que se necesite.
 ## 2. Propósito de cada tabla
 
 - **`farm_sites`** — la finca/sede. Permite que HappyBuddha tenga **más de una finca** en el
-  futuro. Campos: `id, code, name, description?, active, created_at, updated_at`.
+  futuro. Campos: `id, code, name, description?, boundary_geojson?, active, created_at, updated_at`.
+  - **`boundary_geojson` (JSONB, nullable) = límite exterior de la finca/sede.** Guarda el
+    **perímetro** (el polígono `HB-FINCA-01 — Perímetro total HappyBuddha` del KML). CHECK: si
+    tiene valor, objeto JSONB con `type` Polygon/MultiPolygon. Sin PostGIS. WGS84/EPSG:4326,
+    `[longitude, latitude]`. **Uso futuro:** geocerca general, detección de entrada/salida de
+    finca y validación de que las zonas pertenecen razonablemente al sitio.
+  - **El perímetro NO se modela como una `geo_zone` aparte** — vive en `farm_sites.boundary_geojson`.
 - **`geo_zones`** — cualquier área física (campo, parcela, vivero, planta, área de secado,
   bodega, infraestructura…). Jerárquica (`parent_zone_id`). Guarda su polígono en
   `polygon_geojson` (JSONB). `zone_type` es **TEXT** (sin ENUM rígido) para conservar
@@ -100,6 +106,26 @@ y no añade dependencias.
 - Formato: **GeoJSON** estándar en `polygon_geojson JSONB`.
 - Sistema de referencia: **WGS84 / EPSG:4326**.
 - Orden de coordenadas: **[longitude, latitude]** (convención GeoJSON).
+
+## 6b. Límite de finca vs. zonas interiores, y jerarquía ≠ contención geométrica
+
+Separación de responsabilidades geográficas:
+
+- **`farm_sites.boundary_geojson`** = **límite exterior** de la finca/sede (perímetro). Uno por sede.
+- **`geo_zones.polygon_geojson`** = **áreas internas** físicas/operativas: Campo, C1–C38, Planta,
+  Nursery, Invernadero, reservorios, bodegas, cuartos, etc.
+
+**Decisión de diseño — `parent_zone_id` es jerarquía operativa/espacial, no contención estricta.**
+Que una zona sea hija de otra **no** exige que el 100% de su polígono esté físicamente contenido
+en el polígono del padre. Ejemplo real: **`HB-NURSERY → HB-PLANTA`** porque operativamente el
+Nursery forma parte de Planta, aunque sus polígonos no coincidan exactamente. Consecuencia futura:
+si un GPS cae dentro de `HB-NURSERY`, el sistema puede clasificar la ubicación específica como
+**Nursery** y, jerárquicamente, agregarla también a **Planta**.
+
+La **contención geométrica** (que el importador calcula y reporta) es una **señal de validación**,
+no una restricción obligatoria de la base de datos. La única regla de integridad estructural sobre
+la jerarquía sigue siendo la FK compuesta de **misma finca** (padre e hija en el mismo `farm_site`),
+que **no** cambia en esta fase.
 
 ## 7. Zona física ≠ labor realizada
 
