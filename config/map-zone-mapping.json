@@ -16,13 +16,13 @@
 
   "zones": {
     "Area de cultivo":              { "code": "HB-CAMPO",              "zone_type": "PRODUCTIVE_FIELD",  "parent_code": null },
-    "Area productiva de C1 - C4":   { "code": "HB-CAMPO-C1-C4",        "zone_type": "PRODUCTIVE_FIELD",  "parent_code": "HB-CAMPO", "review": true, "review_reason": "Zona de agrupación que se solapa con C1–C4; confirmar si debe existir como zona propia o solo como referencia." },
-    "ZONA EXPERIMENTAL":            { "code": "HB-ZONA-EXPERIMENTAL",  "zone_type": "PRODUCTIVE_FIELD",  "parent_code": null, "review": true, "review_reason": "Zona experimental: confirmar tipo y si depende del campo." },
+    "Area productiva de C1 - C4":   { "code": "HB-CAMPO-C1-C4",        "zone_type": "PRODUCTIVE_FIELD",  "parent_code": "HB-CAMPO" },
+    "ZONA EXPERIMENTAL":            { "code": "HB-ZONA-EXPERIMENTAL",  "zone_type": "PRODUCTIVE_FIELD",  "parent_code": "HB-CAMPO" },
 
-    "C1":  { "code": "HB-C1",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
-    "C2":  { "code": "HB-C2",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
-    "C3":  { "code": "HB-C3",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
-    "C4":  { "code": "HB-C4",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
+    "C1":  { "code": "HB-C1",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO-C1-C4" },
+    "C2":  { "code": "HB-C2",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO-C1-C4" },
+    "C3":  { "code": "HB-C3",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO-C1-C4" },
+    "C4":  { "code": "HB-C4",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO-C1-C4" },
     "C5":  { "code": "HB-C5",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
     "C6":  { "code": "HB-C6",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
     "C7":  { "code": "HB-C7",  "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
@@ -58,8 +58,8 @@
     "C37": { "code": "HB-C37", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
     "C38": { "code": "HB-C38", "zone_type": "PRODUCTIVE_FIELD", "parent_code": "HB-CAMPO" },
 
-    "Nursery":     { "code": "HB-NURSERY",     "zone_type": "NURSERY", "parent_code": null },
-    "Invernadero": { "code": "HB-INVERNADERO", "zone_type": "PRODUCTIVE_FIELD", "parent_code": null, "review": true, "review_reason": "Invernadero: no hay tipo exacto (¿NURSERY o PRODUCTIVE_FIELD?). Confirmar." },
+    "Nursery":     { "code": "HB-NURSERY",     "zone_type": "NURSERY", "parent_code": "HB-PLANTA" },
+    "Invernadero": { "code": "HB-INVERNADERO", "zone_type": "POSTHARVEST_PLANT", "parent_code": null },
 
     "Planta": { "code": "HB-PLANTA", "zone_type": "POSTHARVEST_PLANT", "parent_code": null },
 

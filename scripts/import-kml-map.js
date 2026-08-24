@@ -42,6 +42,15 @@ function parseKml(xml) {
     const nameM = body.match(/<name>([\s\S]*?)<\/name>/);
     const name = nameM ? decodeEntities(nameM[1]).trim() : '(sin nombre)';
     const isPolygon = /<Polygon\b/.test(body);
+
+    // Detección de geometría NO soportada: MultiGeometry / gx:MultiGeometry, o más de un
+    // <Polygon> en el mismo Placemark (MultiPolygon de facto). No se interpretan parcialmente.
+    const polyCount = (body.match(/<Polygon\b/g) || []).length;
+    const hasMultiGeometry = /<(gx:)?MultiGeometry\b/i.test(body);
+    const unsupported = hasMultiGeometry || polyCount > 1;
+    const geometry_kind = unsupported ? 'MULTIPOLYGON_OR_MULTIGEOMETRY'
+      : (isPolygon ? 'POLYGON' : 'NON_POLYGON');
+
     // Un Polygon puede tener outerBoundaryIs + innerBoundaryIs (huecos). Tomamos todos los rings.
     const rings = [];
     const outer = body.match(/<outerBoundaryIs>[\s\S]*?<coordinates>([\s\S]*?)<\/coordinates>[\s\S]*?<\/outerBoundaryIs>/);
@@ -54,7 +63,7 @@ function parseKml(xml) {
       const c = body.match(/<Polygon\b[\s\S]*?<coordinates>([\s\S]*?)<\/coordinates>/);
       if (c) rings.push({ kind: 'outer', coords: parseCoordString(c[1]) });
     }
-    placemarks.push({ name, isPolygon, rings });
+    placemarks.push({ name, isPolygon, rings, unsupported, geometry_kind });
   }
   return placemarks;
 }
@@ -131,6 +140,29 @@ function polygonsOverlap(ringA, ringB) {
   return false;
 }
 
+// Área de intersección aproximada (m²) por muestreo de una grilla sobre el bbox común.
+// Sin librerías: cuenta puntos que caen dentro de AMBOS polígonos. Es una ESTIMACIÓN,
+// suficiente para distinguir un roce/borde de un solape con área real.
+function approxIntersectionAreaM2(ringA, ringB, grid = 120) {
+  const ba = bbox(ringA), bb = bbox(ringB);
+  if (!bboxOverlap(ba, bb)) return 0;
+  const minx = Math.max(ba.minx, bb.minx), maxx = Math.min(ba.maxx, bb.maxx);
+  const miny = Math.max(ba.miny, bb.miny), maxy = Math.min(ba.maxy, bb.maxy);
+  if (maxx <= minx || maxy <= miny) return 0;
+  // Área del rectángulo de intersección en m² (equirectangular local)
+  const rectM2 = ringAreaM2([[minx, miny], [maxx, miny], [maxx, maxy], [minx, maxy], [minx, miny]]);
+  let inBoth = 0, total = 0;
+  for (let i = 0; i < grid; i++) {
+    const x = minx + (i + 0.5) * (maxx - minx) / grid;
+    for (let j = 0; j < grid; j++) {
+      const y = miny + (j + 0.5) * (maxy - miny) / grid;
+      total++;
+      if (pointInRing([x, y], ringA) && pointInRing([x, y], ringB)) inBoth++;
+    }
+  }
+  return total ? rectM2 * (inBoth / total) : 0;
+}
+
 function slug(s) {
   return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '')
     .toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -171,6 +203,27 @@ function main() {
     const outer = (pm.rings.find(r => r.kind === 'outer') || pm.rings[0]);
     const ring = outer ? outer.coords : [];
     geomByName[pm.name] = ring;
+
+    // Geometría NO soportada (MultiPolygon/MultiGeometry): se marca como ERROR y NO se
+    // interpreta parcialmente. La zona queda sin polígono y para revisión.
+    if (pm.unsupported) {
+      w('ERROR', `UNSUPPORTED_GEOMETRY en "${pm.name}": ${pm.geometry_kind}. No se interpreta parcialmente.`, pm.name);
+      const cfgU = zonesCfg[pm.name];
+      zones.push({
+        source_name: pm.name,
+        proposed_code: cfgU ? cfgU.code : 'HB-' + slug(pm.name),
+        proposed_name: pm.name,
+        proposed_zone_type: cfgU ? cfgU.zone_type : 'OTHER',
+        proposed_parent_code: (cfgU && cfgU.parent_code) || null,
+        _parent_explicit: !!(cfgU && cfgU.parent_code),
+        polygon_geojson: null,
+        geometry_kind: pm.geometry_kind,
+        source: SOURCE_TAG,
+        review: true,
+        review_reason: 'UNSUPPORTED_GEOMETRY: MultiPolygon/MultiGeometry no soportado; requiere manejo manual.',
+      });
+      continue;
+    }
 
     // Validaciones geométricas por placemark
     if (!pm.isPolygon) w('ERROR', `Placemark sin Polygon: "${pm.name}"`, pm.name);
@@ -276,6 +329,12 @@ function main() {
   }
 
   // Superposiciones entre zonas del MISMO nivel (mismo parent). Solo se reportan.
+  // Se clasifica cada solape por SEVERIDAD usando un área de intersección aproximada:
+  //  - TOUCH_OR_MINOR_OVERLAP: intersección < 2% del área de la zona más pequeña (probable
+  //    borde compartido o pequeño desajuste del dibujo manual).
+  //  - MEANINGFUL_OVERLAP: intersección >= 2% (área real solapada que merece revisión).
+  // NOTA: es una ESTIMACIÓN por muestreo; no corrige ni recorta geometrías.
+  const OVERLAP_MINOR_RATIO = 0.02;
   const overlaps = [];
   const byParent = {};
   zones.forEach(z => { const k = z.proposed_parent_code || '__ROOT__'; (byParent[k] = byParent[k] || []).push(z); });
@@ -284,11 +343,23 @@ function main() {
       const a = list[i], b = list[j];
       const ra = geomByCode[a.proposed_code], rb = geomByCode[b.proposed_code];
       if (ra && rb && polygonsOverlap(ra, rb)) {
-        overlaps.push({ level_parent: parent === '__ROOT__' ? null : parent, a: a.proposed_code, b: b.proposed_code });
+        const interM2 = approxIntersectionAreaM2(ra, rb);
+        const minArea = Math.max(1, Math.min(ringAreaM2(ra), ringAreaM2(rb)));
+        const ratio = interM2 / minArea;
+        const severity = ratio >= OVERLAP_MINOR_RATIO ? 'MEANINGFUL_OVERLAP' : 'TOUCH_OR_MINOR_OVERLAP';
+        overlaps.push({
+          level_parent: parent === '__ROOT__' ? null : parent,
+          a: a.proposed_code, b: b.proposed_code,
+          severity,
+          approx_intersection_m2: Math.round(interM2),
+          ratio_of_smaller: +ratio.toFixed(3),
+        });
       }
     }
   }
-  if (overlaps.length) w('WARN', `Se detectaron ${overlaps.length} superposición(es) entre zonas del mismo nivel (ver detalle). No se corrigen automáticamente.`);
+  const nMeaningful = overlaps.filter(o => o.severity === 'MEANINGFUL_OVERLAP').length;
+  const nMinor = overlaps.length - nMeaningful;
+  if (overlaps.length) w('WARN', `Se detectaron ${overlaps.length} superposición(es) entre zonas del mismo nivel: ${nMeaningful} MEANINGFUL_OVERLAP y ${nMinor} TOUCH_OR_MINOR_OVERLAP. Son advertencias para revisión futura (dibujo manual del KML), NO errores de importación. No se corrige ninguna geometría.`);
 
   // Zonas contenidas dentro de otras (informativo, cualquier par)
   const containedIn = [];
@@ -322,6 +393,7 @@ function main() {
     proposed_zone_type: z.proposed_zone_type,
     proposed_parent_code: z.proposed_parent_code,
     polygon_geojson: z.polygon_geojson,
+    geometry_kind: z.geometry_kind || 'POLYGON',
     source: z.source,
     review: z.review,
     review_reason: z.review_reason,
@@ -355,11 +427,18 @@ function main() {
       c_fields_range: cNums.length ? `C${cNums[0]}..C${cNums[cNums.length - 1]}` : null,
     },
     c39_c42_absent: [39, 40, 41, 42].every(n => !cNums.includes(n)),
+    unsupported_geometry: zonesOut.filter(z => z.geometry_kind && z.geometry_kind !== 'POLYGON').map(z => ({ zone: z.proposed_code, kind: z.geometry_kind })),
     zone_types_summary: zonesOut.reduce((acc, z) => { acc[z.proposed_zone_type] = (acc[z.proposed_zone_type] || 0) + 1; return acc; }, {}),
     hierarchy_parents: zonesOut.reduce((acc, z) => { const k = z.proposed_parent_code || '(raíz)'; (acc[k] = acc[k] || []).push(z.proposed_code); return acc; }, {}),
     containment_inferred_parents: containmentReport,
     zones_contained_in_others: containedIn,
     overlaps_same_level: overlaps,
+    overlaps_summary: {
+      total: overlaps.length,
+      MEANINGFUL_OVERLAP: overlaps.filter(o => o.severity === 'MEANINGFUL_OVERLAP').length,
+      TOUCH_OR_MINOR_OVERLAP: overlaps.filter(o => o.severity === 'TOUCH_OR_MINOR_OVERLAP').length,
+      nota: 'Estimación por muestreo. Advertencias para revisión futura (dibujo manual del KML), no errores de importación. No se corrige ninguna geometría.',
+    },
     requiere_revision: requiereRevision,
     warnings,
   };
@@ -376,7 +455,8 @@ function main() {
   console.log(`Finca: ${farmSite ? farmSite.code + ' (' + farmSite.name + ')' : 'NO DETECTADA'}`);
   console.log(`Campos C detectados: ${preview.totals.c_fields_detected} (${preview.totals.c_fields_range}) | C39–C42 ausentes: ${preview.c39_c42_absent ? 'sí ✅' : 'NO ❌'}`);
   console.log(`Tipos:`, preview.zone_types_summary);
-  console.log(`REQUIERE_REVISION: ${requiereRevision.length} | Superposiciones: ${overlaps.length} | Contenciones: ${containedIn.length}`);
+  console.log(`REQUIERE_REVISION: ${requiereRevision.length} | Superposiciones: ${overlaps.length} (MEANINGFUL: ${preview.overlaps_summary.MEANINGFUL_OVERLAP}, MINOR: ${preview.overlaps_summary.TOUCH_OR_MINOR_OVERLAP}) | Contenciones: ${containedIn.length}`);
+  console.log(`Geometrías no soportadas (MultiPolygon): ${preview.unsupported_geometry.length}`);
   console.log(`Warnings: ${warnings.length} (ERROR: ${warnings.filter(x => x.level === 'ERROR').length})`);
   console.log(`\nArchivos generados:\n  - ${path.relative(ROOT, NORMALIZED_OUT)}\n  - ${path.relative(ROOT, REPORT_JSON)}\n  - ${path.relative(ROOT, REPORT_MD)}`);
   console.log('\n(No se abrió conexión a PostgreSQL. No se insertó nada.)\n');
@@ -402,9 +482,14 @@ function buildMd(preview, normalized) {
   md += `\n## Zonas que REQUIEREN REVISIÓN\n\n`;
   if (!preview.requiere_revision.length) md += `- (ninguna)\n`;
   else preview.requiere_revision.forEach(r => md += `- **${r.zone}** (${r.source_name}): ${r.reason || 'revisar'}\n`);
+  md += `\n## Geometrías no soportadas (MultiPolygon/MultiGeometry)\n\n`;
+  if (!preview.unsupported_geometry.length) md += `- (ninguna — todos los Placemark son Polygon simples)\n`;
+  else preview.unsupported_geometry.forEach(u => md += `- **${u.zone}**: ${u.kind} → UNSUPPORTED_GEOMETRY (no interpretado)\n`);
   md += `\n## Superposiciones entre zonas del mismo nivel (solo reporte)\n\n`;
+  md += `Estimación por muestreo. Advertencias para revisión futura por el dibujo manual del KML; **no** son errores de importación y **no** se corrige ninguna geometría. `;
+  md += `Total: ${preview.overlaps_summary.total} · MEANINGFUL_OVERLAP: ${preview.overlaps_summary.MEANINGFUL_OVERLAP} · TOUCH_OR_MINOR_OVERLAP: ${preview.overlaps_summary.TOUCH_OR_MINOR_OVERLAP}.\n\n`;
   if (!preview.overlaps_same_level.length) md += `- (ninguna)\n`;
-  else preview.overlaps_same_level.forEach(o => md += `- ${o.a} ↔ ${o.b}${o.level_parent ? ' (bajo ' + o.level_parent + ')' : ' (nivel raíz)'}\n`);
+  else preview.overlaps_same_level.forEach(o => md += `- [${o.severity}] ${o.a} ↔ ${o.b}${o.level_parent ? ' (bajo ' + o.level_parent + ')' : ' (nivel raíz)'} · ≈${o.approx_intersection_m2} m² (${(o.ratio_of_smaller * 100).toFixed(1)}% de la menor)\n`);
   md += `\n## Zonas contenidas dentro de otras\n\n`;
   if (!preview.zones_contained_in_others.length) md += `- (ninguna)\n`;
   else preview.zones_contained_in_others.forEach(c => md += `- ${c.inner} dentro de ${c.outer}\n`);

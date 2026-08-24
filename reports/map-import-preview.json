@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-24T00:36:17.976Z",
+  "generated_at": "2026-08-24T11:50:13.311Z",
   "kml_file": "data/maps/happybudha-farm-map.kml",
   "totals": {
     "placemarks": 59,
@@ -11,22 +11,19 @@
     "c_fields_range": "C1..C38"
   },
   "c39_c42_absent": true,
+  "unsupported_geometry": [],
   "zone_types_summary": {
-    "PRODUCTIVE_FIELD": 42,
+    "PRODUCTIVE_FIELD": 41,
     "NURSERY": 1,
+    "POSTHARVEST_PLANT": 6,
     "WAREHOUSE": 4,
     "COMMON_AREA": 2,
     "WATER_INFRASTRUCTURE": 3,
-    "OFFICE": 1,
-    "POSTHARVEST_PLANT": 5
+    "OFFICE": 1
   },
   "hierarchy_parents": {
     "HB-CAMPO": [
       "HB-CAMPO-C1-C4",
-      "HB-C2",
-      "HB-C1",
-      "HB-C4",
-      "HB-C3",
       "HB-C5",
       "HB-C6",
       "HB-C7",
@@ -60,19 +57,19 @@
       "HB-C35",
       "HB-C36",
       "HB-C37",
-      "HB-C38"
+      "HB-C38",
+      "HB-ZONA-EXPERIMENTAL"
     ],
     "(raíz)": [
       "HB-CAMPO",
-      "HB-NURSERY",
       "HB-INVERNADERO",
       "HB-RESERVORIO-1",
       "HB-CUARTO-BOMBAS",
       "HB-RESERVORIO-2",
-      "HB-ZONA-EXPERIMENTAL",
       "HB-PLANTA"
     ],
     "HB-PLANTA": [
+      "HB-NURSERY",
       "HB-BODEGA-H1",
       "HB-CUARTO-INVENTARIO",
       "HB-CUARTO-TRABAJADORES",
@@ -84,6 +81,12 @@
       "HB-TRIMMING",
       "HB-CUARTOS-SECADO",
       "HB-BODEGA-BIOMASA"
+    ],
+    "HB-CAMPO-C1-C4": [
+      "HB-C2",
+      "HB-C1",
+      "HB-C4",
+      "HB-C3"
     ]
   },
   "containment_inferred_parents": [
@@ -332,192 +335,249 @@
   "overlaps_same_level": [
     {
       "level_parent": "HB-CAMPO",
-      "a": "HB-CAMPO-C1-C4",
-      "b": "HB-C2"
-    },
-    {
-      "level_parent": "HB-CAMPO",
-      "a": "HB-CAMPO-C1-C4",
-      "b": "HB-C1"
-    },
-    {
-      "level_parent": "HB-CAMPO",
-      "a": "HB-CAMPO-C1-C4",
-      "b": "HB-C4"
-    },
-    {
-      "level_parent": "HB-CAMPO",
-      "a": "HB-CAMPO-C1-C4",
-      "b": "HB-C3"
-    },
-    {
-      "level_parent": "HB-CAMPO",
-      "a": "HB-C2",
-      "b": "HB-C1"
-    },
-    {
-      "level_parent": "HB-CAMPO",
-      "a": "HB-C2",
-      "b": "HB-C3"
-    },
-    {
-      "level_parent": "HB-CAMPO",
-      "a": "HB-C1",
-      "b": "HB-C3"
-    },
-    {
-      "level_parent": "HB-CAMPO",
-      "a": "HB-C4",
-      "b": "HB-C3"
-    },
-    {
-      "level_parent": "HB-CAMPO",
       "a": "HB-C6",
-      "b": "HB-C7"
+      "b": "HB-C7",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 21,
+      "ratio_of_smaller": 0.002
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C10",
-      "b": "HB-C11"
+      "b": "HB-C11",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 0,
+      "ratio_of_smaller": 0
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C10",
-      "b": "HB-C14"
+      "b": "HB-C14",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 1,
+      "ratio_of_smaller": 0
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C11",
-      "b": "HB-C14"
+      "b": "HB-C14",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 8,
+      "ratio_of_smaller": 0.001
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C13",
-      "b": "HB-C14"
+      "b": "HB-C14",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 27,
+      "ratio_of_smaller": 0.003
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C15",
-      "b": "HB-C16"
+      "b": "HB-C16",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 58,
+      "ratio_of_smaller": 0.006
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C16",
-      "b": "HB-C17"
+      "b": "HB-C17",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 7,
+      "ratio_of_smaller": 0.001
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C17",
-      "b": "HB-C18"
+      "b": "HB-C18",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 18,
+      "ratio_of_smaller": 0.002
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C18",
-      "b": "HB-C19"
+      "b": "HB-C19",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 194,
+      "ratio_of_smaller": 0.019
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C20",
-      "b": "HB-C21"
+      "b": "HB-C21",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 49,
+      "ratio_of_smaller": 0.005
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C21",
-      "b": "HB-C22"
+      "b": "HB-C22",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 145,
+      "ratio_of_smaller": 0.014
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C23",
-      "b": "HB-C24"
+      "b": "HB-C24",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 19,
+      "ratio_of_smaller": 0.002
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C26",
-      "b": "HB-C27"
+      "b": "HB-C27",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 193,
+      "ratio_of_smaller": 0.019
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C30",
-      "b": "HB-C31"
+      "b": "HB-C31",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 47,
+      "ratio_of_smaller": 0.004
     },
     {
       "level_parent": "HB-CAMPO",
       "a": "HB-C31",
-      "b": "HB-C32"
+      "b": "HB-C32",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 3,
+      "ratio_of_smaller": 0
     },
     {
-      "level_parent": null,
-      "a": "HB-CAMPO",
-      "b": "HB-ZONA-EXPERIMENTAL"
-    },
-    {
-      "level_parent": null,
+      "level_parent": "HB-PLANTA",
       "a": "HB-NURSERY",
-      "b": "HB-PLANTA"
+      "b": "HB-BODEGA-BIOFERT",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 0,
+      "ratio_of_smaller": 0.009
+    },
+    {
+      "level_parent": "HB-PLANTA",
+      "a": "HB-NURSERY",
+      "b": "HB-OFICINA",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 0,
+      "ratio_of_smaller": 0.001
     },
     {
       "level_parent": "HB-PLANTA",
       "a": "HB-CUARTO-INVENTARIO",
-      "b": "HB-BANOS"
+      "b": "HB-BANOS",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 0,
+      "ratio_of_smaller": 0.003
     },
     {
       "level_parent": "HB-PLANTA",
       "a": "HB-CUARTO-TRABAJADORES",
-      "b": "HB-BODEGA-BIOFERT"
+      "b": "HB-BODEGA-BIOFERT",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 0,
+      "ratio_of_smaller": 0.011
     },
     {
       "level_parent": "HB-PLANTA",
       "a": "HB-CUARTO-TRABAJADORES",
-      "b": "HB-RECEPCION-CBD"
+      "b": "HB-RECEPCION-CBD",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 0,
+      "ratio_of_smaller": 0.002
     },
     {
       "level_parent": "HB-PLANTA",
       "a": "HB-BODEGA-BIOFERT",
-      "b": "HB-RECEPCION-CBD"
+      "b": "HB-RECEPCION-CBD",
+      "severity": "MEANINGFUL_OVERLAP",
+      "approx_intersection_m2": 1,
+      "ratio_of_smaller": 0.026
     },
     {
       "level_parent": "HB-PLANTA",
       "a": "HB-RECEPCION-CBD",
-      "b": "HB-CUARTOS-SECADO"
+      "b": "HB-CUARTOS-SECADO",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 0,
+      "ratio_of_smaller": 0.002
     },
     {
       "level_parent": "HB-PLANTA",
       "a": "HB-TRIMMING",
-      "b": "HB-CUARTOS-SECADO"
+      "b": "HB-CUARTOS-SECADO",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 0,
+      "ratio_of_smaller": 0
     },
     {
       "level_parent": "HB-PLANTA",
       "a": "HB-TRIMMING",
-      "b": "HB-BODEGA-BIOMASA"
+      "b": "HB-BODEGA-BIOMASA",
+      "severity": "MEANINGFUL_OVERLAP",
+      "approx_intersection_m2": 4,
+      "ratio_of_smaller": 0.023
     },
     {
       "level_parent": "HB-PLANTA",
       "a": "HB-CUARTOS-SECADO",
-      "b": "HB-BODEGA-BIOMASA"
-    }
-  ],
-  "requiere_revision": [
-    {
-      "zone": "HB-CAMPO-C1-C4",
-      "source_name": "Area productiva de C1 - C4",
-      "reason": "Zona de agrupación que se solapa con C1–C4; confirmar si debe existir como zona propia o solo como referencia."
+      "b": "HB-BODEGA-BIOMASA",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 1,
+      "ratio_of_smaller": 0.004
     },
     {
-      "zone": "HB-INVERNADERO",
-      "source_name": "Invernadero",
-      "reason": "Invernadero: no hay tipo exacto (¿NURSERY o PRODUCTIVE_FIELD?). Confirmar."
+      "level_parent": "HB-CAMPO-C1-C4",
+      "a": "HB-C2",
+      "b": "HB-C1",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 89,
+      "ratio_of_smaller": 0.005
     },
     {
-      "zone": "HB-ZONA-EXPERIMENTAL",
-      "source_name": "ZONA EXPERIMENTAL",
-      "reason": "Zona experimental: confirmar tipo y si depende del campo."
+      "level_parent": "HB-CAMPO-C1-C4",
+      "a": "HB-C2",
+      "b": "HB-C3",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 0,
+      "ratio_of_smaller": 0
+    },
+    {
+      "level_parent": "HB-CAMPO-C1-C4",
+      "a": "HB-C1",
+      "b": "HB-C3",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 5,
+      "ratio_of_smaller": 0
+    },
+    {
+      "level_parent": "HB-CAMPO-C1-C4",
+      "a": "HB-C4",
+      "b": "HB-C3",
+      "severity": "TOUCH_OR_MINOR_OVERLAP",
+      "approx_intersection_m2": 5,
+      "ratio_of_smaller": 0
     }
   ],
+  "overlaps_summary": {
+    "total": 29,
+    "MEANINGFUL_OVERLAP": 2,
+    "TOUCH_OR_MINOR_OVERLAP": 27,
+    "nota": "Estimación por muestreo. Advertencias para revisión futura (dibujo manual del KML), no errores de importación. No se corrige ninguna geometría."
+  },
+  "requiere_revision": [],
   "warnings": [
     {
       "level": "WARN",
       "zone": null,
-      "msg": "Se detectaron 33 superposición(es) entre zonas del mismo nivel (ver detalle). No se corrigen automáticamente."
+      "msg": "Se detectaron 29 superposición(es) entre zonas del mismo nivel: 2 MEANINGFUL_OVERLAP y 27 TOUCH_OR_MINOR_OVERLAP. Son advertencias para revisión futura (dibujo manual del KML), NO errores de importación. No se corrige ninguna geometría."
     }
   ]
 }

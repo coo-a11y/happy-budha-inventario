@@ -1,6 +1,6 @@
 {
   "source": "KML_MAP_V1",
-  "generated_at": "2026-08-24T00:36:17.976Z",
+  "generated_at": "2026-08-24T11:50:13.311Z",
   "crs": "WGS84 / EPSG:4326",
   "coordinate_order": "[longitude, latitude]",
   "note": "Propuesta de importación. NO se ha escrito nada en PostgreSQL. IDs de BD se asignarán al importar en una fase futura autorizada.",
@@ -183,9 +183,10 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
-      "review": true,
-      "review_reason": "Zona de agrupación que se solapa con C1–C4; confirmar si debe existir como zona propia o solo como referencia.",
+      "review": false,
+      "review_reason": null,
       "approx_area_m2": 62280
     },
     {
@@ -317,6 +318,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -327,7 +329,7 @@
       "proposed_code": "HB-NURSERY",
       "proposed_name": "Nursery",
       "proposed_zone_type": "NURSERY",
-      "proposed_parent_code": null,
+      "proposed_parent_code": "HB-PLANTA",
       "polygon_geojson": {
         "type": "Polygon",
         "coordinates": [
@@ -375,6 +377,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -384,7 +387,7 @@
       "source_name": "Invernadero",
       "proposed_code": "HB-INVERNADERO",
       "proposed_name": "Invernadero",
-      "proposed_zone_type": "PRODUCTIVE_FIELD",
+      "proposed_zone_type": "POSTHARVEST_PLANT",
       "proposed_parent_code": null,
       "polygon_geojson": {
         "type": "Polygon",
@@ -421,9 +424,10 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
-      "review": true,
-      "review_reason": "Invernadero: no hay tipo exacto (¿NURSERY o PRODUCTIVE_FIELD?). Confirmar.",
+      "review": false,
+      "review_reason": null,
       "approx_area_m2": 4976
     },
     {
@@ -463,6 +467,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -513,6 +518,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -551,6 +557,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -589,6 +596,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -627,6 +635,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -665,6 +674,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -707,6 +717,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -749,6 +760,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -791,6 +803,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -829,6 +842,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -867,6 +881,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -905,6 +920,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -943,6 +959,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -981,6 +998,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -991,7 +1009,7 @@
       "proposed_code": "HB-C2",
       "proposed_name": "C2",
       "proposed_zone_type": "PRODUCTIVE_FIELD",
-      "proposed_parent_code": "HB-CAMPO",
+      "proposed_parent_code": "HB-CAMPO-C1-C4",
       "polygon_geojson": {
         "type": "Polygon",
         "coordinates": [
@@ -1031,6 +1049,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1041,7 +1060,7 @@
       "proposed_code": "HB-C1",
       "proposed_name": "C1",
       "proposed_zone_type": "PRODUCTIVE_FIELD",
-      "proposed_parent_code": "HB-CAMPO",
+      "proposed_parent_code": "HB-CAMPO-C1-C4",
       "polygon_geojson": {
         "type": "Polygon",
         "coordinates": [
@@ -1069,6 +1088,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1079,7 +1099,7 @@
       "proposed_code": "HB-C4",
       "proposed_name": "C4",
       "proposed_zone_type": "PRODUCTIVE_FIELD",
-      "proposed_parent_code": "HB-CAMPO",
+      "proposed_parent_code": "HB-CAMPO-C1-C4",
       "polygon_geojson": {
         "type": "Polygon",
         "coordinates": [
@@ -1115,6 +1135,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1125,7 +1146,7 @@
       "proposed_code": "HB-C3",
       "proposed_name": "C3",
       "proposed_zone_type": "PRODUCTIVE_FIELD",
-      "proposed_parent_code": "HB-CAMPO",
+      "proposed_parent_code": "HB-CAMPO-C1-C4",
       "polygon_geojson": {
         "type": "Polygon",
         "coordinates": [
@@ -1153,6 +1174,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1191,6 +1213,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1229,6 +1252,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1267,6 +1291,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1305,6 +1330,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1343,6 +1369,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1381,6 +1408,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1419,6 +1447,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1457,6 +1486,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1495,6 +1525,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1533,6 +1564,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1571,6 +1603,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1609,6 +1642,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1647,6 +1681,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1685,6 +1720,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1723,6 +1759,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1761,6 +1798,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1799,6 +1837,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1841,6 +1880,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1879,6 +1919,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1917,6 +1958,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1955,6 +1997,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -1993,6 +2036,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2031,6 +2075,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2069,6 +2114,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2107,6 +2153,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2145,6 +2192,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2183,6 +2231,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2221,6 +2270,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2259,6 +2309,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2301,6 +2352,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2339,6 +2391,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2381,6 +2434,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2419,6 +2473,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2461,6 +2516,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,
@@ -2471,7 +2527,7 @@
       "proposed_code": "HB-ZONA-EXPERIMENTAL",
       "proposed_name": "ZONA EXPERIMENTAL",
       "proposed_zone_type": "PRODUCTIVE_FIELD",
-      "proposed_parent_code": null,
+      "proposed_parent_code": "HB-CAMPO",
       "polygon_geojson": {
         "type": "Polygon",
         "coordinates": [
@@ -2499,9 +2555,10 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
-      "review": true,
-      "review_reason": "Zona experimental: confirmar tipo y si depende del campo.",
+      "review": false,
+      "review_reason": null,
       "approx_area_m2": 6535
     },
     {
@@ -2573,6 +2630,7 @@
           ]
         ]
       },
+      "geometry_kind": "POLYGON",
       "source": "KML_MAP_V1",
       "review": false,
       "review_reason": null,

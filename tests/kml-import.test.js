@@ -95,9 +95,32 @@ test('Cuarto de congelación contenido geométricamente en Planta', () => {
   assert.ok(c.inside, `Cuarto de congelación no resultó contenido en Planta (fracción vértices dentro: ${(c.frac * 100).toFixed(0)}%)`);
 });
 
-// Chequeos sobre la salida normalizada (si existe / se puede generar)
-test('normalized.json y preview reflejan finca + 58 zonas + 38 aliases', () => {
-  // Regenerar de forma segura ejecutando el importador en dry-run
+test('MultiPolygon/MultiGeometry NO se interpreta parcialmente (se marca unsupported)', () => {
+  const fake = `<kml><Placemark><name>ZonaMulti</name><MultiGeometry>
+    <Polygon><outerBoundaryIs><LinearRing><coordinates>-1,-1,0 -1,0,0 0,0,0 -1,-1,0</coordinates></LinearRing></outerBoundaryIs></Polygon>
+    <Polygon><outerBoundaryIs><LinearRing><coordinates>2,2,0 2,3,0 3,3,0 2,2,0</coordinates></LinearRing></outerBoundaryIs></Polygon>
+  </MultiGeometry></Placemark></kml>`;
+  const pms = K.parseKml(fake);
+  assert.strictEqual(pms.length, 1);
+  assert.strictEqual(pms[0].unsupported, true, 'debería marcarse unsupported');
+  assert.strictEqual(pms[0].geometry_kind, 'MULTIPOLYGON_OR_MULTIGEOMETRY');
+});
+
+test('El importador NO modifica las coordenadas del KML (archivo intacto)', () => {
+  const before = fs.readFileSync(K.KML_PATH);
+  require('child_process').execSync('node ' + JSON.stringify(path.join(__dirname, '..', 'scripts', 'import-kml-map.js')) + ' --dry-run', { stdio: 'ignore' });
+  const after = fs.readFileSync(K.KML_PATH);
+  assert.ok(before.equals(after), 'el KML cambió tras ejecutar el importador');
+});
+
+test('Cero conexión a PostgreSQL (el importador no usa pg ni DATABASE_URL)', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'import-kml-map.js'), 'utf8');
+  assert.ok(!/require\(\s*['"]pg['"]\s*\)/.test(src), 'no debe requerir "pg"');
+  assert.ok(!/DATABASE_URL/.test(src), 'no debe referenciar DATABASE_URL');
+});
+
+// Chequeos sobre la salida normalizada (jerarquía y clasificación finales)
+test('normalized.json: finca + 58 zonas + 38 aliases, REQUIERE_REVISION = 0', () => {
   require('child_process').execSync('node ' + JSON.stringify(path.join(__dirname, '..', 'scripts', 'import-kml-map.js')) + ' --dry-run', { stdio: 'ignore' });
   const norm = JSON.parse(fs.readFileSync(K.NORMALIZED_OUT, 'utf8'));
   assert.ok(norm.farm_site && norm.farm_site.code === 'HB-FINCA-01', 'finca incorrecta');
@@ -105,6 +128,53 @@ test('normalized.json y preview reflejan finca + 58 zonas + 38 aliases', () => {
   assert.strictEqual(norm.alias_proposals.length, 38, `esperados 38 aliases, ${norm.alias_proposals.length}`);
   assert.strictEqual(norm.crs, 'WGS84 / EPSG:4326');
   assert.strictEqual(norm.coordinate_order, '[longitude, latitude]');
+  assert.strictEqual(norm.zones.filter(z => z.review).length, 0, 'REQUIERE_REVISION debe ser 0');
+});
+
+// Helpers de clasificación sobre normalized.json
+function loadNorm() {
+  require('child_process').execSync('node ' + JSON.stringify(path.join(__dirname, '..', 'scripts', 'import-kml-map.js')) + ' --dry-run', { stdio: 'ignore' });
+  const norm = JSON.parse(fs.readFileSync(K.NORMALIZED_OUT, 'utf8'));
+  const byCode = {}; norm.zones.forEach(z => byCode[z.proposed_code] = z);
+  return { norm, byCode };
+}
+
+test('Nursery → HB-PLANTA (NURSERY)', () => {
+  const { byCode } = loadNorm();
+  assert.strictEqual(byCode['HB-NURSERY'].proposed_zone_type, 'NURSERY');
+  assert.strictEqual(byCode['HB-NURSERY'].proposed_parent_code, 'HB-PLANTA');
+});
+
+test('Invernadero → POSTHARVEST_PLANT, raíz, sin REQUIERE_REVISION', () => {
+  const { byCode } = loadNorm();
+  assert.strictEqual(byCode['HB-INVERNADERO'].proposed_zone_type, 'POSTHARVEST_PLANT');
+  assert.strictEqual(byCode['HB-INVERNADERO'].proposed_parent_code, null);
+  assert.strictEqual(byCode['HB-INVERNADERO'].review, false);
+});
+
+test('Zona Experimental → HB-CAMPO (PRODUCTIVE_FIELD)', () => {
+  const { byCode } = loadNorm();
+  assert.strictEqual(byCode['HB-ZONA-EXPERIMENTAL'].proposed_zone_type, 'PRODUCTIVE_FIELD');
+  assert.strictEqual(byCode['HB-ZONA-EXPERIMENTAL'].proposed_parent_code, 'HB-CAMPO');
+});
+
+test('C1–C4 → HB-CAMPO-C1-C4  y  C5–C38 → HB-CAMPO', () => {
+  const { byCode } = loadNorm();
+  for (const n of [1, 2, 3, 4]) assert.strictEqual(byCode['HB-C' + n].proposed_parent_code, 'HB-CAMPO-C1-C4', `C${n} mal ubicado`);
+  for (let n = 5; n <= 38; n++) assert.strictEqual(byCode['HB-C' + n].proposed_parent_code, 'HB-CAMPO', `C${n} mal ubicado`);
+});
+
+test('HB-CAMPO-C1-C4 sin REQUIERE_REVISION y bajo HB-CAMPO', () => {
+  const { byCode } = loadNorm();
+  assert.strictEqual(byCode['HB-CAMPO-C1-C4'].review, false);
+  assert.strictEqual(byCode['HB-CAMPO-C1-C4'].proposed_parent_code, 'HB-CAMPO');
+});
+
+test('Reporte de superposiciones distingue severidad', () => {
+  const preview = JSON.parse(fs.readFileSync(K.REPORT_JSON, 'utf8'));
+  assert.ok(preview.overlaps_summary, 'falta overlaps_summary');
+  const kinds = new Set(preview.overlaps_same_level.map(o => o.severity));
+  kinds.forEach(k => assert.ok(['MEANINGFUL_OVERLAP', 'TOUCH_OR_MINOR_OVERLAP'].includes(k), `severidad inválida: ${k}`));
 });
 
 console.log(`\nResultado: ${pass} OK, ${fail} fallos.\n`);
