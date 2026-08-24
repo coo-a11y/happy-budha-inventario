@@ -25,8 +25,8 @@ CREATE TABLE IF NOT EXISTS farm_sites (
   -- las zonas pertenecen razonablemente al sitio.
   boundary_geojson JSONB,
   active      BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   -- Si boundary_geojson tiene contenido, debe ser objeto JSONB con type Polygon/MultiPolygon.
   CONSTRAINT farm_sites_boundary_type_chk CHECK (
     boundary_geojson IS NULL OR (
@@ -50,8 +50,8 @@ CREATE TABLE IF NOT EXISTS geo_zones (
   polygon_geojson JSONB,
   active          BOOLEAN NOT NULL DEFAULT TRUE,
   notes           TEXT,
-  created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   -- Códigos únicos por finca
   CONSTRAINT geo_zones_site_code_uniq UNIQUE (farm_site_id, code),
   -- Clave única compuesta que sirve de destino a la FK compuesta de jerarquía
@@ -71,7 +71,10 @@ CREATE TABLE IF NOT EXISTS geo_zones (
       jsonb_typeof(polygon_geojson) = 'object'
       AND polygon_geojson->>'type' IN ('Polygon', 'MultiPolygon')
     )
-  )
+  ),
+  -- Impide que una zona sea padre directo de sí misma. (La detección de ciclos jerárquicos
+  -- más complejos corresponde a la capa de aplicación/importación, no a esta migración.)
+  CONSTRAINT geo_zones_no_self_parent_chk CHECK (parent_zone_id IS NULL OR parent_zone_id <> id)
 );
 
 -- ------------------------------------------------------------------
@@ -84,7 +87,7 @@ CREATE TABLE IF NOT EXISTS geo_zone_aliases (
   alias          TEXT NOT NULL,
   source_context TEXT,
   active         BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ------------------------------------------------------------------
@@ -96,8 +99,8 @@ CREATE TABLE IF NOT EXISTS workers (
   full_name     TEXT NOT NULL,
   active        BOOLEAN NOT NULL DEFAULT TRUE,
   notes         TEXT,
-  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ------------------------------------------------------------------
@@ -112,9 +115,9 @@ CREATE TABLE IF NOT EXISTS worker_devices (
   device_model  TEXT,
   app_version   TEXT,
   active        BOOLEAN NOT NULL DEFAULT TRUE,
-  first_seen_at TIMESTAMP,
-  last_seen_at  TIMESTAMP,
-  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  first_seen_at TIMESTAMPTZ,
+  last_seen_at  TIMESTAMPTZ,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ------------------------------------------------------------------
@@ -132,3 +135,9 @@ CREATE INDEX IF NOT EXISTS idx_worker_devices_worker  ON worker_devices (worker_
 -- (los NULL no compiten entre sí).
 CREATE UNIQUE INDEX IF NOT EXISTS uq_workers_employee_code
   ON workers (employee_code) WHERE employee_code IS NOT NULL;
+
+-- Evita alias EXACTAMENTE duplicados para la misma zona y contexto. Se usa
+-- COALESCE(source_context,'') para tratar NULL de forma consistente (NULL = '').
+-- NO se hace alias globalmente único: distintas fincas pueden reutilizar 'C1', etc.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_geo_zone_aliases_zone_alias_ctx
+  ON geo_zone_aliases (geo_zone_id, alias, COALESCE(source_context, ''));

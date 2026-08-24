@@ -205,6 +205,34 @@ test('002: sigue pasando la barrera aditiva (sin DROP/TRUNCATE/DELETE/UPDATE/ALT
   assert.ok(!hit, `token prohibido detectado: ${hit && hit.source}`);
 });
 
+test('002: todos los timestamps nuevos son TIMESTAMPTZ (ninguno TIMESTAMP pelado)', () => {
+  // Quitar CURRENT_TIMESTAMP (contiene "TIMESTAMP" pero es un default, no un tipo)
+  const sinDefault = SQL_002_NOCOMMENTS.replace(/CURRENT_TIMESTAMP/g, ' ');
+  const bareTimestamp = sinDefault.match(/\bTIMESTAMP\b(?!TZ)/g) || [];
+  assert.strictEqual(bareTimestamp.length, 0, `hay ${bareTimestamp.length} TIMESTAMP sin TZ`);
+  const tz = SQL_002_NOCOMMENTS.match(/\bTIMESTAMPTZ\b/g) || [];
+  assert.strictEqual(tz.length, 10, `esperados 10 TIMESTAMPTZ, hay ${tz.length}`);
+});
+
+test('002: CHECK que impide auto-padre (parent_zone_id <> id)', () => {
+  assert.ok(/geo_zones_no_self_parent_chk/i.test(SQL_002_NOCOMMENTS), 'falta el constraint nombrado');
+  assert.ok(/CHECK\s*\(\s*parent_zone_id\s+IS\s+NULL\s+OR\s+parent_zone_id\s*<>\s*id\s*\)/i.test(SQL_002_NOCOMMENTS), 'CHECK auto-padre mal formado');
+});
+
+test('002: índice único de alias por (geo_zone_id, alias, COALESCE(source_context,\'\'))', () => {
+  assert.ok(/uq_geo_zone_aliases_zone_alias_ctx/i.test(SQL_002_NOCOMMENTS), 'falta el índice único de alias');
+  assert.ok(/CREATE\s+UNIQUE\s+INDEX[\s\S]*geo_zone_aliases\s*\(\s*geo_zone_id\s*,\s*alias\s*,\s*COALESCE\(\s*source_context\s*,\s*''\s*\)\s*\)/i.test(SQL_002_NOCOMMENTS), 'la expresión del índice no es la esperada');
+  // alias NO debe ser globalmente único (distintas fincas pueden repetir 'C1')
+  assert.ok(!/\balias\s+TEXT\s+NOT\s+NULL\s+UNIQUE\b/i.test(SQL_002_NOCOMMENTS), 'alias no debe ser UNIQUE global');
+});
+
+test('002: se conservan las 5 tablas, FK compuesta misma finca y sin CASCADE', () => {
+  for (const t of ['farm_sites', 'geo_zones', 'geo_zone_aliases', 'workers', 'worker_devices'])
+    assert.ok(new RegExp('CREATE TABLE IF NOT EXISTS ' + t + '\\b', 'i').test(SQL_002_NOCOMMENTS), `falta tabla ${t}`);
+  assert.ok(/geo_zones_parent_same_site_fk/i.test(SQL_002_NOCOMMENTS), 'falta FK compuesta misma finca');
+  assert.ok(!/ON\s+DELETE\s+CASCADE/i.test(SQL_002_NOCOMMENTS), 'no debe haber CASCADE');
+});
+
 test('normalized: farm_site usa boundary_geojson (no polygon_geojson); zones usan polygon_geojson', () => {
   const { norm } = loadNorm();
   assert.ok(norm.farm_site.boundary_geojson && norm.farm_site.boundary_geojson.type === 'Polygon', 'farm_site.boundary_geojson inválido');
