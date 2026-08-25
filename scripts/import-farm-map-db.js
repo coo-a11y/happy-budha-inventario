@@ -270,6 +270,11 @@ async function verifyImportedMap(q, farmCode) {
     WHERE z.farm_site_id = $1 AND a.alias ~ '^C[0-9]+$' AND z.code <> ('HB-' || a.alias)`, [farmId]);
   add('cada C# → HB-C# exacto', mism.c === 0, `desalineados=${mism.c}`);
 
+  // source_context = 'general' para los 38 aliases C1–C38
+  const ctx = await one(`SELECT COUNT(*)::int c FROM geo_zone_aliases a JOIN geo_zones z ON z.id = a.geo_zone_id
+    WHERE z.farm_site_id = $1 AND a.alias ~ '^C([1-9]|[12][0-9]|3[0-8])$' AND a.source_context = 'general'`, [farmId]);
+  add('aliases C1–C38 con source_context general = 38', ctx.c === 38, `count=${ctx.c}`);
+
   // C39–C42 aliases ausentes
   const c39 = await one(`SELECT COUNT(*)::int c FROM geo_zone_aliases a JOIN geo_zones z ON z.id = a.geo_zone_id
     WHERE z.farm_site_id = $1 AND a.alias IN ('C39','C40','C41','C42')`, [farmId]);
@@ -359,11 +364,13 @@ async function runApply(norm, env) {
   const client = await pool.connect();
   const counters = { farm_sites_inserted: 0, farm_sites_matched: 0, zones_inserted: 0, zones_matched: 0, aliases_inserted: 0, aliases_matched: 0 };
   const cq = (sql, params) => client.query(sql, params);
+  let transactionStarted = false;
   try {
     // IDENTIDAD DE LA BASE TEST — solo lectura, ANTES de cualquier escritura o BEGIN.
     await assertTestDatabaseIdentity(cq, env.FARM_OS_TEST_DB_NAME);
 
     await client.query('BEGIN');
+    transactionStarted = true;
 
     // farm_site (idempotente por code)
     const fsProp = norm.farm_site;
@@ -417,8 +424,14 @@ async function runApply(norm, env) {
     console.log('✅ Importación aplicada en TEST (transacción COMMIT).');
     console.log('Contadores de idempotencia:', JSON.stringify(counters));
   } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('⛔ ROLLBACK — no se dejó ninguna importación parcial:', err.message);
+    // ROLLBACK únicamente si la transacción llegó a iniciarse (BEGIN). Si la identidad de
+    // DB falla antes de BEGIN, se aborta sin ROLLBACK (no hay transacción abierta).
+    if (transactionStarted) {
+      await client.query('ROLLBACK');
+      console.error('⛔ ROLLBACK — no se dejó ninguna importación parcial:', err.message);
+    } else {
+      console.error('⛔ ABORTADO antes de iniciar transacción (sin ROLLBACK):', err.message);
+    }
     process.exitCode = 1;
   } finally {
     client.release();

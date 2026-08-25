@@ -12,10 +12,23 @@ const path = require('path');
 const cp = require('child_process');
 const M = require('../scripts/import-farm-map-db.js');
 
+// Runner que ESPERA de verdad las pruebas async: se registran y luego se ejecutan
+// secuencialmente con await. Ninguna promesa queda sin awaited.
 let pass = 0, fail = 0;
-function test(name, fn) {
-  try { fn(); console.log(`  ✅ ${name}`); pass++; }
-  catch (e) { console.log(`  ❌ ${name}\n       ${e.message}`); fail++; }
+const tests = [];
+function test(name, fn) { tests.push({ name, fn }); }
+
+// No silenciar rechazos ni errores async no capturados.
+process.on('unhandledRejection', (err) => { console.error('❌ unhandledRejection:', err && err.message || err); process.exit(1); });
+process.on('uncaughtException', (err) => { console.error('❌ uncaughtException:', err && err.message || err); process.exit(1); });
+
+async function runTests() {
+  for (const t of tests) {
+    try { await t.fn(); console.log(`  ✅ ${t.name}`); pass++; }
+    catch (e) { console.log(`  ❌ ${t.name}\n       ${e.message}`); fail++; }
+  }
+  console.log(`\nResultado: ${pass} OK, ${fail} fallos.\n`);
+  process.exit(fail ? 1 : 0);
 }
 
 const SCRIPT = path.join(__dirname, '..', 'scripts', 'import-farm-map-db.js');
@@ -222,13 +235,15 @@ function makeDbMock(overrides = {}) {
   const parents = { 'HB-NURSERY': 'HB-PLANTA', 'HB-ZONA-EXPERIMENTAL': 'HB-CAMPO' };
   for (const n of [1, 2, 3, 4]) parents['HB-C' + n] = 'HB-CAMPO-C1-C4';
   for (let n = 5; n <= 38; n++) parents['HB-C' + n] = 'HB-CAMPO';
-  const cfg = Object.assign({ fincaCount: 1, boundary: { type: 'Polygon' }, zones: 58, nullPoly: 0, aliases38: 38, mismatch: 0, c39: 0, invType: 'POSTHARVEST_PLANT', selfParent: 0, crossFarm: 0, dupCodes: 0, dupAliases: 0 }, overrides);
+  const cfg = Object.assign({ fincaCount: 1, boundary: { type: 'Polygon' }, zones: 58, nullPoly: 0, aliases38: 38, ctxGeneral: 38, mismatch: 0, c39: 0, invType: 'POSTHARVEST_PLANT', selfParent: 0, crossFarm: 0, dupCodes: 0, dupAliases: 0 }, overrides);
   return async (sql, params = []) => {
     const r = (o) => ({ rows: [o] });
+    if (/current_database\(\)/.test(sql)) return r({ db_name: 'hb_farm_os_test' });
     if (/COUNT\(\*\)::int c FROM farm_sites WHERE code/.test(sql)) return r({ c: cfg.fincaCount });
     if (/SELECT id, code, boundary_geojson FROM farm_sites/.test(sql)) return r({ id: 1, code: 'HB-FINCA-01', boundary_geojson: cfg.boundary });
     if (/COUNT\(\*\)::int c FROM geo_zones WHERE farm_site_id = \$1 AND polygon_geojson IS NULL/.test(sql)) return r({ c: cfg.nullPoly });
     if (/COUNT\(\*\)::int c FROM geo_zones WHERE farm_site_id/.test(sql)) return r({ c: cfg.zones });
+    if (/source_context = 'general'/.test(sql)) return r({ c: cfg.ctxGeneral });
     if (/JOIN geo_zones z[\s\S]*alias ~ '\^C\(/.test(sql)) return r({ c: cfg.aliases38 });
     if (/z\.code <> \('HB-' \|\| a\.alias\)/.test(sql)) return r({ c: cfg.mismatch });
     if (/alias IN \('C39'/.test(sql)) return r({ c: cfg.c39 });
@@ -253,6 +268,11 @@ test('verifyImportedMap: si Invernadero no es POSTHARVEST_PLANT → NO ok', asyn
   const res = await M.verifyImportedMap(makeDbMock({ invType: 'NURSERY' }), 'HB-FINCA-01');
   assert.ok(!res.ok);
 });
+test('verifyImportedMap: si un alias C# tiene source_context≠general (37) → NO ok', async () => {
+  const res = await M.verifyImportedMap(makeDbMock({ ctxGeneral: 37 }), 'HB-FINCA-01');
+  assert.ok(!res.ok, 'debe fallar si no hay 38 aliases con source_context general');
+  assert.ok(res.checks.some(c => /source_context general/.test(c.name) && !c.ok));
+});
 
 // ---------- 2C.1B: estructura de runApply (verificación antes de COMMIT) ----------
 test('runApply verifica ANTES de COMMIT (orden en el código) y hace ROLLBACK si falla', () => {
@@ -269,5 +289,4 @@ test('runApply chequea identidad de DB antes de BEGIN', () => {
   assert.ok(iId > -1 && iId < iBegin, 'la identidad de DB debe verificarse antes de BEGIN');
 });
 
-console.log(`\nResultado: ${pass} OK, ${fail} fallos.\n`);
-process.exit(fail ? 1 : 0);
+runTests();
