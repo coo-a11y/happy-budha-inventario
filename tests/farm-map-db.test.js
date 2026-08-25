@@ -135,5 +135,139 @@ test('no escritura contra tablas históricas', () => {
   inserts.forEach(s => { const t = s.split(/\s+/)[2]; assert.ok(!M.HISTORICAL_TABLES.includes(t), `INSERT prohibido a ${t}`); });
 });
 
+// ---------- 2C.1B: igualdad canónica de JSONB ----------
+test('JSONB canonical: {a:1,b:2} = {b:2,a:1}', () => {
+  assert.ok(M.canonicalEqual({ a: 1, b: 2 }, { b: 2, a: 1 }));
+});
+test('JSONB canonical: arrays con distinto orden NO son iguales', () => {
+  assert.ok(!M.canonicalEqual([1, 2, 3], [3, 2, 1]));
+});
+test('JSONB canonical: dos Polygon con mismas coords y props en distinto orden = iguales', () => {
+  const p1 = { type: 'Polygon', coordinates: [[[0, 0], [0, 1], [1, 1], [0, 0]]] };
+  const p2 = { coordinates: [[[0, 0], [0, 1], [1, 1], [0, 0]]], type: 'Polygon' };
+  assert.ok(M.canonicalEqual(p1, p2));
+  // pero si cambia el ORDEN de coordenadas, NO son iguales
+  const p3 = { type: 'Polygon', coordinates: [[[0, 1], [0, 0], [1, 1], [0, 0]]] };
+  assert.ok(!M.canonicalEqual(p1, p3));
+});
+test('JSONB canonical: acepta valores string JSON (como los devuelve jsonb)', () => {
+  assert.ok(M.canonicalEqual('{"type":"Polygon","coordinates":[]}', { coordinates: [], type: 'Polygon' }));
+});
+
+// ---------- 2C.1B: validación exacta de aliases y review ----------
+function cloneNorm() { return JSON.parse(JSON.stringify(norm)); }
+
+test('alias C7 → HB-C8 (desalineado) hace fallar la validación', () => {
+  const n = cloneNorm();
+  n.alias_proposals.find(a => a.alias === 'C7').proposed_geo_zone_code = 'HB-C8';
+  assert.ok(!M.validateNormalized(n).ok);
+});
+test('falta C20 hace fallar la validación', () => {
+  const n = cloneNorm();
+  n.alias_proposals = n.alias_proposals.filter(a => a.alias !== 'C20');
+  assert.ok(!M.validateNormalized(n).ok);
+});
+test('alias extra (fuera de C1–C38) hace fallar la validación', () => {
+  const n = cloneNorm();
+  n.alias_proposals.push({ alias: 'C99', proposed_geo_zone_code: 'HB-C1', source_context: 'general' });
+  assert.ok(!M.validateNormalized(n).ok);
+});
+test('source_context distinto de general hace fallar', () => {
+  const n = cloneNorm();
+  n.alias_proposals.find(a => a.alias === 'C1').source_context = 'produccion';
+  assert.ok(!M.validateNormalized(n).ok);
+});
+test('una zona con review:true hace fallar (REQUIERE_REVISION = 0 obligatorio)', () => {
+  const n = cloneNorm();
+  n.zones[0].review = true;
+  const v = M.validateNormalized(n);
+  assert.ok(!v.ok && v.errors.some(e => /REQUIERE_REVISION/.test(e)));
+});
+test('normalized real NO tiene zonas en review', () => {
+  assert.strictEqual(norm.zones.filter(z => z.review === true).length, 0);
+});
+
+// ---------- 2C.1B: identidad de la base TEST ----------
+const mockQ = (dbName) => async (sql) => {
+  if (/current_database\(\)/.test(sql)) return { rows: [{ db_name: dbName }] };
+  return { rows: [] };
+};
+test('assertTestDatabaseIdentity: nombre coincidente y con prefijo → OK', async () => {
+  const name = await M.assertTestDatabaseIdentity(mockQ('hb_farm_os_test_20260824'), 'hb_farm_os_test_20260824');
+  assert.strictEqual(name, 'hb_farm_os_test_20260824');
+});
+test('assertTestDatabaseIdentity: current_database ≠ esperado → aborta', async () => {
+  await assert.rejects(() => M.assertTestDatabaseIdentity(mockQ('otra_db'), 'hb_farm_os_test'), /IDENTIDAD_DB/);
+});
+test('assertTestDatabaseIdentity: nombre sin prefijo hb_farm_os_test → aborta (aunque coincida)', async () => {
+  await assert.rejects(() => M.assertTestDatabaseIdentity(mockQ('railway'), 'railway'), /hb_farm_os_test/);
+  await assert.rejects(() => M.assertTestDatabaseIdentity(mockQ('production'), 'production'), /hb_farm_os_test/);
+  await assert.rejects(() => M.assertTestDatabaseIdentity(mockQ('happybudha'), 'happybudha'), /hb_farm_os_test/);
+});
+test('assertTestDatabaseIdentity: sin FARM_OS_TEST_DB_NAME → aborta', async () => {
+  await assert.rejects(() => M.assertTestDatabaseIdentity(mockQ('hb_farm_os_test'), ''), /FARM_OS_TEST_DB_NAME/);
+});
+test('checkApplyBarriers exige FARM_OS_TEST_DB_NAME con prefijo correcto', () => {
+  assert.ok(!M.checkApplyBarriers({ FARM_OS_DB_IMPORT_CONFIRM: 'YES', FARM_OS_DB_ENV: 'TEST', FARM_OS_TEST_DATABASE_URL: 'x' }).ok, 'falta DB_NAME debe fallar');
+  assert.ok(!M.checkApplyBarriers({ FARM_OS_DB_IMPORT_CONFIRM: 'YES', FARM_OS_DB_ENV: 'TEST', FARM_OS_TEST_DATABASE_URL: 'x', FARM_OS_TEST_DB_NAME: 'railway' }).ok, 'prefijo malo debe fallar');
+  assert.ok(M.checkApplyBarriers({ FARM_OS_DB_IMPORT_CONFIRM: 'YES', FARM_OS_DB_ENV: 'TEST', FARM_OS_TEST_DATABASE_URL: 'x', FARM_OS_TEST_DB_NAME: 'hb_farm_os_test' }).ok, 'combinación válida debe pasar');
+});
+test('--apply sin FARM_OS_TEST_DB_NAME aborta', () => {
+  applyExpectAbort({ FARM_OS_DB_IMPORT_CONFIRM: 'YES', FARM_OS_DB_ENV: 'TEST', FARM_OS_TEST_DATABASE_URL: 'postgres://x/y', FARM_OS_TEST_DB_NAME: '' }, 'sin DB_NAME');
+});
+
+// ---------- 2C.1B: verificación pre-COMMIT ----------
+// Mock de consulta que simula una BASE correcta; permite forzar un fallo puntual.
+function makeDbMock(overrides = {}) {
+  const parents = { 'HB-NURSERY': 'HB-PLANTA', 'HB-ZONA-EXPERIMENTAL': 'HB-CAMPO' };
+  for (const n of [1, 2, 3, 4]) parents['HB-C' + n] = 'HB-CAMPO-C1-C4';
+  for (let n = 5; n <= 38; n++) parents['HB-C' + n] = 'HB-CAMPO';
+  const cfg = Object.assign({ fincaCount: 1, boundary: { type: 'Polygon' }, zones: 58, nullPoly: 0, aliases38: 38, mismatch: 0, c39: 0, invType: 'POSTHARVEST_PLANT', selfParent: 0, crossFarm: 0, dupCodes: 0, dupAliases: 0 }, overrides);
+  return async (sql, params = []) => {
+    const r = (o) => ({ rows: [o] });
+    if (/COUNT\(\*\)::int c FROM farm_sites WHERE code/.test(sql)) return r({ c: cfg.fincaCount });
+    if (/SELECT id, code, boundary_geojson FROM farm_sites/.test(sql)) return r({ id: 1, code: 'HB-FINCA-01', boundary_geojson: cfg.boundary });
+    if (/COUNT\(\*\)::int c FROM geo_zones WHERE farm_site_id = \$1 AND polygon_geojson IS NULL/.test(sql)) return r({ c: cfg.nullPoly });
+    if (/COUNT\(\*\)::int c FROM geo_zones WHERE farm_site_id/.test(sql)) return r({ c: cfg.zones });
+    if (/JOIN geo_zones z[\s\S]*alias ~ '\^C\(/.test(sql)) return r({ c: cfg.aliases38 });
+    if (/z\.code <> \('HB-' \|\| a\.alias\)/.test(sql)) return r({ c: cfg.mismatch });
+    if (/alias IN \('C39'/.test(sql)) return r({ c: cfg.c39 });
+    if (/LEFT JOIN geo_zones p ON p\.id = z\.parent_zone_id/.test(sql)) return r({ parent_code: parents[params[1]] });
+    if (/SELECT zone_type FROM geo_zones/.test(sql)) return r({ zone_type: cfg.invType });
+    if (/WHERE parent_zone_id = id/.test(sql)) return r({ c: cfg.selfParent });
+    if (/z\.farm_site_id <> p\.farm_site_id/.test(sql)) return r({ c: cfg.crossFarm });
+    if (/GROUP BY farm_site_id, code/.test(sql)) return r({ c: cfg.dupCodes });
+    if (/GROUP BY geo_zone_id, alias/.test(sql)) return r({ c: cfg.dupAliases });
+    return { rows: [{}] };
+  };
+}
+test('verifyImportedMap: base correcta → ok', async () => {
+  const res = await M.verifyImportedMap(makeDbMock(), 'HB-FINCA-01');
+  assert.ok(res.ok, 'debería pasar: ' + res.checks.filter(c => !c.ok).map(c => c.name));
+});
+test('verifyImportedMap: si faltan zonas (57) → NO ok (bloquearía COMMIT)', async () => {
+  const res = await M.verifyImportedMap(makeDbMock({ zones: 57 }), 'HB-FINCA-01');
+  assert.ok(!res.ok);
+});
+test('verifyImportedMap: si Invernadero no es POSTHARVEST_PLANT → NO ok', async () => {
+  const res = await M.verifyImportedMap(makeDbMock({ invType: 'NURSERY' }), 'HB-FINCA-01');
+  assert.ok(!res.ok);
+});
+
+// ---------- 2C.1B: estructura de runApply (verificación antes de COMMIT) ----------
+test('runApply verifica ANTES de COMMIT (orden en el código) y hace ROLLBACK si falla', () => {
+  const iVer = SRC.indexOf('await verifyImportedMap(cq');
+  const iCommit = SRC.indexOf("client.query('COMMIT')");
+  assert.ok(iVer > -1, 'debe llamar verifyImportedMap antes de COMMIT');
+  assert.ok(iVer < iCommit, 'la verificación debe ocurrir ANTES de COMMIT');
+  assert.ok(/VERIFICACION_PRECOMMIT_FALLIDA/.test(SRC), 'debe lanzar error si la verificación falla');
+  assert.ok(/ROLLBACK/.test(SRC), 'debe existir ROLLBACK');
+});
+test('runApply chequea identidad de DB antes de BEGIN', () => {
+  const iId = SRC.indexOf('assertTestDatabaseIdentity(cq');
+  const iBegin = SRC.indexOf("client.query('BEGIN')");
+  assert.ok(iId > -1 && iId < iBegin, 'la identidad de DB debe verificarse antes de BEGIN');
+});
+
 console.log(`\nResultado: ${pass} OK, ${fail} fallos.\n`);
 process.exit(fail ? 1 : 0);

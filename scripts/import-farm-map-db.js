@@ -83,6 +83,24 @@ function validateNormalized(norm) {
     aliasKeys.add(k);
   }
 
+  // Mapeo EXACTO de aliases: C1 → HB-C1 ... C38 → HB-C38, con source_context = general.
+  // No basta con que existan 38; deben ser exactamente estos.
+  const aliasByName = new Map(aliases.map(a => [a.alias, a]));
+  for (let i = 1; i <= 38; i++) {
+    const a = aliasByName.get('C' + i);
+    if (!a) { errors.push(`falta alias C${i}`); continue; }
+    if (a.proposed_geo_zone_code !== 'HB-C' + i) errors.push(`alias C${i} debe apuntar a HB-C${i} (apunta a ${a.proposed_geo_zone_code})`);
+    if (a.source_context !== 'general') errors.push(`alias C${i} debe tener source_context=general (tiene ${a.source_context})`);
+  }
+  // No debe haber aliases extra fuera de C1–C38
+  for (const a of aliases) if (!/^C([1-9]|[12][0-9]|3[0-8])$/.test(a.alias)) errors.push(`alias inesperado: ${a.alias}`);
+
+  // Ninguna zona puede quedar en REQUIERE_REVISION (review === true o equivalente)
+  for (const z of zones) {
+    const needsReview = z.review === true || z.requiere_revision === true || z.REQUIERE_REVISION === true;
+    if (needsReview) errors.push(`zona en REQUIERE_REVISION: ${z.proposed_code}`);
+  }
+
   // Detección de ciclos (usa topoSort)
   let cycles = 0;
   try { topoSort(zones); } catch (e) { cycles = 1; errors.push(e.message); }
@@ -163,19 +181,32 @@ function sqlInsertAlias(geoZoneId, alias, sourceContext) {
 
 // Comparación de idempotencia (¿coincide lo existente con lo propuesto?)
 function farmSiteMatches(dbRow, proposed) {
-  return dbRow.name === proposed.name && deepEqual(dbRow.boundary_geojson, proposed.boundary_geojson);
+  return dbRow.name === proposed.name && canonicalEqual(dbRow.boundary_geojson, proposed.boundary_geojson);
 }
 function zoneMatches(dbRow, proposed, resolvedParentId) {
   return dbRow.name === proposed.proposed_name
     && dbRow.zone_type === proposed.proposed_zone_type
     && (dbRow.parent_zone_id ?? null) === (resolvedParentId ?? null)
-    && deepEqual(dbRow.polygon_geojson, proposed.polygon_geojson);
+    && canonicalEqual(dbRow.polygon_geojson, proposed.polygon_geojson);
 }
-function deepEqual(a, b) {
-  if (a === b) return true;
+
+// Canonicalización para comparar JSONB de forma estable:
+//  - objetos: se ordenan las claves recursivamente;
+//  - arrays: se preserva ESTRICTAMENTE el orden (nunca se ordenan las coordenadas);
+//  - número/string/boolean/null: se preserva el valor.
+function canonicalize(v) {
+  if (v === null || typeof v !== 'object') return v;
+  if (Array.isArray(v)) return v.map(canonicalize); // orden preservado
+  const out = {};
+  for (const k of Object.keys(v).sort()) out[k] = canonicalize(v[k]);
+  return out;
+}
+// Igualdad canónica. Acepta valores que vengan como string JSON (jsonb de pg puede venir
+// ya parseado como objeto; se contempla ambos casos).
+function canonicalEqual(a, b) {
   if (typeof a === 'string') { try { a = JSON.parse(a); } catch (_) {} }
   if (typeof b === 'string') { try { b = JSON.parse(b); } catch (_) {} }
-  return JSON.stringify(a) === JSON.stringify(b);
+  return JSON.stringify(canonicalize(a)) === JSON.stringify(canonicalize(b));
 }
 
 // ------------------------------------------------------------ Plan (dry-run)
@@ -203,7 +234,82 @@ function checkApplyBarriers(env) {
   if (env.FARM_OS_DB_IMPORT_CONFIRM !== 'YES') reasons.push('falta FARM_OS_DB_IMPORT_CONFIRM=YES');
   if (env.FARM_OS_DB_ENV !== 'TEST') reasons.push(`FARM_OS_DB_ENV debe ser TEST (actual: ${env.FARM_OS_DB_ENV || 'no definido'})`);
   if (!env.FARM_OS_TEST_DATABASE_URL) reasons.push('falta FARM_OS_TEST_DATABASE_URL');
+  if (!env.FARM_OS_TEST_DB_NAME) reasons.push('falta FARM_OS_TEST_DB_NAME');
+  else if (!/^hb_farm_os_test/.test(env.FARM_OS_TEST_DB_NAME)) reasons.push(`FARM_OS_TEST_DB_NAME debe empezar por hb_farm_os_test (actual: ${env.FARM_OS_TEST_DB_NAME})`);
   return { ok: reasons.length === 0, reasons };
+}
+
+// ------------------------------------------------------------ Verificación en BD
+// Reutilizable: recibe una función de consulta `q(sql, params) -> { rows }` (puede ser
+// client.query dentro de la transacción, o un wrapper read-only). Devuelve { ok, checks }.
+async function verifyImportedMap(q, farmCode) {
+  const checks = [];
+  const add = (name, ok, detail) => checks.push({ name, ok: !!ok, detail: detail || '' });
+  const one = async (sql, params) => (await q(sql, params)).rows[0];
+
+  const finca = await one('SELECT COUNT(*)::int c FROM farm_sites WHERE code = $1', [farmCode]);
+  add(`${farmCode} = 1`, finca.c === 1, `count=${finca.c}`);
+  const fila = await one('SELECT id, code, boundary_geojson FROM farm_sites WHERE code = $1', [farmCode]);
+  add('boundary_geojson IS NOT NULL', fila && fila.boundary_geojson != null);
+  add('farm site code correcto', fila && fila.code === farmCode);
+  const farmId = fila ? fila.id : -1;
+
+  const zc = await one('SELECT COUNT(*)::int c FROM geo_zones WHERE farm_site_id = $1', [farmId]);
+  add('58 geo_zones de la finca', zc.c === 58, `count=${zc.c}`);
+
+  const np = await one('SELECT COUNT(*)::int c FROM geo_zones WHERE farm_site_id = $1 AND polygon_geojson IS NULL', [farmId]);
+  add('todas las zonas con polygon_geojson', np.c === 0, `sin polígono=${np.c}`);
+
+  const ac = await one(`SELECT COUNT(*)::int c FROM geo_zone_aliases a JOIN geo_zones z ON z.id = a.geo_zone_id
+    WHERE z.farm_site_id = $1 AND a.alias ~ '^C([1-9]|[12][0-9]|3[0-8])$'`, [farmId]);
+  add('38 aliases C1–C38', ac.c === 38, `count=${ac.c}`);
+
+  // Mapeo exacto C1→HB-C1 ... C38→HB-C38
+  const mism = await one(`SELECT COUNT(*)::int c FROM geo_zone_aliases a
+    JOIN geo_zones z ON z.id = a.geo_zone_id
+    WHERE z.farm_site_id = $1 AND a.alias ~ '^C[0-9]+$' AND z.code <> ('HB-' || a.alias)`, [farmId]);
+  add('cada C# → HB-C# exacto', mism.c === 0, `desalineados=${mism.c}`);
+
+  // C39–C42 aliases ausentes
+  const c39 = await one(`SELECT COUNT(*)::int c FROM geo_zone_aliases a JOIN geo_zones z ON z.id = a.geo_zone_id
+    WHERE z.farm_site_id = $1 AND a.alias IN ('C39','C40','C41','C42')`, [farmId]);
+  add('aliases C39–C42 ausentes', c39.c === 0, `presentes=${c39.c}`);
+
+  const parentOf = async (code) => {
+    const r = await one(`SELECT p.code AS parent_code FROM geo_zones z LEFT JOIN geo_zones p ON p.id = z.parent_zone_id
+      WHERE z.farm_site_id = $1 AND z.code = $2`, [farmId, code]);
+    return r ? r.parent_code : undefined;
+  };
+  add('HB-NURSERY.parent = HB-PLANTA', (await parentOf('HB-NURSERY')) === 'HB-PLANTA');
+  let c14 = true; for (const n of [1, 2, 3, 4]) if ((await parentOf('HB-C' + n)) !== 'HB-CAMPO-C1-C4') { c14 = false; break; }
+  add('HB-C1..C4.parent = HB-CAMPO-C1-C4', c14);
+  let c538 = true; for (let n = 5; n <= 38; n++) if ((await parentOf('HB-C' + n)) !== 'HB-CAMPO') { c538 = false; break; }
+  add('HB-C5..C38.parent = HB-CAMPO', c538);
+  add('HB-ZONA-EXPERIMENTAL.parent = HB-CAMPO', (await parentOf('HB-ZONA-EXPERIMENTAL')) === 'HB-CAMPO');
+  const inv = await one('SELECT zone_type FROM geo_zones WHERE farm_site_id = $1 AND code = $2', [farmId, 'HB-INVERNADERO']);
+  add('HB-INVERNADERO.zone_type = POSTHARVEST_PLANT', inv && inv.zone_type === 'POSTHARVEST_PLANT');
+
+  const sp = await one('SELECT COUNT(*)::int c FROM geo_zones WHERE parent_zone_id = id');
+  add('auto-parent = 0', sp.c === 0, `count=${sp.c}`);
+  const xf = await one(`SELECT COUNT(*)::int c FROM geo_zones z JOIN geo_zones p ON p.id = z.parent_zone_id
+    WHERE z.farm_site_id <> p.farm_site_id`);
+  add('parent de otra finca = 0', xf.c === 0, `count=${xf.c}`);
+  const dupC = await one(`SELECT COUNT(*)::int c FROM (SELECT farm_site_id, code FROM geo_zones GROUP BY farm_site_id, code HAVING COUNT(*) > 1) x`);
+  add('códigos duplicados = 0', dupC.c === 0, `count=${dupC.c}`);
+  const dupA = await one(`SELECT COUNT(*)::int c FROM (SELECT geo_zone_id, alias, COALESCE(source_context,'') sc FROM geo_zone_aliases GROUP BY geo_zone_id, alias, COALESCE(source_context,'') HAVING COUNT(*) > 1) x`);
+  add('aliases duplicados = 0', dupA.c === 0, `count=${dupA.c}`);
+
+  return { ok: checks.every(c => c.ok), checks };
+}
+
+// Barrera de identidad de la base TEST. Exige nombre exacto y prefijo hb_farm_os_test.
+async function assertTestDatabaseIdentity(q, expectedName) {
+  if (!expectedName) throw new Error('falta FARM_OS_TEST_DB_NAME');
+  const row = (await q('SELECT current_database() AS db_name', [])).rows[0];
+  const actual = row && row.db_name;
+  if (actual !== expectedName) throw new Error(`IDENTIDAD_DB: current_database()="${actual}" ≠ FARM_OS_TEST_DB_NAME="${expectedName}"`);
+  if (!/^hb_farm_os_test/.test(actual || '')) throw new Error(`IDENTIDAD_DB: el nombre "${actual}" no empieza por hb_farm_os_test (rechazado aunque ENV=TEST)`);
+  return actual;
 }
 
 // ------------------------------------------------------------ Ejecución
@@ -251,7 +357,12 @@ async function runApply(norm, env) {
   const { Pool } = require('pg'); // require perezoso: dry-run no necesita pg
   const pool = new Pool({ connectionString: env.FARM_OS_TEST_DATABASE_URL, ssl: { rejectUnauthorized: false } });
   const client = await pool.connect();
+  const counters = { farm_sites_inserted: 0, farm_sites_matched: 0, zones_inserted: 0, zones_matched: 0, aliases_inserted: 0, aliases_matched: 0 };
+  const cq = (sql, params) => client.query(sql, params);
   try {
+    // IDENTIDAD DE LA BASE TEST — solo lectura, ANTES de cualquier escritura o BEGIN.
+    await assertTestDatabaseIdentity(cq, env.FARM_OS_TEST_DB_NAME);
+
     await client.query('BEGIN');
 
     // farm_site (idempotente por code)
@@ -261,10 +372,10 @@ async function runApply(norm, env) {
     const fsRes = await client.query(fsSel.text, fsSel.values);
     if (fsRes.rows.length) {
       if (!farmSiteMatches(fsRes.rows[0], fsProp)) throw new Error(`CONFLICT_REQUIRES_REVIEW: farm_site ${fsProp.code} difiere de lo existente`);
-      farmSiteId = fsRes.rows[0].id; // ALREADY_EXISTS_MATCH
+      farmSiteId = fsRes.rows[0].id; counters.farm_sites_matched++; // ALREADY_EXISTS_MATCH
     } else {
       const ins = sqlInsertFarmSite(fsProp);
-      farmSiteId = (await client.query(ins.text, ins.values)).rows[0].id;
+      farmSiteId = (await client.query(ins.text, ins.values)).rows[0].id; counters.farm_sites_inserted++;
     }
 
     // geo_zones en orden topológico (padres primero), idempotente por (farm_site_id, code)
@@ -275,10 +386,10 @@ async function runApply(norm, env) {
       const r = await client.query(sel.text, sel.values);
       if (r.rows.length) {
         if (!zoneMatches(r.rows[0], z, parentId)) throw new Error(`CONFLICT_REQUIRES_REVIEW: zona ${z.proposed_code} difiere de lo existente`);
-        codeToId.set(z.proposed_code, r.rows[0].id); // ALREADY_EXISTS_MATCH
+        codeToId.set(z.proposed_code, r.rows[0].id); counters.zones_matched++; // ALREADY_EXISTS_MATCH
       } else {
         const ins = sqlInsertZone(farmSiteId, z, parentId);
-        codeToId.set(z.proposed_code, (await client.query(ins.text, ins.values)).rows[0].id);
+        codeToId.set(z.proposed_code, (await client.query(ins.text, ins.values)).rows[0].id); counters.zones_inserted++;
       }
     }
 
@@ -289,12 +400,22 @@ async function runApply(norm, env) {
       const r = await client.query(sel.text, sel.values);
       if (!r.rows.length) {
         const ins = sqlInsertAlias(geoZoneId, a.alias, a.source_context);
-        await client.query(ins.text, ins.values);
+        await client.query(ins.text, ins.values); counters.aliases_inserted++;
+      } else {
+        counters.aliases_matched++;
       }
+    }
+
+    // VERIFICACIÓN DENTRO DE LA MISMA TRANSACCIÓN, ANTES DE COMMIT.
+    const verif = await verifyImportedMap(cq, fsProp.code);
+    if (!verif.ok) {
+      const fallidas = verif.checks.filter(c => !c.ok).map(c => c.name + (c.detail ? ` (${c.detail})` : ''));
+      throw new Error('VERIFICACION_PRECOMMIT_FALLIDA: ' + fallidas.join('; '));
     }
 
     await client.query('COMMIT');
     console.log('✅ Importación aplicada en TEST (transacción COMMIT).');
+    console.log('Contadores de idempotencia:', JSON.stringify(counters));
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('⛔ ROLLBACK — no se dejó ninguna importación parcial:', err.message);
@@ -317,6 +438,7 @@ if (require.main === module) main();
 module.exports = {
   validateNormalized, topoSort, buildPlan, checkApplyBarriers,
   sqlInsertFarmSite, sqlInsertZone, sqlInsertAlias, sqlSelectAlias, assertAllowedTable,
-  isValidGeoJsonPolygon, deepEqual, farmSiteMatches, zoneMatches,
+  isValidGeoJsonPolygon, canonicalize, canonicalEqual, farmSiteMatches, zoneMatches,
+  verifyImportedMap, assertTestDatabaseIdentity,
   ALLOWED_WRITE_TABLES, HISTORICAL_TABLES, EXPECTED, NORMALIZED,
 };
