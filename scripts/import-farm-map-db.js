@@ -360,7 +360,8 @@ async function runApply(norm, env) {
   }
 
   const { Pool } = require('pg'); // require perezoso: dry-run no necesita pg
-  const pool = new Pool({ connectionString: env.FARM_OS_TEST_DATABASE_URL, ssl: { rejectUnauthorized: false } });
+  const { resolveTestSsl } = require('./lib/db-ssl.js');
+  const pool = new Pool({ connectionString: env.FARM_OS_TEST_DATABASE_URL, ssl: resolveTestSsl(env) });
   const client = await pool.connect();
   const counters = { farm_sites_inserted: 0, farm_sites_matched: 0, zones_inserted: 0, zones_matched: 0, aliases_inserted: 0, aliases_matched: 0 };
   const cq = (sql, params) => client.query(sql, params);

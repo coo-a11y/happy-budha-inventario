@@ -289,4 +289,36 @@ test('runApply chequea identidad de DB antes de BEGIN', () => {
   assert.ok(iId > -1 && iId < iBegin, 'la identidad de DB debe verificarse antes de BEGIN');
 });
 
+// ---------- 2C.2: gate de SSL para Postgres local de prueba ----------
+const SSL = require('../scripts/lib/db-ssl.js');
+const baseTestEnv = { FARM_OS_DB_ENV: 'TEST', FARM_OS_TEST_DB_NAME: 'hb_farm_os_test_20260825' };
+
+test('SSL: por defecto (sin DISABLE) → SSL activado', () => {
+  const s = SSL.resolveTestSsl(Object.assign({ FARM_OS_TEST_DATABASE_URL: 'postgres://127.0.0.1:55432/hb_farm_os_test_20260825' }, baseTestEnv));
+  assert.deepStrictEqual(s, { rejectUnauthorized: false });
+});
+test('SSL DISABLE permitido: TEST + host local + db hb_farm_os_test* → sin SSL', () => {
+  const s = SSL.resolveTestSsl(Object.assign({ FARM_OS_TEST_DATABASE_URL: 'postgres://user:pw@127.0.0.1:55432/hb_farm_os_test_20260825', FARM_OS_TEST_DB_SSL: 'DISABLE' }, baseTestEnv));
+  assert.strictEqual(s, false);
+});
+test('SSL DISABLE permitido para localhost y ::1', () => {
+  for (const h of ['localhost', '[::1]']) {
+    const s = SSL.resolveTestSsl(Object.assign({ FARM_OS_TEST_DATABASE_URL: `postgres://u:p@${h}:55432/hb_farm_os_test_20260825`, FARM_OS_TEST_DB_SSL: 'DISABLE' }, baseTestEnv));
+    assert.strictEqual(s, false, `host ${h} debería permitir DISABLE`);
+  }
+});
+test('SSL DISABLE RECHAZADO si host NO es local (aunque ENV=TEST)', () => {
+  assert.throws(() => SSL.resolveTestSsl(Object.assign({ FARM_OS_TEST_DATABASE_URL: 'postgres://u:p@db.railway.internal:5432/hb_farm_os_test_20260825', FARM_OS_TEST_DB_SSL: 'DISABLE' }, baseTestEnv)), /SSL_DISABLE_RECHAZADO/);
+});
+test('SSL DISABLE RECHAZADO si DB_NAME no empieza por hb_farm_os_test', () => {
+  assert.throws(() => SSL.resolveTestSsl({ FARM_OS_DB_ENV: 'TEST', FARM_OS_TEST_DB_NAME: 'production', FARM_OS_TEST_DATABASE_URL: 'postgres://127.0.0.1/production', FARM_OS_TEST_DB_SSL: 'DISABLE' }), /SSL_DISABLE_RECHAZADO/);
+});
+test('SSL DISABLE RECHAZADO si ENV no es TEST', () => {
+  assert.throws(() => SSL.resolveTestSsl({ FARM_OS_DB_ENV: 'PRODUCTION', FARM_OS_TEST_DB_NAME: 'hb_farm_os_test', FARM_OS_TEST_DATABASE_URL: 'postgres://127.0.0.1/hb_farm_os_test', FARM_OS_TEST_DB_SSL: 'DISABLE' }), /SSL_DISABLE_RECHAZADO/);
+});
+test('SSL migrate: host local → sin SSL; host remoto → con SSL', () => {
+  assert.strictEqual(SSL.resolveMigrateSsl('postgres://127.0.0.1:55432/hb_farm_os_test_20260825'), false);
+  assert.deepStrictEqual(SSL.resolveMigrateSsl('postgres://u:p@db.railway.internal:5432/railway'), { rejectUnauthorized: false });
+});
+
 runTests();

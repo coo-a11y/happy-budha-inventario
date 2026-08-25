@@ -22,7 +22,8 @@ async function main() {
   if (!process.env.FARM_OS_TEST_DB_NAME) { console.error('⛔ Falta FARM_OS_TEST_DB_NAME.'); process.exit(1); }
 
   const { Pool } = require('pg');
-  const pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
+  const { resolveTestSsl } = require('./lib/db-ssl.js');
+  const pool = new Pool({ connectionString: url, ssl: resolveTestSsl(process.env) });
 
   // Barrera read-only: cualquier consulta debe ser SELECT.
   const q = async (sql, params = []) => {

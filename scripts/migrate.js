@@ -81,9 +81,10 @@ async function main() {
   }
 
   const { Pool } = require('pg');
+  const { resolveMigrateSsl } = require('./lib/db-ssl.js');
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    ssl: resolveMigrateSsl(process.env.DATABASE_URL),
   });
 
   try {
