@@ -17,7 +17,8 @@
     "map:db:verify": "node scripts/verify-farm-map-db.js",
     "test:farmdb": "node tests/farm-map-db.test.js",
     "prod:preflight": "node scripts/farm-os-production-preflight.js",
-    "test:preflight": "node tests/production-preflight.test.js"
+    "test:preflight": "node tests/production-preflight.test.js",
+    "test:guard": "node tests/migration-guard.test.js"
   },
   "keywords": [
     "inventario",

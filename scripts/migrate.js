@@ -80,6 +80,21 @@ async function main() {
     }
   }
 
+  // PRODUCTION MIGRATION WRITE GUARD — evaluado ANTES de conectar / CREATE / BEGIN / DDL / INSERT.
+  // Bloquea una migración REAL contra un host remoto sin autorización explícita de producción.
+  // No afecta a --dry-run (cero escrituras) ni a hosts locales.
+  const { evaluateMigrationGuard } = require('./lib/migration-guard.js');
+  const guard = evaluateMigrationGuard(process.env, process.env.DATABASE_URL, DRY_RUN);
+  if (guard.blocked) {
+    log('⛔ PRODUCTION MIGRATION BLOCKED');
+    log('   Migración REAL contra un host remoto sin autorización explícita de producción.');
+    log('   Para aplicar en producción se exigen EXACTAMENTE ambas variables:');
+    guard.missing.forEach(m => log('   - ' + m));
+    log('   (Se abortó ANTES de conectar y ANTES de cualquier escritura.)');
+    process.exitCode = 1;
+    return;
+  }
+
   const { Pool } = require('pg');
   const { resolveMigrateSsl } = require('./lib/db-ssl.js');
   const pool = new Pool({
