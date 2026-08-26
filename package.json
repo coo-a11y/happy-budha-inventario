@@ -15,7 +15,9 @@
     "test:kml": "node tests/kml-import.test.js",
     "map:db:dry": "node scripts/import-farm-map-db.js --dry-run",
     "map:db:verify": "node scripts/verify-farm-map-db.js",
-    "test:farmdb": "node tests/farm-map-db.test.js"
+    "test:farmdb": "node tests/farm-map-db.test.js",
+    "prod:preflight": "node scripts/farm-os-production-preflight.js",
+    "test:preflight": "node tests/production-preflight.test.js"
   },
   "keywords": [
     "inventario",
