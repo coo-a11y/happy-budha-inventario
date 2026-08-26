@@ -19,7 +19,8 @@
     "prod:preflight": "node scripts/farm-os-production-preflight.js",
     "test:preflight": "node tests/production-preflight.test.js",
     "test:guard": "node tests/migration-guard.test.js",
-    "test:import-guard": "node tests/import-guard.test.js"
+    "test:import-guard": "node tests/import-guard.test.js",
+    "test:import-canonical": "node tests/import-canonical.test.js"
   },
   "keywords": [
     "inventario",

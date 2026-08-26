@@ -323,6 +323,53 @@ async function assertInitialStateCompatible(q) {
   return { fs: r.fs, gz: r.gz, ga: r.ga, zero, canonical };
 }
 
+// Verificación READ-ONLY COMPLETA del dataset YA EXISTENTE (cuando los conteos son 1/58/38),
+// ANTES de cualquier escritura. Confirma que lo existente es EXACTAMENTE el dataset canónico:
+// no basta con que los conteos sean 1/58/38. Reutiliza verifyImportedMap (invariantes
+// estructurales) y compara contenido exacto (geometría canónica, nombre, tipo, jerarquía,
+// boundary y aliases) con `norm`. Solo hace SELECT. Si algo difiere → lanza BLOCKED.
+async function assertExistingIsCanonical(q, norm) {
+  const blocked = (msg) => { throw new Error('PRODUCTION MAP IMPORT BLOCKED: ' + msg); };
+
+  // 0) El dataset propuesto debe ser en sí mismo canónico (incluye review = 0).
+  const vn = validateNormalized(norm);
+  if (!vn.ok) blocked('el dataset propuesto no es canónico (' + vn.errors.slice(0, 3).join('; ') + ')');
+
+  // 1) Invariantes estructurales del dataset existente (jerarquía, aliases, C39–C42, cycles,
+  //    duplicados, cross-farm, tipos). Reutiliza la lógica canónica ya existente.
+  const v = await verifyImportedMap(q, norm.farm_site.code);
+  if (!v.ok) blocked('dataset existente no canónico → ' + v.checks.filter(c => !c.ok).map(c => c.name).join('; '));
+
+  // 2) Contenido EXACTO: farm_site (incluye boundary canónico).
+  const fsSel = sqlSelectFarmSite(norm.farm_site.code);
+  const fsRow = (await q(fsSel.text, fsSel.values)).rows[0];
+  if (!fsRow || !farmSiteMatches(fsRow, norm.farm_site)) blocked('farm_site difiere del dataset canónico');
+  const farmSiteId = fsRow.id;
+
+  // 3) Zonas: geometría canónica (JSONB), nombre, tipo y jerarquía exactos.
+  const zoneRows = (await q(
+    'SELECT id, code, name, zone_type, parent_zone_id, polygon_geojson FROM geo_zones WHERE farm_site_id = $1', [farmSiteId])).rows;
+  const byCode = new Map(zoneRows.map(r => [r.code, r]));
+  for (const z of norm.zones) {
+    const row = byCode.get(z.proposed_code);
+    if (!row) blocked('falta la zona esperada ' + z.proposed_code);
+    const parentId = z.proposed_parent_code != null
+      ? (byCode.get(z.proposed_parent_code) ? byCode.get(z.proposed_parent_code).id : null)
+      : null;
+    if (!zoneMatches(row, z, parentId)) blocked('la zona ' + z.proposed_code + ' difiere (geometría/nombre/tipo/parent)');
+  }
+
+  // 4) Aliases exactos.
+  for (const a of norm.alias_proposals) {
+    const zid = byCode.get(a.proposed_geo_zone_code) ? byCode.get(a.proposed_geo_zone_code).id : null;
+    const sel = sqlSelectAlias(zid, a.alias, a.source_context);
+    const r = await q(sel.text, sel.values);
+    if (!r.rows.length) blocked('falta el alias ' + a.alias + ' → ' + a.proposed_geo_zone_code);
+  }
+
+  return true;
+}
+
 // Barrera de identidad de la base TEST. Exige nombre exacto y prefijo hb_farm_os_test.
 async function assertTestDatabaseIdentity(q, expectedName) {
   if (!expectedName) throw new Error('falta FARM_OS_TEST_DB_NAME');
@@ -414,8 +461,11 @@ async function runApply(norm, env) {
     await client.query('BEGIN');
     transactionStarted = true;
 
-    // GATE DE ESTADO INICIAL: solo 0/0/0 o el dataset canónico 1/58/38. Si no, ROLLBACK.
-    await assertInitialStateCompatible(cq);
+    // GATE DE ESTADO INICIAL: solo 0/0/0 o conteos 1/58/38. Si no, ROLLBACK.
+    const initState = await assertInitialStateCompatible(cq);
+    // Si los conteos son 1/58/38, verificar READ-ONLY que el contenido existente es EXACTAMENTE
+    // el dataset canónico ANTES del primer INSERT/UPSERT. Si difiere → BLOCKED + ROLLBACK.
+    if (initState.canonical) await assertExistingIsCanonical(cq, norm);
 
     // farm_site (idempotente por code)
     const fsProp = norm.farm_site;
@@ -497,6 +547,6 @@ module.exports = {
   validateNormalized, topoSort, buildPlan, checkApplyBarriers,
   sqlInsertFarmSite, sqlInsertZone, sqlInsertAlias, sqlSelectAlias, assertAllowedTable,
   isValidGeoJsonPolygon, canonicalize, canonicalEqual, farmSiteMatches, zoneMatches,
-  verifyImportedMap, assertTestDatabaseIdentity, assertInitialStateCompatible,
+  verifyImportedMap, assertTestDatabaseIdentity, assertInitialStateCompatible, assertExistingIsCanonical,
   ALLOWED_WRITE_TABLES, HISTORICAL_TABLES, EXPECTED, NORMALIZED,
 };
