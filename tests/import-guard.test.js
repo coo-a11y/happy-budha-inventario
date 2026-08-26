@@ -100,4 +100,31 @@ test('spawn: apply remoto (PRODUCTION_IMPORT) sin confirmación imprime BLOCKED 
   assert.ok(/PRODUCTION MAP IMPORT BLOCKED/.test(res.stdout + res.stderr));
 });
 
+// ---------- 2E.1C: SSL host-aware para PRODUCTION_IMPORT ----------
+const SSL = require('../scripts/lib/db-ssl.js');
+test('PRODUCTION_IMPORT + 127.0.0.1 → SSL deshabilitado', () => {
+  assert.strictEqual(SSL.resolveHostAwareSsl('postgresql://u:p@127.0.0.1:55432/db'), false);
+});
+test('PRODUCTION_IMPORT + localhost → SSL deshabilitado', () => {
+  assert.strictEqual(SSL.resolveHostAwareSsl('postgresql://u:p@localhost:55432/db'), false);
+});
+test('PRODUCTION_IMPORT + ::1 → SSL deshabilitado', () => {
+  assert.strictEqual(SSL.resolveHostAwareSsl('postgresql://u:p@[::1]:55432/db'), false);
+});
+test('PRODUCTION_IMPORT + host remoto → SSL habilitado', () => {
+  assert.deepStrictEqual(SSL.resolveHostAwareSsl('postgresql://u:p@shuttle.proxy.rlwy.net:12345/railway'), { rejectUnauthorized: false });
+});
+test('resolveMigrateSsl reutiliza la política host-aware (no duplica lógica)', () => {
+  assert.strictEqual(SSL.resolveMigrateSsl('postgres://u:p@127.0.0.1:5432/x'), false);
+  assert.deepStrictEqual(SSL.resolveMigrateSsl('postgres://u:p@db.example.com:5432/x'), { rejectUnauthorized: false });
+});
+test('el importador resuelve SSL por HOST (usa resolveHostAwareSsl) y el guard va antes del Pool', () => {
+  const iSsl = SRC.indexOf('resolveHostAwareSsl(url)');
+  const iGuard = SRC.indexOf('evaluateImportGuard(env, url, false)');
+  const iPool = SRC.indexOf('new Pool(');
+  assert.ok(iSsl > -1, 'la rama PRODUCTION_IMPORT debe usar resolveHostAwareSsl(url)');
+  assert.ok(!/PRODUCTION_IMPORT'\)\s*\{[\s\S]*?rejectUnauthorized: false/.test(SRC.slice(SRC.indexOf("=== 'PRODUCTION_IMPORT'"), iPool)), 'la rama no debe fijar SSL por modo');
+  assert.ok(iGuard < iPool, 'el guard debe evaluarse antes de crear el Pool');
+});
+
 runTests();

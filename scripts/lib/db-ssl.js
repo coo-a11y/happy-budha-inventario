@@ -37,12 +37,20 @@ function resolveTestSsl(env) {
 }
 
 /**
- * SSL para el migration runner (usa DATABASE_URL). Regla simple y segura: si el host es
- * local, no requiere SSL; si es remoto, SSL activado. (Un Postgres local no expone SSL por
- * defecto; uno remoto/Railway sí.)
+ * SSL HOST-AWARE (compartida): si el host es local (localhost/127.0.0.1/::1) → SIN SSL;
+ * si es remoto → SSL activado (rejectUnauthorized:false). Un Postgres local no expone SSL
+ * por defecto; uno remoto/Railway sí. Es la política a usar para conexiones que no dependen
+ * del gate FARM_OS_TEST_DB_SSL (p. ej. PRODUCTION_IMPORT y el migration runner).
  */
-function resolveMigrateSsl(databaseUrl) {
-  return isLocalHost(hostOf(databaseUrl || '')) ? false : { rejectUnauthorized: false };
+function resolveHostAwareSsl(url) {
+  return isLocalHost(hostOf(url || '')) ? false : { rejectUnauthorized: false };
 }
 
-module.exports = { hostOf, isLocalHost, resolveTestSsl, resolveMigrateSsl };
+/**
+ * SSL para el migration runner (usa DATABASE_URL). Reutiliza la política host-aware.
+ */
+function resolveMigrateSsl(databaseUrl) {
+  return resolveHostAwareSsl(databaseUrl);
+}
+
+module.exports = { hostOf, isLocalHost, resolveTestSsl, resolveMigrateSsl, resolveHostAwareSsl };

@@ -407,7 +407,7 @@ async function runApply(norm, env) {
   // NUNCA usa DATABASE_URL. El destino depende del modo (TEST o PRODUCTION_IMPORT).
   console.log(`TARGET ENVIRONMENT: ${env.FARM_OS_DB_ENV || '(no definido)'}`);
 
-  const { resolveTestSsl } = require('./lib/db-ssl.js');
+  const { resolveTestSsl, resolveHostAwareSsl } = require('./lib/db-ssl.js');
   let url, sslOpt, identityCheck = null;
 
   if (env.FARM_OS_DB_ENV === 'TEST') {
@@ -424,7 +424,8 @@ async function runApply(norm, env) {
   } else if (env.FARM_OS_DB_ENV === 'PRODUCTION_IMPORT') {
     // Ruta de PRODUCCIÓN (gated por el Production Import Guard + estado inicial compatible).
     url = env.FARM_OS_PRODUCTION_IMPORT_DATABASE_URL;
-    sslOpt = { rejectUnauthorized: false };
+    // SSL HOST-AWARE por el host REAL del URL: local (ensayo) → sin SSL; remoto/Railway → con SSL.
+    sslOpt = resolveHostAwareSsl(url);
     // En producción no aplica la identidad hb_farm_os_test*; se usa assertInitialStateCompatible.
   } else {
     console.error('⛔ ABORTADO: FARM_OS_DB_ENV debe ser TEST o PRODUCTION_IMPORT.');
