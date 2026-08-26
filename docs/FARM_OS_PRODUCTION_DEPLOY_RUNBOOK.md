@@ -32,6 +32,15 @@ ls -lh "backup_prod_farmos_$STAMP.dump"
 shasum -a 256 "backup_prod_farmos_$STAMP.dump"
 ```
 
+**Validación mínima de que el archive puede leerse** (no restaura nada):
+
+```bash
+pg_restore --list "backup_prod_farmos_$STAMP.dump" | head -40
+```
+
+Debe listar los objetos del backup (tablas históricas incluidas). Si `--list` falla, el
+backup NO es válido → detenerse.
+
 ### 5. Snapshot de preflight EXITOSO (read-only)
 
 ```bash

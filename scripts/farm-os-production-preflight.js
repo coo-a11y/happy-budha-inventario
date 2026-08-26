@@ -35,9 +35,25 @@ function safeHost(url) {
   try { return new URL(url).hostname; } catch (_) { return '(host no parseable)'; }
 }
 
-// Barrera: solo SELECT.
+// Barrera: exactamente UNA sentencia SELECT. Rechaza múltiples statements
+// (p. ej. "SELECT 1; DELETE FROM x").
 function assertSelectOnly(sql) {
   if (!/^\s*SELECT\b/i.test(sql)) throw new Error('BLOQUEADO: el preflight solo permite SELECT.');
+  // Quitar un único punto y coma final opcional; si queda algún ';', hay varias sentencias.
+  const withoutTrailing = String(sql).trim().replace(/;\s*$/, '');
+  if (withoutTrailing.includes(';')) throw new Error('BLOQUEADO: solo se permite UNA sentencia SELECT (sin múltiples statements).');
+}
+
+// Estado global del preflight. Bloquea si: falta cualquier tabla histórica, existe cualquier
+// tabla nueva, o 002 no es aditiva.
+function computeOverall(report) {
+  const reasons = [];
+  const missing = (report.historical_tables || []).filter(t => !t.exists).map(t => t.table);
+  if (missing.length) reasons.push('faltan tablas históricas: ' + missing.join(', '));
+  const present = (report.new_tables_conflict && report.new_tables_conflict.present) || [];
+  if (present.length) reasons.push('ya existen tablas nuevas: ' + present.join(', '));
+  if (!(report.migration_002_lint && report.migration_002_lint.ok === true)) reasons.push('002 no es aditiva (lint)');
+  return { status: reasons.length ? 'PREFLIGHT_BLOCKED' : 'READY_FOR_DEPLOY_REVIEW', blocked: reasons.length > 0, reasons };
 }
 
 function checkPreflightEnv(env) {
@@ -62,11 +78,18 @@ async function snapshotTable(q, table) {
        JOIN information_schema.key_column_usage kcu ON kcu.constraint_name = tc.constraint_name
      WHERE tc.table_schema='public' AND tc.table_name=$1 AND tc.constraint_type='PRIMARY KEY'
      ORDER BY kcu.ordinal_position`, [table])).rows.map(r => r.column_name);
-  const fks = (await q(
-    `SELECT tc.constraint_name FROM information_schema.table_constraints tc
-     WHERE tc.table_schema='public' AND tc.table_name=$1 AND tc.constraint_type='FOREIGN KEY'`, [table])).rows.map(r => r.constraint_name);
-  const indexes = (await q(`SELECT indexname FROM pg_indexes WHERE schemaname='public' AND tablename=$1 ORDER BY indexname`, [table])).rows.map(r => r.indexname);
-  return { table, exists: true, count: String(count), columns, primary_key: pk, foreign_keys: fks, indexes };
+  // Constraints (todos los tipos) con definición vía pg_get_constraintdef.
+  const constraints = (await q(
+    `SELECT con.conname AS name, con.contype AS type, pg_get_constraintdef(con.oid) AS definition
+     FROM pg_constraint con
+     WHERE con.conrelid = ('public.' || $1)::regclass
+     ORDER BY con.contype, con.conname`, [table])).rows;
+  // FKs con su definición (subconjunto de constraints, contype='f').
+  const foreign_keys = constraints.filter(c => c.type === 'f').map(c => ({ name: c.name, definition: c.definition }));
+  // Índices con indexname + indexdef.
+  const indexes = (await q(
+    `SELECT indexname, indexdef FROM pg_indexes WHERE schemaname='public' AND tablename=$1 ORDER BY indexname`, [table])).rows;
+  return { table, exists: true, count: String(count), columns, primary_key: pk, foreign_keys, constraints, indexes };
 }
 
 async function buildSnapshot(q) {
@@ -120,6 +143,8 @@ async function main() {
       new_tables_conflict: { any: conflicts.length > 0, present: conflicts, status: conflicts.length ? 'CONFLICT_REQUIRES_REVIEW' : 'OK' },
       migration_002_lint: lint,
     };
+    const overall = computeOverall(report);
+    report.overall = overall;
 
     fs.mkdirSync(path.dirname(SNAPSHOT_OUT), { recursive: true });
     fs.writeFileSync(SNAPSHOT_OUT, JSON.stringify(report, null, 2));
@@ -131,9 +156,13 @@ async function main() {
     snapshot.forEach(t => console.log(`  - ${t.table}: ${t.exists ? t.count + ' filas' : 'NO EXISTE'}`));
     console.log(`Conflicto tablas nuevas: ${report.new_tables_conflict.status}${conflicts.length ? ' → ' + conflicts.join(', ') : ''}`);
     console.log(`002 aditiva: ${lint.ok ? 'YES' : 'NO — ' + lint.findings.join('; ')}`);
-    console.log(`\nSnapshot guardado en: ${path.relative(ROOT, SNAPSHOT_OUT)}`);
+    console.log(`\nRESULTADO GLOBAL: ${overall.status}`);
+    if (overall.blocked) overall.reasons.forEach(r => console.log('   - ' + r));
+    console.log(`Snapshot guardado en: ${path.relative(ROOT, SNAPSHOT_OUT)}`);
     console.log('(Solo lectura: no se escribió nada en la base productiva.)\n');
-    process.exit(conflicts.length ? 2 : 0);
+    // No terminar el proceso abruptamente con el pool abierto: solo fijar el código de
+    // salida y dejar que el finally cierre la conexión. Bloqueado → código no-cero.
+    process.exitCode = overall.blocked ? 2 : 0;
   } finally {
     await pool.end();
   }
@@ -142,6 +171,6 @@ async function main() {
 if (require.main === module) main();
 
 module.exports = {
-  checkPreflightEnv, assertSelectOnly, safeHost, snapshotTable, buildSnapshot,
+  checkPreflightEnv, assertSelectOnly, computeOverall, safeHost, snapshotTable, buildSnapshot,
   checkConflicts, analyzeMigration002, HISTORICAL_TABLES, NEW_TABLES, SNAPSHOT_OUT,
 };

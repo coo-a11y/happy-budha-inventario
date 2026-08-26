@@ -119,4 +119,89 @@ test('analyzeMigration002 lee el archivo real y lo reporta aditivo', () => {
   assert.ok(r.ok, 'findings: ' + r.findings.join('; '));
 });
 
+// ---------- 2D.1: estado global del preflight ----------
+function baseReport() {
+  return {
+    historical_tables: P.HISTORICAL_TABLES.map(t => ({ table: t, exists: true, count: '10' })),
+    new_tables_conflict: { present: [], status: 'OK' },
+    migration_002_lint: { ok: true, findings: [] },
+  };
+}
+test('computeOverall: todo correcto → READY_FOR_DEPLOY_REVIEW', () => {
+  const o = P.computeOverall(baseReport());
+  assert.strictEqual(o.status, 'READY_FOR_DEPLOY_REVIEW');
+  assert.strictEqual(o.blocked, false);
+});
+test('computeOverall: falta una tabla histórica → PREFLIGHT_BLOCKED', () => {
+  const r = baseReport(); r.historical_tables[2].exists = false;
+  const o = P.computeOverall(r);
+  assert.strictEqual(o.status, 'PREFLIGHT_BLOCKED');
+  assert.ok(o.reasons.some(x => /faltan tablas históricas/.test(x)));
+});
+test('computeOverall: existe una tabla nueva → PREFLIGHT_BLOCKED', () => {
+  const r = baseReport(); r.new_tables_conflict = { present: ['geo_zones'], status: 'CONFLICT_REQUIRES_REVIEW' };
+  assert.strictEqual(P.computeOverall(r).status, 'PREFLIGHT_BLOCKED');
+});
+test('computeOverall: 002 lint falla → PREFLIGHT_BLOCKED', () => {
+  const r = baseReport(); r.migration_002_lint = { ok: false, findings: ['contiene ALTER'] };
+  assert.strictEqual(P.computeOverall(r).status, 'PREFLIGHT_BLOCKED');
+});
+
+// ---------- 2D.1: assertSelectOnly endurecido (una sola sentencia) ----------
+test('assertSelectOnly: rechaza múltiples statements', () => {
+  assert.throws(() => P.assertSelectOnly('SELECT 1; DELETE FROM x'), /BLOQUEADO/);
+  assert.throws(() => P.assertSelectOnly('SELECT 1; DROP TABLE x'), /BLOQUEADO/);
+  assert.throws(() => P.assertSelectOnly('SELECT 1; UPDATE x SET a=1'), /BLOQUEADO/);
+  // un SELECT con punto y coma final sí es válido
+  assert.doesNotThrow(() => P.assertSelectOnly('SELECT current_database();'));
+  assert.doesNotThrow(() => P.assertSelectOnly('SELECT 1'));
+});
+
+// ---------- 2D.1: snapshot estructural completo ----------
+function makeTableMock(cfg = {}) {
+  return async (sql, params = []) => {
+    const r = (rows) => ({ rows });
+    if (/to_regclass/.test(sql)) return r([{ exists: cfg.exists !== false }]);
+    if (/COUNT\(\*\)::bigint/.test(sql)) return r([{ c: '42' }]);
+    if (/information_schema\.columns/.test(sql)) return r([{ column_name: 'id', data_type: 'integer', is_nullable: 'NO' }, { column_name: 'nombre', data_type: 'text', is_nullable: 'YES' }]);
+    if (/PRIMARY KEY/.test(sql)) return r([{ column_name: 'id' }]);
+    if (/pg_get_constraintdef/.test(sql)) return r([
+      { name: 'fk_x', type: 'f', definition: 'FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE SET NULL' },
+      { name: 'pk_x', type: 'p', definition: 'PRIMARY KEY (id)' },
+    ]);
+    if (/pg_indexes/.test(sql)) return r([{ indexname: 'x_pkey', indexdef: 'CREATE UNIQUE INDEX x_pkey ON public.x USING btree (id)' }]);
+    return r([{}]);
+  };
+}
+test('snapshotTable incluye FKs con definición e índices con indexdef', async () => {
+  const snap = await P.snapshotTable(makeTableMock(), 'movimientos');
+  assert.ok(snap.foreign_keys.length && snap.foreign_keys[0].definition.includes('FOREIGN KEY'));
+  assert.ok(snap.constraints.length, 'debe incluir constraints');
+  assert.ok(snap.indexes.length && snap.indexes[0].indexdef.includes('CREATE'));
+  assert.ok(Array.isArray(snap.primary_key) && snap.primary_key.includes('id'));
+});
+test('snapshotTable NO contiene filas ni valores de negocio', async () => {
+  const snap = await P.snapshotTable(makeTableMock(), 'productos');
+  const json = JSON.stringify(snap);
+  // Solo metadata: existencia, conteo y estructura. Sin claves de datos de negocio.
+  assert.ok(!/\brows\b/.test(json) && !/\bdata\b/.test(json));
+  // columnas solo con metadatos
+  snap.columns.forEach(c => assert.deepStrictEqual(Object.keys(c).sort(), ['column_name', 'data_type', 'is_nullable'].sort()));
+  assert.ok(typeof snap.count === 'string'); // conteo, no filas
+});
+
+// ---------- 2D.1: cierre de pool sin process.exit ----------
+test('el bloque conectado NO usa process.exit() (usa exitCode + finally pool.end)', () => {
+  const afterPool = SRC.slice(SRC.indexOf('new Pool('));
+  assert.ok(!/process\.exit\s*\(/.test(afterPool), 'no debe llamar process.exit() con el pool abierto');
+  assert.ok(/process\.exitCode\s*=/.test(SRC), 'debe fijar process.exitCode');
+  assert.ok(/finally\s*\{[\s\S]*await pool\.end\(\)/.test(SRC), 'pool.end() debe estar en finally');
+});
+
+// ---------- 2D.1: snapshot ignorado por Git ----------
+test('reports/production-preflight-snapshot.json está ignorado por Git', () => {
+  const out = require('child_process').spawnSync('git', ['check-ignore', 'reports/production-preflight-snapshot.json'], { cwd: path.join(__dirname, '..'), encoding: 'utf8' });
+  assert.strictEqual(out.stdout.trim(), 'reports/production-preflight-snapshot.json', 'el snapshot debe estar en .gitignore');
+});
+
 runTests();

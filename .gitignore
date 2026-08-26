@@ -10,3 +10,8 @@ build/
 # Secretos / entornos locales (no versionar)
 .enves
 .env.*
+
+# Preflight snapshot y backups (nunca versionar; pueden derivar de datos)
+reports/production-preflight-snapshot.json
+*.dump
+backup_*
