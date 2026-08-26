@@ -124,6 +124,47 @@ node scripts/migrate.js               # aplica 001 + 002 (con el guard autorizad
   `docs/SECURITY_AUDIT.md`, p. ej. el `DATABASE_URL` que estuvo en `.enves`) **debe rotarse**
   antes o durante la preparación del despliegue. No se rota nada automáticamente.
 
+## Importación del mapa a producción (fase 2E — NO ejecutar aún)
+
+Solo **después** de que `002` esté aplicada y verificada en producción. El importador tiene un
+**Production Map Import Guard** host-based: bloquea todo apply REAL contra host remoto salvo que
+estén presentes las dos variables de autorización. `--dry-run` remoto está permitido sin ellas y
+con cero escrituras.
+
+Flujo exacto:
+
+```
+1. map preflight / dry-run ... node scripts/import-farm-map-db.js --dry-run   (1/58/38, 0 writes)
+2. explicit authorization .... exportar las DOS variables de import (abajo)
+3. import transaction ........ node scripts/import-farm-map-db.js --apply
+                               (guard → estado inicial 0/0/0 → BEGIN → inserts en orden
+                                topológico → verificación pre-COMMIT → COMMIT; ROLLBACK ante fallo)
+4. exact verify .............. farm_sites=1, geo_zones=58, geo_zone_aliases=38, jerarquía OK,
+                               cycles=0, missing parents=0, review=0, C39–C42 ausentes,
+                               aliases exactos, geometrías canónicas
+5. application smoke test .... node scripts/smoke-test.js (o SMOKE_BASE_URL=<prod> solo GET)
+6. retain backup ............. conservar el backup pre-deploy validado
+```
+
+**Autorización explícita (paso 2)** — solo cuando decidas importar:
+
+```bash
+export FARM_OS_DB_ENV=PRODUCTION_IMPORT
+export FARM_OS_PRODUCTION_IMPORT_CONFIRM=IMPORT_VERIFIED_FARM_MAP
+export FARM_OS_PRODUCTION_IMPORT_DATABASE_URL="$PROD_URL"   # solo para este comando
+```
+
+Sin las dos variables exactas contra un host remoto: `PRODUCTION MAP IMPORT BLOCKED`
+(aborta antes de conectar y antes de cualquier escritura).
+
+**Estado inicial aceptado.** El importador solo procede si producción está en `0/0/0`
+(farm_sites/geo_zones/geo_zone_aliases) o **exactamente** en el dataset canónico ya importado
+(`1/58/38`) para una re-ejecución idempotente. Cualquier estado parcial/inesperado →
+`PRODUCTION MAP IMPORT BLOCKED` + ROLLBACK. Nunca se mezclan datasets.
+
+**Nota GIS.** El perímetro dibujado (~46.68 ha) es geometría del mapa; **no** representa el área
+cultivada/legal actual.
+
 ## POST-DEPLOY (solo diseño en esta fase — NO ejecutar aún)
 
 Tras aplicar `002` (fase futura), volver a correr el preflight y comparar `before` vs `after`:

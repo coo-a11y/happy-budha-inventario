@@ -307,6 +307,22 @@ async function verifyImportedMap(q, farmCode) {
   return { ok: checks.every(c => c.ok), checks };
 }
 
+// Gate de estado inicial compatible: la base destino solo puede estar VACÍA (0/0/0) o
+// contener EXACTAMENTE el dataset canónico ya importado (1/58/38). Cualquier estado parcial,
+// inesperado o diferente => se lanza error => ROLLBACK (nunca se mezclan datasets).
+async function assertInitialStateCompatible(q) {
+  const r = (await q(
+    `SELECT (SELECT COUNT(*) FROM farm_sites)::int AS fs,
+            (SELECT COUNT(*) FROM geo_zones)::int AS gz,
+            (SELECT COUNT(*) FROM geo_zone_aliases)::int AS ga`, [])).rows[0];
+  const zero = r.fs === 0 && r.gz === 0 && r.ga === 0;
+  const canonical = r.fs === 1 && r.gz === 58 && r.ga === 38;
+  if (!zero && !canonical) {
+    throw new Error(`PRODUCTION MAP IMPORT BLOCKED: estado inicial incompatible (farm_sites=${r.fs}, geo_zones=${r.gz}, geo_zone_aliases=${r.ga}). Solo se acepta 0/0/0 (vacío) o el dataset canónico 1/58/38.`);
+  }
+  return { fs: r.fs, gz: r.gz, ga: r.ga, zero, canonical };
+}
+
 // Barrera de identidad de la base TEST. Exige nombre exacto y prefijo hb_farm_os_test.
 async function assertTestDatabaseIdentity(q, expectedName) {
   if (!expectedName) throw new Error('falta FARM_OS_TEST_DB_NAME');
@@ -341,18 +357,44 @@ function runDryRun(norm) {
 }
 
 async function runApply(norm, env) {
-  // IGNORA DATABASE_URL por completo. Solo FARM_OS_TEST_DATABASE_URL.
-  const barrier = checkApplyBarriers(env);
+  // NUNCA usa DATABASE_URL. El destino depende del modo (TEST o PRODUCTION_IMPORT).
   console.log(`TARGET ENVIRONMENT: ${env.FARM_OS_DB_ENV || '(no definido)'}`);
-  if (env.FARM_OS_DB_ENV && env.FARM_OS_DB_ENV !== 'TEST') {
-    console.error('⛔ ABORTADO: FARM_OS_DB_ENV distinto de TEST. No existe modo PRODUCTION en este importador.');
+
+  const { resolveTestSsl } = require('./lib/db-ssl.js');
+  let url, sslOpt, identityCheck = null;
+
+  if (env.FARM_OS_DB_ENV === 'TEST') {
+    // Ruta de PRUEBA (comportamiento existente): barreras TEST + identidad hb_farm_os_test*.
+    const barrier = checkApplyBarriers(env);
+    if (!barrier.ok) {
+      console.error('⛔ ABORTADO: no se cumplen las barreras para --apply:');
+      barrier.reasons.forEach(r => console.error('   - ' + r));
+      process.exit(1);
+    }
+    url = env.FARM_OS_TEST_DATABASE_URL;
+    sslOpt = resolveTestSsl(env);
+    identityCheck = (cq) => assertTestDatabaseIdentity(cq, env.FARM_OS_TEST_DB_NAME);
+  } else if (env.FARM_OS_DB_ENV === 'PRODUCTION_IMPORT') {
+    // Ruta de PRODUCCIÓN (gated por el Production Import Guard + estado inicial compatible).
+    url = env.FARM_OS_PRODUCTION_IMPORT_DATABASE_URL;
+    sslOpt = { rejectUnauthorized: false };
+    // En producción no aplica la identidad hb_farm_os_test*; se usa assertInitialStateCompatible.
+  } else {
+    console.error('⛔ ABORTADO: FARM_OS_DB_ENV debe ser TEST o PRODUCTION_IMPORT.');
     process.exit(1);
   }
-  if (!barrier.ok) {
-    console.error('⛔ ABORTADO: no se cumplen las barreras para --apply:');
-    barrier.reasons.forEach(r => console.error('   - ' + r));
+
+  // PRODUCTION MAP IMPORT GUARD — host-based, evaluado ANTES de conectar / BEGIN / INSERT / DDL.
+  const { evaluateImportGuard } = require('./lib/import-guard.js');
+  const guard = evaluateImportGuard(env, url, false);
+  if (guard.blocked) {
+    console.error('⛔ PRODUCTION MAP IMPORT BLOCKED');
+    console.error('   Import REAL contra un host remoto sin autorización explícita. Faltan:');
+    guard.missing.forEach(m => console.error('   - ' + m));
+    console.error('   (Se abortó ANTES de conectar y ANTES de cualquier escritura.)');
     process.exit(1);
   }
+
   const plan = buildPlan(norm);
   if (!plan.validation.ok) {
     console.error('⛔ ABORTADO: normalized inválido. Revisa los errores (dry-run).');
@@ -360,18 +402,20 @@ async function runApply(norm, env) {
   }
 
   const { Pool } = require('pg'); // require perezoso: dry-run no necesita pg
-  const { resolveTestSsl } = require('./lib/db-ssl.js');
-  const pool = new Pool({ connectionString: env.FARM_OS_TEST_DATABASE_URL, ssl: resolveTestSsl(env) });
+  const pool = new Pool({ connectionString: url, ssl: sslOpt });
   const client = await pool.connect();
   const counters = { farm_sites_inserted: 0, farm_sites_matched: 0, zones_inserted: 0, zones_matched: 0, aliases_inserted: 0, aliases_matched: 0 };
   const cq = (sql, params) => client.query(sql, params);
   let transactionStarted = false;
   try {
-    // IDENTIDAD DE LA BASE TEST — solo lectura, ANTES de cualquier escritura o BEGIN.
-    await assertTestDatabaseIdentity(cq, env.FARM_OS_TEST_DB_NAME);
+    // IDENTIDAD (solo TEST) — lectura, ANTES de cualquier escritura o BEGIN.
+    if (identityCheck) await identityCheck(cq);
 
     await client.query('BEGIN');
     transactionStarted = true;
+
+    // GATE DE ESTADO INICIAL: solo 0/0/0 o el dataset canónico 1/58/38. Si no, ROLLBACK.
+    await assertInitialStateCompatible(cq);
 
     // farm_site (idempotente por code)
     const fsProp = norm.farm_site;
@@ -453,6 +497,6 @@ module.exports = {
   validateNormalized, topoSort, buildPlan, checkApplyBarriers,
   sqlInsertFarmSite, sqlInsertZone, sqlInsertAlias, sqlSelectAlias, assertAllowedTable,
   isValidGeoJsonPolygon, canonicalize, canonicalEqual, farmSiteMatches, zoneMatches,
-  verifyImportedMap, assertTestDatabaseIdentity,
+  verifyImportedMap, assertTestDatabaseIdentity, assertInitialStateCompatible,
   ALLOWED_WRITE_TABLES, HISTORICAL_TABLES, EXPECTED, NORMALIZED,
 };
