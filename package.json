@@ -20,7 +20,9 @@
     "test:preflight": "node tests/production-preflight.test.js",
     "test:guard": "node tests/migration-guard.test.js",
     "test:import-guard": "node tests/import-guard.test.js",
-    "test:import-canonical": "node tests/import-canonical.test.js"
+    "test:import-canonical": "node tests/import-canonical.test.js",
+    "prod:map-verify": "node scripts/verify-production-farm-map.js",
+    "test:verify-prod": "node tests/verify-production.test.js"
   },
   "keywords": [
     "inventario",

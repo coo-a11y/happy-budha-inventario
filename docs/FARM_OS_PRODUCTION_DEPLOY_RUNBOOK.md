@@ -165,6 +165,25 @@ Sin las dos variables exactas contra un host remoto: `PRODUCTION MAP IMPORT BLOC
 **Nota GIS.** El perímetro dibujado (~46.68 ha) es geometría del mapa; **no** representa el área
 cultivada/legal actual.
 
+### Cierre del despliegue del mapa (post-import)
+
+```
+1. post-import counts ........ farm_sites=1, geo_zones=58, geo_zone_aliases=38, workers=0, worker_devices=0
+2. production canonical verify (READ-ONLY):
+     FARM_OS_DB_ENV=PRODUCTION_MAP_VERIFY \
+     FARM_OS_PRODUCTION_MAP_VERIFY_DATABASE_URL="$PROD_URL" \
+       node scripts/verify-production-farm-map.js        # RESULT: PASS
+3. application smoke test ..... SMOKE_BASE_URL="$PROD_URL" node scripts/smoke-test.js   (solo GET)
+4. retain backup ............. conservar el backup pre-map validado (no borrar)
+5. close map deployment ...... registrar PASS + conteos; fin del despliegue del mapa
+```
+
+El verificador de producción es **estrictamente READ-ONLY** (barrera SELECT-only), usa
+**exclusivamente** `FARM_OS_PRODUCTION_MAP_VERIFY_DATABASE_URL` (nunca `DATABASE_URL`,
+`FARM_OS_PRODUCTION_IMPORT_DATABASE_URL` ni `FARM_OS_TEST_DATABASE_URL`), y compara producción
+contra el dataset normalizado (conteos + geometrías/aliases/jerarquía canónicos, C39–C42
+ausentes, review=0). Si algo difiere: `RESULT: FAIL` y exit ≠ 0, sin modificar nada.
+
 ## POST-DEPLOY (solo diseño en esta fase — NO ejecutar aún)
 
 Tras aplicar `002` (fase futura), volver a correr el preflight y comparar `before` vs `after`:
