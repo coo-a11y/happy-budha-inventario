@@ -517,7 +517,7 @@ async function runApply(norm, env) {
     }
 
     await client.query('COMMIT');
-    console.log('✅ Importación aplicada en TEST (transacción COMMIT).');
+    console.log(`✅ Importación aplicada en ${env.FARM_OS_DB_ENV} (transacción COMMIT).`);
     console.log('Contadores de idempotencia:', JSON.stringify(counters));
   } catch (err) {
     // ROLLBACK únicamente si la transacción llegó a iniciarse (BEGIN). Si la identidad de

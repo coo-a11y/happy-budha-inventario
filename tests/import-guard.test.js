@@ -127,4 +127,10 @@ test('el importador resuelve SSL por HOST (usa resolveHostAwareSsl) y el guard v
   assert.ok(iGuard < iPool, 'el guard debe evaluarse antes de crear el Pool');
 });
 
+// ---------- 2E.1D: el mensaje final de COMMIT NO está hardcodeado a TEST ----------
+test('el log final de COMMIT usa el entorno real (no "en TEST" hardcodeado)', () => {
+  assert.ok(!/Importación aplicada en TEST/.test(SRC), 'no debe estar hardcodeado a TEST');
+  assert.ok(/Importación aplicada en \$\{env\.FARM_OS_DB_ENV\}/.test(SRC), 'debe interpolar env.FARM_OS_DB_ENV');
+});
+
 runTests();
