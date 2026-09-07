@@ -1849,16 +1849,24 @@
 
     // Polling automático cada 10 segundos
     function iniciarPolling() {
+      // Auto-refresh liviano: cada 60s, solo si la pestaña del navegador está visible, sin
+      // modal abierta, y refrescando ÚNICAMENTE los datos de la sección activa (no todo).
       setInterval(() => {
-        // No hace polling si hay una modal abierta
-        const modalAbiera = document.querySelector('.modal[style*="display: block"]');
-        if (modalAbiera) return;
+        if (document.hidden) return; // no refrescar en segundo plano
+        const modalAbierta = document.querySelector('.modal[style*="display: block"]');
+        if (modalAbierta) return;
 
-        console.log('🔄 Actualizando datos automáticamente...');
-        cargarProductos();
-        cargarMovimientos();
-        cargarEstadisticas();
-      }, 10000); // Cada 10 segundos
+        const activa = (document.querySelector('.dashboard.active') || {}).dataset
+          ? document.querySelector('.dashboard.active').dataset.tab : null;
+
+        if (activa === 'movimientos') {
+          cargarMovimientos();
+        } else if (activa === 'productos' || activa === 'dashboard' || !activa) {
+          cargarProductos();     // ya no trae la foto → liviano; alimenta tabla + tarjeta crítica
+          cargarEstadisticas();
+        }
+        // Otras pestañas (cultivo, medición, calendario, etc.) no requieren auto-refresh.
+      }, 60000); // cada 60 segundos
     }
     function cambiarTab(tabName) {
       console.log('📌 Cambiando a tab:', tabName);

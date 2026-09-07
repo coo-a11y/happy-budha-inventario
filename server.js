@@ -1004,7 +1004,11 @@ app.get('/api/usuario-actual', (req, res) => {
 app.get('/api/productos', async (req, res) => {
   try {
     const { categoria, zona, buscar, estado } = req.query;
-    let query = 'SELECT * FROM productos WHERE 1=1';
+    // Excluir la columna `foto` (base64, pesada) del listado. En PostgreSQL seleccionamos
+    // columnas explícitas + un booleano `tiene_foto` calculado en SQL, para NO transferir el
+    // blob de cada producto. En LocalDB (dev) se mantiene el comportamiento previo.
+    const PROD_COLS_PG = "id, codigo, nombre, nombre_referencia, categoria, presentacion, stock, stock_minimo, precio, fecha_caducidad, bodega, zona, proveedor, contifico_id, tipo_producto, created_at, updated_at, (foto IS NOT NULL AND foto <> '') AS tiene_foto";
+    let query = usePostgres ? `SELECT ${PROD_COLS_PG} FROM productos WHERE 1=1` : 'SELECT * FROM productos WHERE 1=1';
     let params = [];
     let paramCount = 1;
 
@@ -1048,12 +1052,14 @@ app.get('/api/productos', async (req, res) => {
     const result = await executeQuery(query, params);
     let rows = result.rows;
 
-    // Excluir la foto del listado (puede ser pesada); solo marcar si tiene o no.
-    // La imagen se carga aparte con GET /api/productos/:id/foto
-    rows = rows.map(r => {
-      const { foto, ...resto } = r;
-      return { ...resto, tiene_foto: !!(foto && String(foto).trim() !== '') };
-    });
+    // En PostgreSQL `tiene_foto` ya viene calculado y `foto` NO se trajo (más rápido).
+    // En LocalDB se seleccionó todo, así que se quita la foto aquí y se marca tiene_foto.
+    if (!usePostgres) {
+      rows = rows.map(r => {
+        const { foto, ...resto } = r;
+        return { ...resto, tiene_foto: !!(foto && String(foto).trim() !== '') };
+      });
+    }
 
     // Si el usuario es operario, ocultar precios
     if (usuarioActual.rol === 'operario') {
@@ -1607,7 +1613,8 @@ app.get('/api/lotes/:producto_id', async (req, res) => {
 
 app.get('/api/estadisticas', async (req, res) => {
   try {
-    const result = await executeQuery('SELECT * FROM productos');
+    // Solo las columnas necesarias para las métricas (evita traer la foto base64).
+    const result = await executeQuery('SELECT stock, stock_minimo, precio, fecha_caducidad, categoria, zona FROM productos');
     const productos = result.rows;
 
     const today = new Date();
