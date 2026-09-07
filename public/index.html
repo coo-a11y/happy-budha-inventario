@@ -1414,20 +1414,20 @@
             btnEliminar.style.display = data.rol === 'admin' ? 'inline-block' : 'none';
           }
         });
+      // Al inicio (pestaña Dashboard) solo cargamos lo necesario: productos (tabla + tarjeta
+      // crítica + selects) y estadísticas. Historial (hasta 5000 movimientos), Medición,
+      // Calendario y Producción se cargan la PRIMERA vez que abres su pestaña (cambiarTab),
+      // para no descargar todo de golpe al abrir la app.
       cargarProductos();
       cargarEstadisticas();
-      cargarMovimientos();
       const ahora = new Date();
       document.getElementById('salida-fecha').value = ahora.toISOString().slice(0, 16);
       poblarZonasMedicion();
       limpiarMedicion();
-      cargarMediciones();
       configurarBotonRespaldo();
       actualizarFechaHora();
       setInterval(actualizarFechaHora, 1000);
-      cargarCalendario();
       poblarLotesProduccion();
-      cargarProduccion();
       iniciarPolling();
     });
 
@@ -1876,6 +1876,10 @@
       const section = document.querySelector(`.dashboard[data-tab="${tabName}"]`);
       if (navBtn) navBtn.classList.add('active');
       if (section) section.classList.add('active');
+      // Carga perezosa: los datos de cada pestaña se piden al abrirla (no al inicio).
+      if (tabName === 'movimientos') cargarMovimientos();
+      if (tabName === 'medicion' && typeof cargarMediciones === 'function') cargarMediciones();
+      if (tabName === 'calendario' && typeof cargarCalendario === 'function') cargarCalendario();
       if (tabName === 'calendario' && typeof renderCalendario === 'function') renderCalendario();
       if (tabName === 'produccion' && typeof cargarProduccion === 'function') cargarProduccion();
     }
@@ -1926,7 +1930,7 @@
         let estadoStock = 'stock-ok';
         if (p.stock <= (p.stock_minimo || 0)) estadoStock = 'stock-critico';
         const fotoCell = p.tiene_foto
-          ? `<img src="/api/productos/${p.id}/foto?v=${encodeURIComponent(p.updated_at || '')}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--gray-300)" onclick="ampliarFoto('${p.id}','${encodeURIComponent(p.updated_at || '')}')">`
+          ? `<img loading="lazy" decoding="async" src="/api/productos/${p.id}/foto?v=${encodeURIComponent(p.updated_at || '')}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--gray-300)" onclick="ampliarFoto('${p.id}','${encodeURIComponent(p.updated_at || '')}')">`
           : '<span style="color:var(--gray-400)">—</span>';
         html += `<tr>
           <td><strong>${idx + 1}</strong></td>
